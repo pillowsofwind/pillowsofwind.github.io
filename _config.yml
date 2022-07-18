@@ -9,8 +9,8 @@
 locale                   : "en-US"
 title                    : "Rongwu Xu / Home"
 title_separator          : "-"
-name                     : &name "Rongwu Xu"
-description              : &description "许 融武"
+name                     : &name "Rongwu Xu's Personal Site"
+description              : &description ""
 url                      : https://pillowsofwind.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
 repository               : "pillowsofwind/pillowsofwind.github.io"
@@ -82,7 +82,7 @@ analytics:
 author:
   name             : "Rongwu Xu"
   avatar           : "profile.jpg"
-  bio              : "Student major in computer science"
+  bio              : "许 融武"
   location         : "Tsinghua Univ., Beijing"
   employer         :
   pubmed           : 

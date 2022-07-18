@@ -11,9 +11,9 @@ title                    : "Rongwu Xu / Home"
 title_separator          : "-"
 name                     : &name "Rongwu Xu"
 description              : &description "许 融武"
-url                      : https://pillowofwind.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
+url                      : https://pillowsofwind.github.io # the base hostname & protocol for your site e.g. "https://mmistakes.github.io"
 baseurl                  : "" # the subpath of your site, e.g. "/blog"
-repository               : "pillowofwind/pillowofwind.github.io"
+repository               : "pillowsofwind/pillowsofwind.github.io"
 teaser                   :  # filename of teaser fallback teaser image placed in /images/, .e.g. "500x300.png"
 breadcrumbs              : false # true, false (default)
 words_per_minute         : 160

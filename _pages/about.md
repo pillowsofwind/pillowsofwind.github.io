@@ -20,7 +20,7 @@ See [this page](https://pillowsofwind.github.io/publications/) for details.
 
 # Miscellaneous
 
-Besides being a fan of Pink Floyd, I enjoy all genres of music, especially 70's rock, dream pop and classical music. I am an amateur electric guitar player and play a lovely [sunburst cherry Fender strat](https://pillowsofwind.github.io/images/guitar.jpg). I also enjoy playing the game [riichi mahjong,麻雀](https://en.wikipedia.org/wiki/Japanese_mahjong) a lot. I have been a serious collector of [miniature die-cast cars](https://pillowsofwind.github.io/images/cars.jpg) for over 10 years. I also keep a [Swiss mechanical watch](https://pillowsofwind.github.io/images/watch.jpg) collecttion for brands with good traditions like IWC, Rolex, etc.
+Besides being a fan of Pink Floyd, I enjoy all genres of music, especially 70's rock, dream pop and classical music. I am an amateur electric guitar player and play a lovely [sunburst cherry Fender strat](https://pillowsofwind.github.io/images/guitar.jpg). I also enjoy playing the game [riichi mahjong, 麻雀](https://en.wikipedia.org/wiki/Japanese_mahjong) a lot. I have been a serious collector of [miniature die-cast cars](https://pillowsofwind.github.io/images/cars.jpg) for over 10 years. I also keep a [Swiss mechanical watch](https://pillowsofwind.github.io/images/watch.jpg) collection for brands with fine traditions.
 
 # Notes
 

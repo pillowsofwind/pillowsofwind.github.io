@@ -1,7 +1,8 @@
-@import url(https://fonts.googleapis.com/css?family=Lato:300,400);
+@import url('https://fonts.googleapis.com/css?family=Exo+2:400,600');
+
 body {
     background: #1c2032; 
-    font: normal 100% Lato, sans-serif;
+    font: normal 100% 'Exo 2', sans-serif;
     margin: 0;
     color: #555;
 }

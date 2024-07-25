@@ -95,9 +95,83 @@ header a {
     color: inherit;
 }
 
-.highlight-box {
+.container {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .left-column {
+    max-width: calc(100% - 200px); /* 为右侧照片留出空间 */
+    padding: 10px;
+  }
+
+  .right-column {
+    flex-shrink: 0; /* 确保照片不会缩小 */
+    padding: 10px;
+  }
+
+  .profile-image {
+    width: 160px; /* 照片宽度 */
+    height: auto; /* 保持宽高比 */
+    display: block; /* 图片默认为块级元素 */
+    margin: 0 auto; /* 垂直居中 */
+  }
+
+  .text-content {
+    clear: both;
+    margin-top: 0px;
+    padding: 5px;
+  }
+
+  .highlight-box {
     background-color: rgb(255, 254, 184);
-    padding: 15px;
-    margin: 15px;
+    padding: 10px;
+    margin: 10px;
     border: 1px solid #ccccccbe;
 }
+
+.toggle-content .toggle-body {
+    display: none;
+    /* 默认隐藏内容 */
+  }
+
+  .arrow {
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-left: 0px;
+    /* 可选：添加一些左边距，以便与文本区分 */
+  }
+
+  .toggle-header {
+    color: blue;
+  }
+
+
+  .slider {
+    overflow-y: scroll; /* 允许垂直滚动 */
+    max-height: 228px; /* Set the max-height as needed */
+  }
+
+  .rounded-rectangle {
+    display: inline-flex;
+    background-color: #37910dc3;
+    /* 深绿色 */
+    color: white;
+    /* 字体颜色为白色 */
+    border-radius: 4px;
+    /* 圆角大小调整为更细腻 */
+    font-size: 14px;
+    /* 字体大小 */
+    height: 1;
+    /* 高度设置为当前字体大小的1em */
+    line-height: 1.2;
+    /* 行高与高度同步 */
+    align-items: center;
+    /* 垂直居中内容 */
+    justify-content: center;
+    /* 水平居中内容 */
+    padding: 0 4px;
+    /* 减少内边距以避免换行 */
+  }

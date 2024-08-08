@@ -151,7 +151,7 @@ header a {
 
   .slider {
     overflow-y: scroll; /* 允许垂直滚动 */
-    max-height: 228px; /* Set the max-height as needed */
+    max-height: 288px; /* Set the max-height as needed */
   }
 
   .rounded-rectangle {

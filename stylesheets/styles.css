@@ -280,3 +280,10 @@ footer {
   margin: 0px;
   border: 1px solid #ccccccbe;
 }
+
+.slidery {
+  max-height: 300px;
+  overflow-y: auto;
+  transition: height 0.3s ease;
+  margin-bottom: 20px;
+}

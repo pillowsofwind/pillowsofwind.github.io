@@ -285,7 +285,7 @@ footer {
 }
 
 .slidery {
-  max-height: 350px;
+  max-height: 330px;
   overflow-y: auto;
   transition: height 0.3s ease;
   margin-bottom: 20px;

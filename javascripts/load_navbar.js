@@ -4,6 +4,7 @@ document.addEventListener('DOMContentLoaded', function() {
         <div class="nav-content">
             <a href="./index.html">home</a>     
             <a href="./misc.html">misc</a>
+            <a href="./wttn.html">welcome to the nature</a>
         </div>
     </nav>
     `;

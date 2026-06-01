@@ -12,6 +12,20 @@
             max-width: 760px;
             margin: 0 auto;
             padding: 12px 16px 56px;
+            float: none;
+            width: auto;
+        }
+
+        /* Override site theme: section { float: right } is for index layout only */
+        .fun-wrapper section {
+            float: none;
+            width: auto;
+        }
+
+        .fun-wrapper .wttn-content {
+            float: none;
+            width: 100%;
+            clear: both;
         }
 
         .fun-intro {
@@ -37,10 +51,15 @@
             margin-bottom: 22px;
         }
 
-        .trip-title {
-            margin-bottom: 8px;
+        .trip-entry>.trip-title {
+            display: inline;
+            margin: 0 8px 8px 0;
             font-size: 15px;
             color: #222;
+        }
+
+        .trip-entry>.trip-title:has(+ .trip-tags:not(:empty)) {
+            margin-bottom: 0;
         }
 
         .trip-description {
@@ -52,6 +71,117 @@
 
         .trip-description:empty {
             display: none;
+        }
+
+        .trip-entry>.trip-tags:not(:empty) {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 0 0 8px;
+            vertical-align: middle;
+            align-items: center;
+        }
+
+        .trip-entry>.trip-tags:empty {
+            display: none;
+        }
+
+        .trip-tag {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            background: center / contain no-repeat var(--tag-icon);
+        }
+
+        .trip-tag.casual {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12h9'/%3E%3Cpath d='M5 12V9h7v3'/%3E%3Cpath d='M5 12v5M12 12v5'/%3E%3Cpath d='M16 20v-4'/%3E%3Cpath d='M16 16c-2-2-3-4-3-5.5a3 3 0 016 0C19 12 18 14 16 16'/%3E%3Cpath d='M3 20h18'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.hiking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6L9 10M12 6l3 4'/%3E%3Cpath d='M12 10l-4 5M12 10l4 5'/%3E%3Cpath d='M12 14l-5 5M12 14l5 5'/%3E%3Cpath d='M12 19v2'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.cycling {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='17' r='2.5'/%3E%3Ccircle cx='18' cy='17' r='2.5'/%3E%3Cpath d='M6 17l3-6h5l2 3h2M9 11l2-4h2l1 4'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.camping {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20L12 5l8 15H4z'/%3E%3Cpath d='M12 14v6'/%3E%3Cpath d='M9 20h6'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.backpacking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 5h8v3H8z'/%3E%3Cpath d='M9 8v12h6V8'/%3E%3Cpath d='M7 12h2M15 12h2'/%3E%3Cpath d='M11 12v5'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.mountaineering {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 20L12 4l7 16'/%3E%3Cpath d='M17 7l3 11'/%3E%3Cpath d='M17 7l-4 6'/%3E%3Cpath d='M4 18h16'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.kayaking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 16c5-3 13-3 18 0'/%3E%3Cpath d='M12 6v7'/%3E%3Cpath d='M6 9l12 4'/%3E%3Ccircle cx='12' cy='6' r='1'/%3E%3C/svg%3E");
+        }
+
+        .wttn-content {
+            margin-top: 8px;
+        }
+
+        .activity-key {
+            margin: 0 0 20px;
+            padding: 0;
+        }
+
+        .activity-key-title {
+            margin: 0 0 10px;
+            padding: 0;
+            font-size: 13px;
+            font-weight: 500;
+            color: #777;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .activity-key-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px 20px;
+        }
+
+        .activity-key-list li {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .activity-key-list .trip-tag {
+            margin-top: 1px;
+            flex-shrink: 0;
+        }
+
+        .activity-key-list .activity-key-text {
+            min-width: 0;
+        }
+
+        .activity-key-list strong {
+            display: block;
+            color: #222;
+            font-weight: 500;
+        }
+
+        .activity-key-list .activity-key-desc {
+            display: block;
+            color: #666;
+            line-height: 1.35;
+            font-size: 12px;
+        }
+
+        .wttn-content .trip-year:first-of-type {
+            margin-top: 0;
         }
 
         .trip-gallery {
@@ -84,8 +214,15 @@
                 margin-top: 16px;
             }
 
-            .trip-title {
+            .trip-entry>.trip-title {
                 font-size: 14px;
+            }
+
+            .trip-entry>.trip-title:has(+ .trip-tags:not(:empty)) {
+                margin-bottom: 0;
+            }
+
+            .trip-entry>.trip-tags:not(:empty) {
                 margin-bottom: 6px;
             }
 
@@ -106,305 +243,428 @@
     <main class="fun-wrapper">
         <h1>Welcome to the Nature</h1>
 
-        <h2 class="trip-year">2026</h2>
-
-        <h3 class="trip-month">May</h3>
-        <article class="trip-entry">
-            <div class="trip-title">Artist Point Attempt</div>
-            <div class="trip-description"></div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Artist%20Point.HEIC">
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Ruth Mountain Attempt</div>
-            <div class="trip-description"></div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain2.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain3.HEIC">
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Monogram Lake Overnight Backpacking Attempt</div>
-            <div class="trip-description"></div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake2.HEIC">
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Hidden Lake Lookout Attempt</div>
-            <div class="trip-description"></div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout2.jpg">
+        <div class="wttn-content">
+            <div class="activity-key" aria-label="Activity types">
+                <p class="activity-key-title">Activity types</p>
+                <ul class="activity-key-list">
+                    <li>
+                        <span class="trip-tag casual" aria-hidden="true"></span>
+                        <div class="activity-key-text">
+                            <strong>casual</strong>
+                            <span class="activity-key-desc">Parks, strolls, scenic stops.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="trip-tag hiking" aria-hidden="true"></span>
+                        <div class="activity-key-text">
+                            <strong>hiking</strong>
+                            <span class="activity-key-desc">Day hikes on trails/off-trail.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="trip-tag cycling" aria-hidden="true"></span>
+                        <div class="activity-key-text">
+                            <strong>cycling</strong>
+                            <span class="activity-key-desc">Road, gravel, or bikepacking rides on two wheels.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="trip-tag camping" aria-hidden="true"></span>
+                        <div class="activity-key-text">
+                            <strong>camping</strong>
+                            <span class="activity-key-desc">Car or drive-up camping.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="trip-tag backpacking" aria-hidden="true"></span>
+                        <div class="activity-key-text">
+                            <strong>backpacking</strong>
+                            <span class="activity-key-desc">Multi-day trips carrying shelter, food, and gear on a
+                                rucksack.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="trip-tag mountaineering" aria-hidden="true"></span>
+                        <div class="activity-key-text">
+                            <strong>mountaineering</strong>
+                            <span class="activity-key-desc">Technical/alpine objectives: steeper terrain, snow, rope,
+                                scramble, or summit attempts.</span>
+                        </div>
+                    </li>
+                    <li>
+                        <span class="trip-tag kayaking" aria-hidden="true"></span>
+                        <div class="activity-key-text">
+                            <strong>kayaking</strong>
+                            <span class="activity-key-desc">Paddling on lakes, rivers, or ocean.</span>
+                        </div>
+                    </li>
+                </ul>
             </div>
-        </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Green Mountain (Kitsap Peninsula)</div>
-            <div class="trip-description"></div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain2.HEIC">
-            </div>
-        </article>
+            <h2 class="trip-year">2026</h2>
 
-        <article class="trip-entry">
-            <div class="trip-title">Dosewallips State Park</div>
-            <div class="trip-description"></div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park1.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park2.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park3.HEIC">
-            </div>
-        </article>
+            <h3 class="trip-month">May</h3>
+            <article class="trip-entry">
+                <div class="trip-title">Wild Goose Trail (Artist Point Attempt)</div>
+                <div class="trip-tags"> <span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-description"></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Artist%20Point.HEIC">
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Fort Flagler State Park</div>
-            <div class="trip-description"></div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Fort%20Flagler%20State%20Park.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Ruth Mountain Attempt</div>
+                <div class="trip-tags"> <span class="trip-tag mountaineering" title="mountaineering"></span></div>
+                <div class="trip-description"></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain2.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain3.HEIC">
+            </article>
 
-        <h3 class="trip-month">April</h3>
-        <article class="trip-entry">
-            <div class="trip-title">Granite Mountain (I-90)</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Granite%20Mountain1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Granite%20Mountain2.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Monogram Lake Overnight Backpacking Attempt</div>
+                <div class="trip-tags"> <span class="trip-tag backpacking" title="backpacking"></span></div>
+                <div class="trip-description"></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake2.HEIC">
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Snow Lake</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake2.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake3.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Hidden Lake Lookout Attempt</div>
+                <div class="trip-tags">
+                    <span class="trip-tag hiking" title="hiking"></span>
+                    <span class="trip-tag mountaineering" title="mountaineering"></span>
+                </div>
+                <div class="trip-description"></div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout2.jpg">
+                </div>
+            </article>
 
+            <article class="trip-entry">
+                <div class="trip-title">Green Mountain (Kitsap Peninsula)</div>
+                <div class="trip-tags"> <span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-description"></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain2.HEIC">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Orcas Island Car Camping Trip</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island1.JPG">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island2.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island3.JPG">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island4.JPG">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island5.heic">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Dosewallips State Park</div>
+                <div class="trip-tags">
+                    <span class="trip-tag camping" title="camping"></span>
+                    <span class="trip-tag casual" title="casual"></span>
+                </div>
+                <div class="trip-description"></div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park2.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park3.HEIC">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Mailbox Peak</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak2.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak3.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Fort Flagler State Park</div>
+                <div class="trip-tags">
+                    <span class="trip-tag camping" title="camping"></span>
+                    <span class="trip-tag hiking" title="hiking"></span>
+                </div>
+                <div class="trip-description"></div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Fort%20Flagler%20State%20Park.HEIC">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Mount Si</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mount%20Si1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mount%20Si2.HEIC">
-            </div>
-        </article>
+            <h3 class="trip-month">April</h3>
+            <article class="trip-entry">
+                <div class="trip-title">Granite Mountain (I-90)</div>
+                <div class="trip-tags"> <span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Granite%20Mountain1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Granite%20Mountain2.HEIC">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Snowqualmie Falls</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snoqualmie%20Fall.HEIC">
-            </div>
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Talapus Lake</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Talapus%20Lake.heic">
-            </div>
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Source Lake</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Source%20Lake1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Source%20Lake2.HEIC">
-            </div>
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Decption Pass - Whidbey Island Car Camping Trip (Ebey's Landing, Fort Ebey, Fort
-                Casey)</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip1.JPG">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip2.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip3.JPG">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip4.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip5.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip6.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip7.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip8.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Snow Lake</div>
+                <div class="trip-tags">
+                    <span class="trip-tag hiking" title="hiking"></span>
+                </div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake2.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake3.HEIC">
+                </div>
+            </article>
 
 
-        <article class="trip-entry">
-            <div class="trip-title">Lincoln Park</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lincoln%20Park1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lincoln%20Park2.JPG">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Orcas Island Car Camping Trip</div>
+                <div class="trip-tags">
+                    <span class="trip-tag camping" title="camping"></span>
+                    <span class="trip-tag kayaking" title="kayaking"></span>
+                    <span class="trip-tag hiking" title="hiking"></span>
+                    <span class="trip-tag casual" title="casual"></span>
+                </div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island1.JPG">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island2.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island3.JPG">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island4.JPG">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island5.heic">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Lake Serene</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lake%20Serene1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lake%20Serene2.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Mailbox Peak</div>
+                <div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak2.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak3.HEIC">
+                </div>
+            </article>
 
+            <article class="trip-entry">
+                <div class="trip-title">Mount Si</div>
+                <div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mount%20Si1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mount%20Si2.HEIC">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">South Lake Washington Loop Ride</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/South%20Lake%20Washington%20Loop1.heic">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/South%20Lake%20Washington%20Loop2.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Snowqualmie Falls</div>
+                <div class="trip-tags"> <span class="trip-tag casual" title="casual"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snoqualmie%20Fall.HEIC">
+                </div>
+            </article>
 
-        <h3 class="trip-month">March</h3>
-        <article class="trip-entry">
-            <div class="trip-title">Wallace Falls State Park</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Wallace%20Falls%20State%20Park1.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Wallace%20Falls%20State%20Park2.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Talapus Lake</div>
+                <div class="trip-tags"> <span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Talapus%20Lake.heic">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Alki Beach</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Alki%20Beach.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Source Lake</div>
+                <div class="trip-tags"> <span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Source%20Lake1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Source%20Lake2.HEIC">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Seward Park (on a sunny day)</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20sunny%20day1.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20sunny%20day2.HEIC">
-            </div>
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Seward Park (on a cloudy day)</div>
-            <div class="trip-description">Rode my bike here along the coastal road. Great view of Mt Rainier.</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20cloudy%20day.HEIC">
-            </div>
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Golden Gardens Beach</div>
-            <div class="trip-description">...in its absolute golden hour.</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Golden%20Gardens%20Beach1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Golden%20Gardens%20Beach2.HEIC">
-            </div>
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Magnuson Park</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Magnuson%20Park1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Magnuson%20Park2.HEIC">
-            </div>
-        </article>
-
-        <article class="trip-entry">
-            <div class="trip-title">Burke-Gilman Trail - Sammamish River Trail - Redmond</div>
-            <div class="trip-description">First time rode to the east on a lovely sunny afternoon. Very enjoyable!</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Burke-Gilman%20Trail%20-%20Sammamish%20River%20Trail%20-%20Redmond1.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Burke-Gilman%20Trail%20-%20Sammamish%20River%20Trail%20-%20Redmond2.heic">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Deception Pass - Whidbey Island Car Camping Trip (Ebey's Landing, Fort Ebey,
+                    Fort
+                    Casey)</div>
+                <div class="trip-tags">
+                    <span class="trip-tag camping" title="camping"></span>
+                    <span class="trip-tag hiking" title="hiking"></span>
+                    <span class="trip-tag casual" title="casual"></span>
+                </div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip1.JPG">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip2.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip3.JPG">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip4.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip5.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip6.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip7.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip8.HEIC">
+                </div>
+            </article>
 
 
-        <h3 class="trip-month">February</h3>
-        <article class="trip-entry">
-            <div class="trip-title">Burke-Gilman Trail</div>
-            <div class="trip-description">Well worth the post as I picked up my fresh Marin 4C this afternoon and went
-                for a night ride along the Burke-Gilman (East part).</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Burke-Gilman%20Trail1.HEIC
+            <article class="trip-entry">
+                <div class="trip-title">Lincoln Park</div>
+                <div class="trip-tags"> <span class="trip-tag casual" title="casual"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lincoln%20Park1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lincoln%20Park2.JPG">
+                </div>
+            </article>
+
+            <article class="trip-entry">
+                <div class="trip-title">Lake Serene</div>
+                <div class="trip-tags"> <span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lake%20Serene1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lake%20Serene2.HEIC">
+                </div>
+            </article>
+
+
+            <article class="trip-entry">
+                <div class="trip-title">South Lake Washington Loop Ride</div>
+                <div class="trip-tags"> <span class="trip-tag cycling" title="cycling"></span></div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/South%20Lake%20Washington%20Loop1.heic">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/South%20Lake%20Washington%20Loop2.HEIC">
+                </div>
+            </article>
+
+            <h3 class="trip-month">March</h3>
+            <article class="trip-entry">
+                <div class="trip-title">Wallace Falls State Park</div>
+                <div class="trip-tags"> <span class="trip-tag hiking" title="hiking"></span></div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Wallace%20Falls%20State%20Park1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Wallace%20Falls%20State%20Park2.HEIC">
+                </div>
+            </article>
+
+            <article class="trip-entry">
+                <div class="trip-title">Alki Beach</div>
+                <div class="trip-tags"> <span class="trip-tag casual" title="casual"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Alki%20Beach.HEIC">
+                </div>
+            </article>
+
+            <article class="trip-entry">
+                <div class="trip-title">Seward Park (on a sunny day)</div>
+                <div class="trip-tags"> <span class="trip-tag casual" title="casual"></span></div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20sunny%20day1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20sunny%20day2.HEIC">
+                </div>
+            </article>
+
+            <article class="trip-entry">
+                <div class="trip-title">Seward Park (on a cloudy day)</div>
+                <div class="trip-tags"> <span class="trip-tag cycling" title="cycling"></span></div>
+                <div class="trip-description">Rode my bike here along the coastal road. Great view of Mt Rainier.</div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20cloudy%20day.HEIC">
+                </div>
+            </article>
+
+            <article class="trip-entry">
+                <div class="trip-title">Golden Gardens Beach</div>
+                <div class="trip-tags"> <span class="trip-tag casual" title="casual"></span></div>
+                <div class="trip-description">...in its absolute golden hour.</div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Golden%20Gardens%20Beach1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Golden%20Gardens%20Beach2.HEIC">
+                </div>
+            </article>
+
+            <article class="trip-entry">
+                <div class="trip-title">Magnuson Park</div>
+                <div class="trip-tags"> <span class="trip-tag cycling" title="cycling"></span></div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Magnuson%20Park1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Magnuson%20Park2.HEIC">
+                </div>
+            </article>
+
+            <article class="trip-entry">
+                <div class="trip-title">Burke-Gilman Trail - Sammamish River Trail - Redmond</div>
+                <div class="trip-tags"> <span class="trip-tag cycling" title="cycling"></span></div>
+                <div class="trip-description">First time rode to the east on a lovely sunny afternoon. Very enjoyable!
+                </div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Burke-Gilman%20Trail%20-%20Sammamish%20River%20Trail%20-%20Redmond1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Burke-Gilman%20Trail%20-%20Sammamish%20River%20Trail%20-%20Redmond2.heic">
+                </div>
+            </article>
+
+
+            <h3 class="trip-month">February</h3>
+            <article class="trip-entry">
+                <div class="trip-title">Burke-Gilman Trail</div>
+                <div class="trip-tags"> <span class="trip-tag cycling" title="cycling"></span></div>
+                <div class="trip-description">Well worth the post as I picked up my fresh Marin 4C this afternoon and
+                    went
+                    for a night ride along the Burke-Gilman (East part).</div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Burke-Gilman%20Trail1.HEIC
                 ">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Burke-Gilman%20Trail2.HEIC
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Burke-Gilman%20Trail2.HEIC
                 ">
-            </div>
-        </article>
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Discovery Park</div>
-            <div class="trip-description">I little bit off trail exploration down to the shore is the best part of the
-                day.</div>
-            <div class="trip-gallery">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Discovery%20Park1.HEIC">
-                <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Discovery%20Park2.JPG">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Discovery Park</div>
+                <div class="trip-tags">
+                    <span class="trip-tag casual" title="casual"></span>
+                    <span class="trip-tag hiking" title="hiking"></span>
+                </div>
+                <div class="trip-description">I little bit off trail exploration down to the shore is the best part of
+                    the
+                    day.</div>
+                <div class="trip-gallery">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Discovery%20Park1.HEIC">
+                    <img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Discovery%20Park2.JPG">
+                </div>
+            </article>
 
-        <article class="trip-entry">
-            <div class="trip-title">Arboretum Waterfront Trail</div>
-            <div class="trip-description">Nice little walk just south of the campus.</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Arboretum%20Waterfront%20Trail1.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Arboretum%20Waterfront%20Trail2.HEIC">
-            </div>
-        </article>
+            <article class="trip-entry">
+                <div class="trip-title">Arboretum Waterfront Trail</div>
+                <div class="trip-tags"> <span class="trip-tag casual" title="casual"></span>
+                </div>
+                <div class="trip-description">Nice little walk just south of the campus.</div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Arboretum%20Waterfront%20Trail1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Arboretum%20Waterfront%20Trail2.HEIC">
+                </div>
+            </article>
 
-        <h2 class="trip-year">2025</h2>
+            <h2 class="trip-year">2025</h2>
 
-        <h3 class="trip-month">December</h3>
-        <article class="trip-entry">
-            <div class="trip-title">Bridle Trails State Park</div>
-            <div class="trip-gallery">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2025/Dec/Bridle%20Trails%20State%20Park1.HEIC">
-                <img
-                    src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2025/Dec/Bridle%20Trails%20State%20Park2.HEIC">
-            </div>
-        </article>
+            <h3 class="trip-month">December</h3>
+            <article class="trip-entry">
+                <div class="trip-title">Bridle Trails State Park</div>
+                <div class="trip-tags">
+                    <span class="trip-tag casual" title="casual"></span>
+                </div>
+                <div class="trip-gallery">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2025/Dec/Bridle%20Trails%20State%20Park1.HEIC">
+                    <img
+                        src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2025/Dec/Bridle%20Trails%20State%20Park2.HEIC">
+                </div>
+            </article>
+        </div>
     </main>
 </body>
 

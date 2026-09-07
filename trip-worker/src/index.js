@@ -1,3 +1,5 @@
+import exifr from "exifr";
+
 const DEFAULT_PUBLIC_BASE =
   "https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev";
 
@@ -75,10 +77,42 @@ function monthIndex(month) {
   return i >= 0 ? i + 1 : 0;
 }
 
+function parseTripDate(raw) {
+  const s = String(raw || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(s)) return null;
+  const [y, m, d] = s.split("-").map(Number);
+  const dt = new Date(Date.UTC(y, m - 1, d));
+  if (
+    dt.getUTCFullYear() !== y ||
+    dt.getUTCMonth() !== m - 1 ||
+    dt.getUTCDate() !== d
+  ) {
+    return null;
+  }
+  if (y < 2000 || y > 2100) return null;
+  return s;
+}
+
+function partsFromDate(dateStr) {
+  const [y, m] = dateStr.split("-").map(Number);
+  return { year: y, month: MONTHS[m - 1] };
+}
+
+function tripDateKey(trip) {
+  if (trip.date && /^\d{4}-\d{2}-\d{2}$/.test(trip.date)) return trip.date;
+  const mi = monthIndex(trip.month);
+  if (trip.year && mi) {
+    return `${trip.year}-${String(mi).padStart(2, "0")}-01`;
+  }
+  return "0000-00-00";
+}
+
 function sortTrips(trips) {
   return [...trips].sort((a, b) => {
-    if (a.year !== b.year) return b.year - a.year;
-    return monthIndex(b.month) - monthIndex(a.month);
+    const db = tripDateKey(b);
+    const da = tripDateKey(a);
+    if (db !== da) return db < da ? -1 : 1;
+    return String(b.title || "").localeCompare(String(a.title || ""));
   });
 }
 
@@ -155,10 +189,11 @@ function parseTags(raw) {
   return tags.filter((t) => ALLOWED_TAGS.includes(t));
 }
 
-function validateTripFields({ title, year, month }) {
+function validateTripFields({ title, date, endDate }) {
   if (!title) return "Title is required";
-  if (!year || year < 2000 || year > 2100) return "Valid year is required";
-  if (!MONTHS.includes(month)) return "Valid month is required";
+  if (!parseTripDate(date)) return "Valid start date is required (YYYY-MM-DD)";
+  if (!parseTripDate(endDate)) return "Valid end date is required (YYYY-MM-DD)";
+  if (endDate < date) return "End date must be on or after start date";
   return null;
 }
 
@@ -187,6 +222,50 @@ function tripIdFromPath(pathname) {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
+async function gpsFromR2Object(obj) {
+  if (!obj) return null;
+  try {
+    const buf = await obj.arrayBuffer();
+    const slice = buf.byteLength > 262144 ? buf.slice(0, 262144) : buf;
+    const gps = await exifr.gps(slice);
+    if (
+      gps &&
+      typeof gps.latitude === "number" &&
+      typeof gps.longitude === "number" &&
+      Number.isFinite(gps.latitude) &&
+      Number.isFinite(gps.longitude)
+    ) {
+      return { lat: gps.latitude, lng: gps.longitude };
+    }
+  } catch {
+    // ignore parse errors
+  }
+  return null;
+}
+
+async function gpsForPhotoUrls(env, base, urls) {
+  const out = [];
+  for (const photoUrl of urls.slice(0, 40)) {
+    const key = keyFromPhotoUrl(photoUrl, base);
+    if (!key) {
+      out.push({ url: photoUrl, lat: null, lng: null });
+      continue;
+    }
+    try {
+      const obj = await env.PHOTOS.get(key);
+      const gps = await gpsFromR2Object(obj);
+      out.push({
+        url: photoUrl,
+        lat: gps ? gps.lat : null,
+        lng: gps ? gps.lng : null,
+      });
+    } catch {
+      out.push({ url: photoUrl, lat: null, lng: null });
+    }
+  }
+  return out;
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -198,6 +277,19 @@ export default {
 
     if (url.pathname === "/health") {
       return json({ ok: true }, 200, request);
+    }
+
+    // Public: extract GPS from trip photos stored in R2
+    if (url.pathname === "/api/gps" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const urls = Array.isArray(body?.urls) ? body.urls.map(String) : [];
+        if (!urls.length) return json({ error: "urls required" }, 400, request);
+        const points = await gpsForPhotoUrls(env, base, urls);
+        return json({ points }, 200, request);
+      } catch (err) {
+        return json({ error: err.message || "GPS lookup failed" }, 500, request);
+      }
     }
 
     // List trips
@@ -216,13 +308,15 @@ export default {
         }
 
         const title = String(form.get("title") || "").trim();
-        const year = Number(form.get("year"));
-        const month = String(form.get("month") || "").trim();
+        const date = parseTripDate(form.get("date"));
+        const endDate =
+          parseTripDate(form.get("endDate")) || date;
         const report = String(form.get("report") || "").trim();
         const tags = parseTags(form.get("tags"));
-        const err = validateTripFields({ title, year, month });
+        const err = validateTripFields({ title, date, endDate });
         if (err) return json({ error: err }, 400, request);
 
+        const { year, month } = partsFromDate(date);
         const files = form
           .getAll("photos")
           .filter((f) => f && typeof f === "object" && f.size > 0);
@@ -244,6 +338,8 @@ export default {
         const data = await loadTrips(env, base);
         const trip = {
           id: `${year}-${String(monthIndex(month)).padStart(2, "0")}-${slug}-${Date.now()}`,
+          date,
+          endDate,
           year,
           month,
           title,
@@ -280,8 +376,14 @@ export default {
         const existing = data.trips[idx];
 
         const title = String(form.get("title") || existing.title).trim();
-        const year = Number(form.get("year") || existing.year);
-        const month = String(form.get("month") || existing.month).trim();
+        const date = parseTripDate(
+          form.get("date") != null ? form.get("date") : existing.date
+        );
+        const endDate = parseTripDate(
+          form.get("endDate") != null
+            ? form.get("endDate")
+            : existing.endDate || existing.date
+        );
         const report =
           form.get("report") != null
             ? String(form.get("report")).trim()
@@ -291,8 +393,10 @@ export default {
             ? parseTags(form.get("tags"))
             : existing.tags || [];
 
-        const fieldErr = validateTripFields({ title, year, month });
+        const fieldErr = validateTripFields({ title, date, endDate });
         if (fieldErr) return json({ error: fieldErr }, 400, request);
+
+        const { year, month } = partsFromDate(date);
 
         let keepPhotos = existing.photos || [];
         if (form.get("keepPhotos") != null) {
@@ -333,6 +437,8 @@ export default {
         const trip = {
           ...existing,
           title,
+          date,
+          endDate,
           year,
           month,
           tags,

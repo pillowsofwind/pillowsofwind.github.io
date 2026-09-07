@@ -1,0 +1,14 @@
+# Dependencies
+node_modules/
+trip-worker/node_modules/
+
+# Local / temp migration artifacts
+.heic-migrate-tmp/
+data/heic-migrate.log
+data/trips.remote.json
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/

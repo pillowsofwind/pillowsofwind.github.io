@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="color-scheme" content="light only">
-  <title>Manage Trips | Welcome to the Nature</title>
+  <title>Manage Trips | Trip Reports</title>
   <style>
     :root {
       --bg: #f7f6f3;
@@ -79,6 +79,7 @@
     input[type="text"],
     input[type="password"],
     input[type="number"],
+    input[type="date"],
     select,
     textarea {
       width: 100%;
@@ -259,14 +260,15 @@
           </div>
           <div class="row">
             <div class="field">
-              <label for="year">Year</label>
-              <input id="year" name="year" type="number" required min="2000" max="2100">
+              <label for="date">Start date</label>
+              <input id="date" name="date" type="date" required>
             </div>
             <div class="field">
-              <label for="month">Month</label>
-              <select id="month" name="month" required></select>
+              <label for="endDate">End date</label>
+              <input id="endDate" name="endDate" type="date" required>
             </div>
           </div>
+          <p class="hint" style="margin-top:-4px;margin-bottom:12px">Same day for day trips; overnight can span two or more dates.</p>
           <div class="field">
             <label>Tags</label>
             <div class="tags" id="tags"></div>
@@ -285,8 +287,8 @@
           </div>
           <div class="drop" id="drop" style="margin-top:12px">
             <strong>Drop photos here</strong> or tap to choose<br>
-            <span class="hint">JPEG/PNG/WebP preferred</span>
-            <input id="photos" type="file" accept="image/*,.heic,.HEIC" multiple>
+            <span class="hint">HEIC/HEIF auto-converts to JPEG on upload</span>
+            <input id="photos" type="file" accept="image/*,.heic,.HEIC,.heif,.HEIF" multiple>
           </div>
           <div class="previews" id="previews"></div>
         </div>
@@ -332,25 +334,60 @@
   </div>
 
   <script src="./javascripts/nature-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script>
     (function () {
-      var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
       var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'mountaineering', 'kayaking'];
+      var JPEG_QUALITY = 0.88;
       var newFiles = [];
       var keepPhotos = [];
       var allTrips = [];
       var editingId = null;
+      var converting = false;
 
-      var monthSelect = document.getElementById('month');
-      MONTHS.forEach(function (m) {
-        var opt = document.createElement('option');
-        opt.value = m;
-        opt.textContent = m;
-        monthSelect.appendChild(opt);
+      function todayISO() {
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = String(now.getMonth() + 1).padStart(2, '0');
+        var d = String(now.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + d;
+      }
+
+      function dateFromTrip(trip) {
+        if (trip && trip.date && /^\d{4}-\d{2}-\d{2}$/.test(trip.date)) return trip.date;
+        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        var mi = months.findIndex(function (m) {
+          return m.toLowerCase() === String(trip && trip.month || '').toLowerCase();
+        });
+        if (trip && trip.year && mi >= 0) {
+          return trip.year + '-' + String(mi + 1).padStart(2, '0') + '-01';
+        }
+        return todayISO();
+      }
+
+      function endDateFromTrip(trip) {
+        if (trip && trip.endDate && /^\d{4}-\d{2}-\d{2}$/.test(trip.endDate)) return trip.endDate;
+        return dateFromTrip(trip);
+      }
+
+      function formatRangeMeta(start, end) {
+        if (!start) return '';
+        if (!end || end === start) return start;
+        return start + ' → ' + end;
+      }
+
+      document.getElementById('date').value = todayISO();
+      document.getElementById('endDate').value = todayISO();
+
+      var dateInput = document.getElementById('date');
+      var endDateInput = document.getElementById('endDate');
+      dateInput.addEventListener('change', function () {
+        if (!endDateInput.value || endDateInput.value < dateInput.value) {
+          endDateInput.value = dateInput.value;
+        }
+        endDateInput.min = dateInput.value;
       });
-      var now = new Date();
-      document.getElementById('year').value = now.getFullYear();
-      monthSelect.value = MONTHS[now.getMonth()];
+      endDateInput.min = dateInput.value;
 
       var tagsEl = document.getElementById('tags');
       TAGS.forEach(function (tag) {
@@ -446,12 +483,63 @@
         });
       }
 
-      function addFiles(list) {
-        Array.from(list || []).forEach(function (f) {
-          if (!f.type.startsWith('image/') && !/\.heic$/i.test(f.name)) return;
-          newFiles.push(f);
+      function isHeicLike(file) {
+        var type = (file.type || '').toLowerCase();
+        var name = file.name || '';
+        return type === 'image/heic' || type === 'image/heif' || /\.hei[cf]$/i.test(name);
+      }
+
+      function baseName(name) {
+        return String(name || 'photo').replace(/\.[^.]+$/, '') || 'photo';
+      }
+
+      async function toJpegFile(file) {
+        if (!window.heic2any) throw new Error('HEIC converter failed to load');
+        var result = await window.heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: JPEG_QUALITY,
         });
-        renderNewPreviews();
+        var blob = Array.isArray(result) ? result[0] : result;
+        return new File([blob], baseName(file.name) + '.jpg', { type: 'image/jpeg' });
+      }
+
+      async function normalizeFile(file) {
+        if (!isHeicLike(file)) return file;
+        return toJpegFile(file);
+      }
+
+      async function addFiles(list) {
+        var status = document.getElementById('status');
+        var candidates = Array.from(list || []).filter(function (f) {
+          return f.type.startsWith('image/') || /\.hei[cf]$/i.test(f.name);
+        });
+        if (!candidates.length) return;
+
+        converting = true;
+        var heicCount = candidates.filter(isHeicLike).length;
+        if (heicCount) {
+          setStatus(status, '', 'Converting ' + heicCount + ' HEIC photo' + (heicCount === 1 ? '' : 's') + '…');
+        }
+
+        try {
+          for (var i = 0; i < candidates.length; i++) {
+            try {
+              newFiles.push(await normalizeFile(candidates[i]));
+            } catch (err) {
+              console.error(err);
+              setStatus(status, 'err', 'Could not convert ' + (candidates[i].name || 'photo') + '. Try exporting as JPEG.');
+              converting = false;
+              renderNewPreviews();
+              return;
+            }
+          }
+          if (heicCount) setStatus(status, 'ok', 'Converted to JPEG — ready to upload');
+          else setStatus(status, '', '');
+          renderNewPreviews();
+        } finally {
+          converting = false;
+        }
       }
 
       drop.addEventListener('click', function () { input.click(); });
@@ -472,8 +560,9 @@
         document.getElementById('editId').value = '';
         document.getElementById('title').value = '';
         document.getElementById('report').value = '';
-        document.getElementById('year').value = now.getFullYear();
-        monthSelect.value = MONTHS[now.getMonth()];
+        document.getElementById('date').value = todayISO();
+        document.getElementById('endDate').value = todayISO();
+        document.getElementById('endDate').min = todayISO();
         setSelectedTags([]);
         newFiles = [];
         keepPhotos = [];
@@ -494,8 +583,9 @@
         editingId = trip.id;
         document.getElementById('editId').value = trip.id;
         document.getElementById('title').value = trip.title || '';
-        document.getElementById('year').value = trip.year;
-        monthSelect.value = trip.month;
+        document.getElementById('date').value = dateFromTrip(trip);
+        document.getElementById('endDate').value = endDateFromTrip(trip);
+        document.getElementById('endDate').min = document.getElementById('date').value;
         document.getElementById('report').value = trip.report || '';
         setSelectedTags(trip.tags || []);
         keepPhotos = (trip.photos || []).slice();
@@ -520,6 +610,22 @@
         }
         localStorage.setItem('natureWorkerUrl', base);
 
+        if (converting) {
+          setStatus(status, 'err', 'Still converting photos — wait a moment.');
+          return;
+        }
+
+        var start = document.getElementById('date').value;
+        var end = document.getElementById('endDate').value;
+        if (!start || !end) {
+          setStatus(status, 'err', 'Start and end dates are required.');
+          return;
+        }
+        if (end < start) {
+          setStatus(status, 'err', 'End date must be on or after start date.');
+          return;
+        }
+
         var totalPhotos = keepPhotos.length + newFiles.length;
         if (!totalPhotos) {
           setStatus(status, 'err', 'Keep or add at least one photo.');
@@ -529,8 +635,8 @@
         var fd = new FormData();
         fd.append('password', document.getElementById('password').value);
         fd.append('title', document.getElementById('title').value.trim());
-        fd.append('year', document.getElementById('year').value);
-        fd.append('month', document.getElementById('month').value);
+        fd.append('date', document.getElementById('date').value);
+        fd.append('endDate', document.getElementById('endDate').value);
         fd.append('report', document.getElementById('report').value.trim());
         fd.append('tags', JSON.stringify(selectedTags()));
         if (editingId) fd.append('keepPhotos', JSON.stringify(keepPhotos));
@@ -581,7 +687,7 @@
             '<div><div class="title"></div><div class="meta"></div></div>' +
             '<div class="go"><button type="button" class="secondary edit-btn">Edit</button> <button type="button" class="danger del-btn">Delete</button></div>';
           btn.querySelector('.title').textContent = trip.title;
-          btn.querySelector('.meta').textContent = trip.month + ' ' + trip.year + (trip.tags && trip.tags.length ? ' · ' + trip.tags.join(', ') : '');
+          btn.querySelector('.meta').textContent = formatRangeMeta(dateFromTrip(trip), endDateFromTrip(trip)) + (trip.tags && trip.tags.length ? ' · ' + trip.tags.join(', ') : '');
           btn.querySelector('.edit-btn').addEventListener('click', function (ev) {
             ev.stopPropagation();
             fillForm(trip);

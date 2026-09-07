@@ -62,6 +62,10 @@ After that, **new trips do not need commits**.
 
 ## Notes
 - Keep `admin.html` off public nav (password + obscure URL).
-- Prefer JPEG/WebP for web; HEIC often won’t preview in browsers.
+- Each trip requires `date` + `endDate` (`YYYY-MM-DD`); same day for day trips.
+- Trips sort newest-first by start date; the page shows a range only when end ≠ start.
+- Year/month headings are derived from the start date.
+- `admin.html` auto-converts HEIC/HEIF → JPEG in the browser before upload (via `heic2any`).
+- Existing HEIC already on R2 is unchanged until you replace those photos.
 - `trips.json` on R2 is the live source; `./data/trips.json` is a fallback seed.
 - After updating Worker code, redeploy: `npx wrangler deploy`

@@ -22,10 +22,97 @@
     return i >= 0 ? i + 1 : 0;
   }
 
+  function tripDateKey(trip) {
+    if (trip && trip.date && /^\d{4}-\d{2}-\d{2}$/.test(trip.date)) return trip.date;
+    var mi = monthIndex(trip && trip.month);
+    if (trip && trip.year && mi) {
+      return trip.year + "-" + String(mi).padStart(2, "0") + "-01";
+    }
+    return "0000-00-00";
+  }
+
+  function formatTripDate(dateStr) {
+    if (!dateStr || !/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return "";
+    var parts = dateStr.split("-");
+    var months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+    var monthName = months[Number(parts[1]) - 1] || parts[1];
+    return monthName + " " + Number(parts[2]) + ", " + parts[0];
+  }
+
+  function formatTripDateRange(start, end) {
+    var startLabel = formatTripDate(start);
+    if (!startLabel) return "";
+    if (!end || end === start) return startLabel;
+    var endLabel = formatTripDate(end);
+    if (!endLabel) return startLabel;
+
+    var sp = start.split("-");
+    var ep = end.split("-");
+    var months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+    // Same month+year: "June 24–26, 2026"
+    if (sp[0] === ep[0] && sp[1] === ep[1]) {
+      return (
+        months[Number(sp[1]) - 1] +
+        " " +
+        Number(sp[2]) +
+        "–" +
+        Number(ep[2]) +
+        ", " +
+        sp[0]
+      );
+    }
+    // Same year: "June 28 – July 1, 2026"
+    if (sp[0] === ep[0]) {
+      return (
+        months[Number(sp[1]) - 1] +
+        " " +
+        Number(sp[2]) +
+        " – " +
+        months[Number(ep[1]) - 1] +
+        " " +
+        Number(ep[2]) +
+        ", " +
+        sp[0]
+      );
+    }
+    return startLabel + " – " + endLabel;
+  }
+
   function sortTrips(trips) {
     return trips.slice().sort(function (a, b) {
-      if (a.year !== b.year) return b.year - a.year;
-      return monthIndex(b.month) - monthIndex(a.month);
+      var db = tripDateKey(b);
+      var da = tripDateKey(a);
+      if (db !== da) return db < da ? -1 : 1;
+      return String(b.title || "").localeCompare(String(a.title || ""));
+    });
+  }
+
+  function normalizeTrip(trip) {
+    var date = tripDateKey(trip);
+    var endDate =
+      trip && trip.endDate && /^\d{4}-\d{2}-\d{2}$/.test(trip.endDate)
+        ? trip.endDate
+        : date === "0000-00-00"
+          ? trip.endDate
+          : date;
+    var parts = date.split("-");
+    var months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+    var year = Number(parts[0]) || trip.year;
+    var month = months[Number(parts[1]) - 1] || trip.month;
+    return Object.assign({}, trip, {
+      date: date === "0000-00-00" ? trip.date : date,
+      endDate: endDate,
+      year: year,
+      month: month,
     });
   }
 
@@ -50,9 +137,25 @@
   }
 
   function renderTrip(trip) {
+    var dateLabel = formatTripDateRange(trip.date, trip.endDate);
+    var dateHtml = dateLabel
+      ? '<div class="trip-date">' + escapeHtml(dateLabel) + "</div>"
+      : "";
     var report = trip.report
       ? '<div class="trip-report">' + escapeHtml(trip.report) + "</div>"
       : "";
+    var mapBtn =
+      trip.photos && trip.photos.length
+        ? '<button type="button" class="trip-map-btn" data-trip-map="' +
+          escapeHtml(trip.id || "") +
+          '" aria-label="Show on map">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+          '<path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/>' +
+          '<circle cx="12" cy="9.8" r="2.2"/>' +
+          "</svg>" +
+          '<span class="trip-map-btn-label">Show on map</span>' +
+          "</button>"
+        : "";
     var photos = (trip.photos || [])
       .map(function (src) {
         return '<img src="' + escapeHtml(src) + '" alt="">';
@@ -68,6 +171,8 @@
       escapeHtml(trip.title) +
       "</div>" +
       renderTags(trip.tags) +
+      dateHtml +
+      mapBtn +
       report +
       gallery +
       "</article>"
@@ -75,7 +180,7 @@
   }
 
   function renderAll(trips) {
-    var sorted = sortTrips(trips);
+    var sorted = sortTrips(trips.map(normalizeTrip));
     var html = "";
     var currentYear = null;
     var currentMonth = null;
@@ -93,7 +198,7 @@
       html += renderTrip(trip);
     });
 
-    return html;
+    return { html: html, trips: sorted };
   }
 
   function initTips(root) {
@@ -143,8 +248,16 @@
     var config = window.NATURE_CONFIG || {};
     try {
       var data = await loadTripsData(config);
-      target.innerHTML = renderAll(data.trips || []);
+      var rendered = renderAll(data.trips || []);
+      target.innerHTML = rendered.html;
       initTips(document);
+      var byId = Object.create(null);
+      rendered.trips.forEach(function (t) {
+        if (t.id) byId[t.id] = t;
+      });
+      if (typeof window.bindNatureMapButtons === "function") {
+        window.bindNatureMapButtons(target, byId);
+      }
     } catch (err) {
       target.innerHTML =
         '<p class="trips-load-error">Could not load trips. Check trips.json on R2 or ./data/trips.json.</p>';

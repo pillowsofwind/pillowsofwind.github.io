@@ -205,7 +205,7 @@
 
     .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
 
-    button.primary, button.secondary, button.danger {
+    button.primary, button.secondary, button.danger, a.secondary {
       border-radius: 999px;
       padding: 11px 16px;
       font: inherit;
@@ -219,10 +219,14 @@
       color: #3d2208;
     }
 
-    button.secondary {
+    button.secondary, a.secondary {
       border: 1px solid var(--line);
       background: #fff;
       color: var(--ink);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      box-sizing: border-box;
     }
 
     button.danger {
@@ -310,7 +314,7 @@
               <input id="endDate" name="endDate" type="date" required>
             </div>
           </div>
-          <p class="hint" style="margin-top:-4px;margin-bottom:12px">Same day for day trips; overnight can span two or more dates.</p>
+          <p class="hint" style="margin-top:-4px;margin-bottom:12px">End date follows start until you change it (day trips stay same-day).</p>
           <div class="field">
             <label>Tags</label>
             <div class="tags" id="tags"></div>
@@ -333,28 +337,30 @@
           <p class="hint" style="margin-top:0">Drag tiles to reorder. Removing a saved photo deletes it from R2 when you save.</p>
           <div class="previews" id="photo-list"></div>
           <div class="drop" id="drop" style="margin-top:12px">
-            <strong>Drop photos here</strong> or tap to choose<br>
-            <span class="hint">HEIC/HEIF auto-converts to JPEG on upload</span>
+            <strong>Drop photos here</strong>, paste, or tap to choose<br>
+            <span class="hint">HEIC/HEIF auto-converts to JPEG · ⌘/Ctrl+Enter to publish</span>
             <input id="photos" type="file" accept="image/*,.heic,.HEIC,.heif,.HEIF" multiple>
           </div>
         </div>
 
         <div class="card">
           <h2>Publish</h2>
-          <div class="field">
-            <label for="password">Admin password</label>
-            <input id="password" name="password" type="password" required autocomplete="current-password">
-          </div>
           <details class="setup field">
-            <summary>Advanced: Worker URL</summary>
+            <summary>Advanced: Worker URL &amp; password</summary>
             <div class="field" style="margin-top:10px">
               <label for="workerUrl">Cloudflare Worker URL</label>
               <input id="workerUrl" type="text" placeholder="https://nature-trip-uploader.YOUR_SUBDOMAIN.workers.dev">
+            </div>
+            <div class="field">
+              <label for="password">Admin password (saved in this browser)</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Set once, then publish without retyping">
+              <span class="hint">Stored locally — publish / save / delete use it automatically.</span>
             </div>
           </details>
           <div class="actions">
             <button class="primary" id="submit" type="submit">Upload trip</button>
             <button class="secondary hidden" id="cancel-edit" type="button">Cancel edit</button>
+            <a class="secondary" href="./nature.html" target="_blank" rel="noopener">View site</a>
             <span class="status" id="status"></span>
           </div>
         </div>
@@ -365,10 +371,6 @@
     <section id="panel-manage" class="hidden">
       <div class="card">
         <h2>Your trips</h2>
-        <div class="field">
-          <label for="manage-password">Admin password (to load / delete)</label>
-          <input id="manage-password" type="password" autocomplete="current-password">
-        </div>
         <div class="actions" style="margin-bottom:12px">
           <button class="primary" type="button" id="load-trips">Load trips</button>
           <span class="status" id="manage-status"></span>
@@ -391,6 +393,7 @@
       var editingId = null;
       var converting = false;
       var dragFrom = null;
+      var endDateManual = false;
 
       function todayISO() {
         var now = new Date();
@@ -428,11 +431,28 @@
 
       var dateInput = document.getElementById('date');
       var endDateInput = document.getElementById('endDate');
-      dateInput.addEventListener('change', function () {
-        if (!endDateInput.value || endDateInput.value < dateInput.value) {
+
+      function syncEndDateFromStart() {
+        if (endDateManual) {
+          if (endDateInput.value && endDateInput.value < dateInput.value) {
+            endDateInput.value = dateInput.value;
+          }
+        } else {
           endDateInput.value = dateInput.value;
         }
         endDateInput.min = dateInput.value;
+      }
+
+      dateInput.addEventListener('change', syncEndDateFromStart);
+      dateInput.addEventListener('input', syncEndDateFromStart);
+      endDateInput.addEventListener('change', function () {
+        endDateManual = true;
+        if (endDateInput.value && endDateInput.value < dateInput.value) {
+          endDateInput.value = dateInput.value;
+        }
+      });
+      endDateInput.addEventListener('input', function () {
+        endDateManual = true;
       });
       endDateInput.min = dateInput.value;
 
@@ -444,14 +464,43 @@
         tagsEl.appendChild(label);
       });
 
+      function rememberTags(tags) {
+        try {
+          localStorage.setItem('natureLastTags', JSON.stringify(tags || []));
+        } catch (e) {}
+      }
+
+      function lastTags() {
+        try {
+          var raw = JSON.parse(localStorage.getItem('natureLastTags') || '[]');
+          return Array.isArray(raw) ? raw.filter(function (t) { return TAGS.indexOf(t) >= 0; }) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
       var workerInput = document.getElementById('workerUrl');
+      var passwordInput = document.getElementById('password');
       workerInput.value = localStorage.getItem('natureWorkerUrl') || (window.NATURE_CONFIG && window.NATURE_CONFIG.workerUrl) || '';
+      passwordInput.value = localStorage.getItem('natureAdminPassword') || '';
       workerInput.addEventListener('change', function () {
         localStorage.setItem('natureWorkerUrl', workerInput.value.trim());
+      });
+      passwordInput.addEventListener('change', function () {
+        localStorage.setItem('natureAdminPassword', passwordInput.value);
+      });
+      passwordInput.addEventListener('input', function () {
+        localStorage.setItem('natureAdminPassword', passwordInput.value);
       });
 
       function workerUrl() {
         return (workerInput.value || '').trim().replace(/\/$/, '');
+      }
+
+      function adminPassword() {
+        var p = (passwordInput.value || localStorage.getItem('natureAdminPassword') || '').trim();
+        if (p) localStorage.setItem('natureAdminPassword', p);
+        return p;
       }
 
       function setStatus(el, type, msg) {
@@ -469,6 +518,9 @@
         });
       }
 
+      // Prefill last-used tags for a new trip
+      setSelectedTags(lastTags());
+
       // Tabs
       document.querySelectorAll('.tabs button').forEach(function (btn) {
         btn.addEventListener('click', function () {
@@ -477,6 +529,7 @@
           var tab = btn.getAttribute('data-tab');
           document.getElementById('panel-add').classList.toggle('hidden', tab !== 'add');
           document.getElementById('panel-manage').classList.toggle('hidden', tab !== 'manage');
+          if (tab === 'manage') loadTripsQuiet();
         });
       });
 
@@ -676,34 +729,69 @@
       });
       drop.addEventListener('drop', function (e) { addFiles(e.dataTransfer.files); });
 
-      function resetForm(keepPassword) {
+      // Paste images from clipboard (skip when pasting text into inputs)
+      document.getElementById('trip-form').addEventListener('paste', function (e) {
+        var items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        var files = [];
+        var hasText = false;
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].type && items[i].type.indexOf('image/') === 0) {
+            var f = items[i].getAsFile();
+            if (f) files.push(f);
+          } else if (items[i].type === 'text/plain') {
+            hasText = true;
+          }
+        }
+        if (!files.length) return;
+        var tag = (e.target && e.target.tagName) || '';
+        if (hasText && (tag === 'TEXTAREA' || tag === 'INPUT')) return;
+        e.preventDefault();
+        addFiles(files);
+      });
+
+      // ⌘/Ctrl+Enter publishes from anywhere in the form
+      document.getElementById('trip-form').addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('submit').click();
+        }
+      });
+
+      function resetForm() {
         editingId = null;
+        endDateManual = false;
         document.getElementById('editId').value = '';
         document.getElementById('title').value = '';
         document.getElementById('report').value = '';
         document.getElementById('date').value = todayISO();
         document.getElementById('endDate').value = todayISO();
         document.getElementById('endDate').min = todayISO();
-        setSelectedTags([]);
+        setSelectedTags(lastTags());
         clearPhotos();
         document.getElementById('submit').textContent = 'Upload trip';
         document.getElementById('cancel-edit').classList.add('hidden');
-        if (!keepPassword) document.getElementById('password').value = '';
         setStatus(document.getElementById('status'), '', '');
+        setTimeout(function () {
+          document.getElementById('title').focus();
+        }, 0);
       }
 
       document.getElementById('cancel-edit').addEventListener('click', function () {
-        resetForm(true);
+        resetForm();
         document.getElementById('tab-manage').click();
       });
 
       function fillForm(trip) {
         editingId = trip.id;
+        var start = dateFromTrip(trip);
+        var end = endDateFromTrip(trip);
+        endDateManual = !!(end && start && end !== start);
         document.getElementById('editId').value = trip.id;
         document.getElementById('title').value = trip.title || '';
-        document.getElementById('date').value = dateFromTrip(trip);
-        document.getElementById('endDate').value = endDateFromTrip(trip);
-        document.getElementById('endDate').min = document.getElementById('date').value;
+        document.getElementById('date').value = start;
+        document.getElementById('endDate').value = end;
+        document.getElementById('endDate').min = start;
         document.getElementById('report').value = trip.report || '';
         setSelectedTags(trip.tags || []);
         clearPhotos();
@@ -715,6 +803,9 @@
         document.getElementById('cancel-edit').classList.remove('hidden');
         document.getElementById('tab-add').click();
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(function () {
+          document.getElementById('title').focus();
+        }, 0);
       }
 
       // Submit create / update
@@ -750,8 +841,14 @@
           return;
         }
 
+        var password = adminPassword();
+        if (!password) {
+          setStatus(status, 'err', 'Set admin password once under Advanced.');
+          return;
+        }
+
         var fd = new FormData();
-        fd.append('password', document.getElementById('password').value);
+        fd.append('password', password);
         fd.append('title', document.getElementById('title').value.trim());
         fd.append('date', document.getElementById('date').value);
         fd.append('endDate', document.getElementById('endDate').value);
@@ -789,14 +886,22 @@
           });
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
-          var msg = editingId ? 'Saved!' : 'Published!';
-          if (editingId && data.deletedPhotos) {
+          var wasEdit = !!editingId;
+          var msg = wasEdit ? 'Saved!' : 'Published!';
+          if (wasEdit && data.deletedPhotos) {
             msg = 'Saved — deleted ' + data.deletedPhotos + ' photo' + (data.deletedPhotos === 1 ? '' : 's') + ' from storage';
           }
-          setStatus(status, 'ok', msg);
-          setTimeout(function () {
-            location.href = './nature.html?t=' + Date.now();
-          }, 600);
+          rememberTags(selectedTags());
+          if (wasEdit && data.trip) {
+            allTrips = allTrips.map(function (t) {
+              return t.id === data.trip.id ? data.trip : t;
+            });
+          } else if (!wasEdit && data.trip) {
+            allTrips = [data.trip].concat(allTrips.filter(function (t) { return t.id !== data.trip.id; }));
+          }
+          resetForm();
+          setStatus(status, 'ok', msg + ' Stay here to add another, or open View site.');
+          submit.disabled = false;
         } catch (err) {
           setStatus(status, 'err', err.message || 'Failed');
           submit.disabled = false;
@@ -841,14 +946,14 @@
 
       async function deleteTrip(trip) {
         var base = workerUrl();
-        var password = document.getElementById('manage-password').value || document.getElementById('password').value;
+        var password = adminPassword();
         var manageStatus = document.getElementById('manage-status');
         if (!base) {
           setStatus(manageStatus, 'err', 'Set Worker URL first.');
           return;
         }
         if (!password) {
-          setStatus(manageStatus, 'err', 'Enter admin password.');
+          setStatus(manageStatus, 'err', 'Set admin password under Advanced (Add trip tab).');
           return;
         }
         if (!confirm('Delete “' + trip.title + '”? Photos will be removed from R2.')) return;
@@ -870,15 +975,18 @@
         }
       }
 
-      document.getElementById('load-trips').addEventListener('click', async function () {
+      var tripsLoading = false;
+      async function loadTrips(opts) {
+        var quiet = opts && opts.quiet;
         var base = workerUrl();
         var manageStatus = document.getElementById('manage-status');
+        if (tripsLoading) return;
+        tripsLoading = true;
         if (!base) {
-          // fallback to public trips.json / local
           var config = window.NATURE_CONFIG || {};
           try {
-            setStatus(manageStatus, '', 'Loading…');
-            var urls = [config.tripsUrl, config.tripsFallbackUrl, base ? base + '/api/trips' : null].filter(Boolean);
+            if (!quiet) setStatus(manageStatus, '', 'Loading…');
+            var urls = [config.tripsUrl, config.tripsFallbackUrl].filter(Boolean);
             var data = null;
             for (var i = 0; i < urls.length; i++) {
               try {
@@ -888,30 +996,45 @@
             }
             if (!data) throw new Error('Could not load trips');
             allTrips = data.trips || [];
-            renderTripList('');
-            setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded (view/edit). Password needed to save/delete.');
+            renderTripList(document.getElementById('search').value || '');
+            setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
           } catch (err) {
-            setStatus(manageStatus, 'err', err.message || 'Load failed');
+            if (!quiet) setStatus(manageStatus, 'err', err.message || 'Load failed');
+          } finally {
+            tripsLoading = false;
           }
           return;
         }
         try {
-          setStatus(manageStatus, '', 'Loading…');
+          if (!quiet) setStatus(manageStatus, '', 'Loading…');
           localStorage.setItem('natureWorkerUrl', base);
           var res = await fetch(base + '/api/trips', { cache: 'no-store' });
           var data = await res.json();
           if (!res.ok) throw new Error(data.error || 'Load failed');
           allTrips = data.trips || [];
-          renderTripList('');
+          renderTripList(document.getElementById('search').value || '');
           setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
         } catch (err) {
-          setStatus(manageStatus, 'err', err.message || 'Load failed');
+          if (!quiet || !allTrips.length) setStatus(manageStatus, 'err', err.message || 'Load failed');
+        } finally {
+          tripsLoading = false;
         }
+      }
+
+      function loadTripsQuiet() {
+        loadTrips({ quiet: true });
+      }
+
+      document.getElementById('load-trips').addEventListener('click', function () {
+        loadTrips({ quiet: false });
       });
 
       document.getElementById('search').addEventListener('input', function (e) {
         renderTripList(e.target.value);
       });
+
+      // Ready for typing
+      document.getElementById('title').focus();
     })();
   </script>
 </body>

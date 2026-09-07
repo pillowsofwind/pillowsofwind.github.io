@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light only">
+  <title>Manage Trips | Welcome to the Nature</title>
+  <style>
+    :root {
+      --bg: #f7f6f3;
+      --card: #fff;
+      --ink: #222;
+      --muted: #666;
+      --line: #e6e4df;
+      --accent: #f5a560;
+      --accent-ink: #7a3f0e;
+      --ok: #2f6b3a;
+      --err: #9b2c2c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at top left, #fff7ee 0, transparent 40%), var(--bg);
+      min-height: 100vh;
+      padding: 24px 16px 64px;
+    }
+
+    .wrap { max-width: 720px; margin: 0 auto; }
+
+    h1 { margin: 0 0 6px; font-size: 28px; font-weight: 600; }
+
+    .sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+    .sub a { color: #39c; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tabs button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .tabs button.active {
+      background: #fff4ea;
+      border-color: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 600;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .card h2 { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+
+    label { display: block; margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    textarea { min-height: 140px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+      background: #fff;
+    }
+    .tag input { accent-color: var(--accent); }
+    .tag:has(input:checked) {
+      border-color: var(--accent);
+      background: #fff4ea;
+      color: var(--accent-ink);
+    }
+
+    .drop {
+      border: 1.5px dashed #d2cdc4;
+      border-radius: 10px;
+      padding: 22px 14px;
+      text-align: center;
+      color: var(--muted);
+      background: #fafaf8;
+      cursor: pointer;
+    }
+    .drop.dragover { border-color: var(--accent); background: #fff4ea; }
+    .drop strong { color: var(--ink); }
+    .drop input { display: none; }
+
+    .previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .previews figure {
+      margin: 0;
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #eee;
+    }
+
+    .previews img { width: 100%; height: 100%; object-fit: cover; }
+
+    .previews button {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      border: 0;
+      border-radius: 999px;
+      width: 22px;
+      height: 22px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+    }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+
+    button.primary, button.secondary, button.danger {
+      border-radius: 999px;
+      padding: 11px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border: 0;
+      background: var(--accent);
+      color: #3d2208;
+    }
+
+    button.secondary {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+    }
+
+    button.danger {
+      border: 1px solid #f0c4c4;
+      background: #fff5f5;
+      color: var(--err);
+    }
+
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .status { font-size: 13px; color: var(--muted); }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--err); }
+    .hint { margin-top: 8px; font-size: 12px; color: #888; }
+
+    details.setup summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+
+    .trip-list { display: grid; gap: 8px; }
+    .trip-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      font: inherit;
+    }
+    .trip-item:hover { border-color: var(--accent); }
+    .trip-item img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #eee;
+    }
+    .trip-item .meta { color: var(--muted); font-size: 12px; }
+    .trip-item .title { font-weight: 600; }
+
+    .hidden { display: none !important; }
+
+    .search { margin-bottom: 12px; }
+
+    @media (max-width: 560px) {
+      .row { grid-template-columns: 1fr; }
+      .trip-item { grid-template-columns: 52px 1fr; }
+      .trip-item .go { grid-column: 2; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Manage trips</h1>
+    <p class="sub">Add, edit, or delete trips. Photos sync to R2 — no Git commit.
+      <a href="./nature.html">View site</a>
+    </p>
+
+    <div class="tabs">
+      <button type="button" class="active" data-tab="add" id="tab-add">Add trip</button>
+      <button type="button" data-tab="manage" id="tab-manage">Edit / delete</button>
+    </div>
+
+    <!-- ADD -->
+    <section id="panel-add">
+      <form id="trip-form">
+        <div class="card">
+          <h2>Trip details</h2>
+          <input type="hidden" id="editId" value="">
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" name="title" type="text" required placeholder="Lake Serene">
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="year">Year</label>
+              <input id="year" name="year" type="number" required min="2000" max="2100">
+            </div>
+            <div class="field">
+              <label for="month">Month</label>
+              <select id="month" name="month" required></select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Tags</label>
+            <div class="tags" id="tags"></div>
+          </div>
+          <div class="field">
+            <label for="report">Trip report</label>
+            <textarea id="report" name="report" placeholder="What happened, conditions, notes…"></textarea>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Photos</h2>
+          <div id="existing-wrap" class="hidden">
+            <label>Current photos (click × to remove)</label>
+            <div class="previews" id="existing-previews"></div>
+          </div>
+          <div class="drop" id="drop" style="margin-top:12px">
+            <strong>Drop photos here</strong> or tap to choose<br>
+            <span class="hint">JPEG/PNG/WebP preferred</span>
+            <input id="photos" type="file" accept="image/*,.heic,.HEIC" multiple>
+          </div>
+          <div class="previews" id="previews"></div>
+        </div>
+
+        <div class="card">
+          <h2>Publish</h2>
+          <div class="field">
+            <label for="password">Admin password</label>
+            <input id="password" name="password" type="password" required autocomplete="current-password">
+          </div>
+          <details class="setup field">
+            <summary>Advanced: Worker URL</summary>
+            <div class="field" style="margin-top:10px">
+              <label for="workerUrl">Cloudflare Worker URL</label>
+              <input id="workerUrl" type="text" placeholder="https://nature-trip-uploader.YOUR_SUBDOMAIN.workers.dev">
+            </div>
+          </details>
+          <div class="actions">
+            <button class="primary" id="submit" type="submit">Upload trip</button>
+            <button class="secondary hidden" id="cancel-edit" type="button">Cancel edit</button>
+            <span class="status" id="status"></span>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- MANAGE -->
+    <section id="panel-manage" class="hidden">
+      <div class="card">
+        <h2>Your trips</h2>
+        <div class="field">
+          <label for="manage-password">Admin password (to load / delete)</label>
+          <input id="manage-password" type="password" autocomplete="current-password">
+        </div>
+        <div class="actions" style="margin-bottom:12px">
+          <button class="primary" type="button" id="load-trips">Load trips</button>
+          <span class="status" id="manage-status"></span>
+        </div>
+        <input class="search" id="search" type="text" placeholder="Search by title…">
+        <div class="trip-list" id="trip-list"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./javascripts/nature-config.js"></script>
+  <script>
+    (function () {
+      var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'mountaineering', 'kayaking'];
+      var newFiles = [];
+      var keepPhotos = [];
+      var allTrips = [];
+      var editingId = null;
+
+      var monthSelect = document.getElementById('month');
+      MONTHS.forEach(function (m) {
+        var opt = document.createElement('option');
+        opt.value = m;
+        opt.textContent = m;
+        monthSelect.appendChild(opt);
+      });
+      var now = new Date();
+      document.getElementById('year').value = now.getFullYear();
+      monthSelect.value = MONTHS[now.getMonth()];
+
+      var tagsEl = document.getElementById('tags');
+      TAGS.forEach(function (tag) {
+        var label = document.createElement('label');
+        label.className = 'tag';
+        label.innerHTML = '<input type="checkbox" name="tag" value="' + tag + '"> ' + tag;
+        tagsEl.appendChild(label);
+      });
+
+      var workerInput = document.getElementById('workerUrl');
+      workerInput.value = localStorage.getItem('natureWorkerUrl') || (window.NATURE_CONFIG && window.NATURE_CONFIG.workerUrl) || '';
+      workerInput.addEventListener('change', function () {
+        localStorage.setItem('natureWorkerUrl', workerInput.value.trim());
+      });
+
+      function workerUrl() {
+        return (workerInput.value || '').trim().replace(/\/$/, '');
+      }
+
+      function setStatus(el, type, msg) {
+        el.className = 'status' + (type ? ' ' + type : '');
+        el.textContent = msg || '';
+      }
+
+      function selectedTags() {
+        return Array.from(document.querySelectorAll('input[name="tag"]:checked')).map(function (el) { return el.value; });
+      }
+
+      function setSelectedTags(tags) {
+        document.querySelectorAll('input[name="tag"]').forEach(function (el) {
+          el.checked = (tags || []).indexOf(el.value) >= 0;
+        });
+      }
+
+      // Tabs
+      document.querySelectorAll('.tabs button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          var tab = btn.getAttribute('data-tab');
+          document.getElementById('panel-add').classList.toggle('hidden', tab !== 'add');
+          document.getElementById('panel-manage').classList.toggle('hidden', tab !== 'manage');
+        });
+      });
+
+      // Photos UI
+      var drop = document.getElementById('drop');
+      var input = document.getElementById('photos');
+      var previews = document.getElementById('previews');
+      var existingPreviews = document.getElementById('existing-previews');
+      var existingWrap = document.getElementById('existing-wrap');
+
+      function renderNewPreviews() {
+        previews.innerHTML = '';
+        newFiles.forEach(function (file, idx) {
+          var fig = document.createElement('figure');
+          var img = document.createElement('img');
+          var url = URL.createObjectURL(file);
+          img.src = url;
+          img.alt = file.name;
+          img.onload = function () { URL.revokeObjectURL(url); };
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = '×';
+          btn.onclick = function () {
+            newFiles.splice(idx, 1);
+            renderNewPreviews();
+          };
+          fig.appendChild(img);
+          fig.appendChild(btn);
+          previews.appendChild(fig);
+        });
+      }
+
+      function renderExistingPreviews() {
+        existingPreviews.innerHTML = '';
+        existingWrap.classList.toggle('hidden', keepPhotos.length === 0);
+        keepPhotos.forEach(function (src, idx) {
+          var fig = document.createElement('figure');
+          var img = document.createElement('img');
+          img.src = src;
+          img.alt = '';
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = '×';
+          btn.onclick = function () {
+            keepPhotos.splice(idx, 1);
+            renderExistingPreviews();
+          };
+          fig.appendChild(img);
+          fig.appendChild(btn);
+          existingPreviews.appendChild(fig);
+        });
+      }
+
+      function addFiles(list) {
+        Array.from(list || []).forEach(function (f) {
+          if (!f.type.startsWith('image/') && !/\.heic$/i.test(f.name)) return;
+          newFiles.push(f);
+        });
+        renderNewPreviews();
+      }
+
+      drop.addEventListener('click', function () { input.click(); });
+      input.addEventListener('change', function () {
+        addFiles(input.files);
+        input.value = '';
+      });
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('dragover'); });
+      });
+      drop.addEventListener('drop', function (e) { addFiles(e.dataTransfer.files); });
+
+      function resetForm(keepPassword) {
+        editingId = null;
+        document.getElementById('editId').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('report').value = '';
+        document.getElementById('year').value = now.getFullYear();
+        monthSelect.value = MONTHS[now.getMonth()];
+        setSelectedTags([]);
+        newFiles = [];
+        keepPhotos = [];
+        renderNewPreviews();
+        renderExistingPreviews();
+        document.getElementById('submit').textContent = 'Upload trip';
+        document.getElementById('cancel-edit').classList.add('hidden');
+        if (!keepPassword) document.getElementById('password').value = '';
+        setStatus(document.getElementById('status'), '', '');
+      }
+
+      document.getElementById('cancel-edit').addEventListener('click', function () {
+        resetForm(true);
+        document.getElementById('tab-manage').click();
+      });
+
+      function fillForm(trip) {
+        editingId = trip.id;
+        document.getElementById('editId').value = trip.id;
+        document.getElementById('title').value = trip.title || '';
+        document.getElementById('year').value = trip.year;
+        monthSelect.value = trip.month;
+        document.getElementById('report').value = trip.report || '';
+        setSelectedTags(trip.tags || []);
+        keepPhotos = (trip.photos || []).slice();
+        newFiles = [];
+        renderExistingPreviews();
+        renderNewPreviews();
+        document.getElementById('submit').textContent = 'Save changes';
+        document.getElementById('cancel-edit').classList.remove('hidden');
+        document.getElementById('tab-add').click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      // Submit create / update
+      document.getElementById('trip-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var status = document.getElementById('status');
+        var submit = document.getElementById('submit');
+        var base = workerUrl();
+        if (!base) {
+          setStatus(status, 'err', 'Set your Worker URL in Advanced first.');
+          return;
+        }
+        localStorage.setItem('natureWorkerUrl', base);
+
+        var totalPhotos = keepPhotos.length + newFiles.length;
+        if (!totalPhotos) {
+          setStatus(status, 'err', 'Keep or add at least one photo.');
+          return;
+        }
+
+        var fd = new FormData();
+        fd.append('password', document.getElementById('password').value);
+        fd.append('title', document.getElementById('title').value.trim());
+        fd.append('year', document.getElementById('year').value);
+        fd.append('month', document.getElementById('month').value);
+        fd.append('report', document.getElementById('report').value.trim());
+        fd.append('tags', JSON.stringify(selectedTags()));
+        if (editingId) fd.append('keepPhotos', JSON.stringify(keepPhotos));
+        newFiles.forEach(function (f) { fd.append('photos', f, f.name); });
+
+        submit.disabled = true;
+        setStatus(status, '', editingId ? 'Saving…' : 'Uploading…');
+
+        try {
+          var endpoint = editingId
+            ? base + '/api/trips/' + encodeURIComponent(editingId)
+            : base + '/api/trips';
+          var res = await fetch(endpoint, {
+            method: editingId ? 'PUT' : 'POST',
+            body: fd,
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
+          setStatus(status, 'ok', editingId ? 'Saved!' : 'Published!');
+          setTimeout(function () {
+            location.href = './nature.html?t=' + Date.now();
+          }, 600);
+        } catch (err) {
+          setStatus(status, 'err', err.message || 'Failed');
+          submit.disabled = false;
+        }
+      });
+
+      // Manage list
+      function renderTripList(filter) {
+        var list = document.getElementById('trip-list');
+        var q = (filter || '').toLowerCase();
+        var trips = allTrips.filter(function (t) {
+          return !q || String(t.title || '').toLowerCase().indexOf(q) >= 0;
+        });
+        if (!trips.length) {
+          list.innerHTML = '<p class="hint">No trips found.</p>';
+          return;
+        }
+        list.innerHTML = '';
+        trips.forEach(function (trip) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'trip-item';
+          var thumb = (trip.photos && trip.photos[0]) || '';
+          btn.innerHTML =
+            (thumb ? '<img src="' + thumb.replace(/"/g, '&quot;') + '" alt="">' : '<div></div>') +
+            '<div><div class="title"></div><div class="meta"></div></div>' +
+            '<div class="go"><button type="button" class="secondary edit-btn">Edit</button> <button type="button" class="danger del-btn">Delete</button></div>';
+          btn.querySelector('.title').textContent = trip.title;
+          btn.querySelector('.meta').textContent = trip.month + ' ' + trip.year + (trip.tags && trip.tags.length ? ' · ' + trip.tags.join(', ') : '');
+          btn.querySelector('.edit-btn').addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            fillForm(trip);
+          });
+          btn.querySelector('.del-btn').addEventListener('click', async function (ev) {
+            ev.stopPropagation();
+            await deleteTrip(trip);
+          });
+          btn.addEventListener('click', function () { fillForm(trip); });
+          list.appendChild(btn);
+        });
+      }
+
+      async function deleteTrip(trip) {
+        var base = workerUrl();
+        var password = document.getElementById('manage-password').value || document.getElementById('password').value;
+        var manageStatus = document.getElementById('manage-status');
+        if (!base) {
+          setStatus(manageStatus, 'err', 'Set Worker URL first.');
+          return;
+        }
+        if (!password) {
+          setStatus(manageStatus, 'err', 'Enter admin password.');
+          return;
+        }
+        if (!confirm('Delete “' + trip.title + '”? Photos will be removed from R2.')) return;
+
+        setStatus(manageStatus, '', 'Deleting…');
+        try {
+          var res = await fetch(base + '/api/trips/' + encodeURIComponent(trip.id), {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: password, deleteFiles: true }),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.error || 'Delete failed');
+          allTrips = allTrips.filter(function (t) { return t.id !== trip.id; });
+          renderTripList(document.getElementById('search').value);
+          setStatus(manageStatus, 'ok', 'Deleted.');
+        } catch (err) {
+          setStatus(manageStatus, 'err', err.message || 'Delete failed');
+        }
+      }
+
+      document.getElementById('load-trips').addEventListener('click', async function () {
+        var base = workerUrl();
+        var manageStatus = document.getElementById('manage-status');
+        if (!base) {
+          // fallback to public trips.json / local
+          var config = window.NATURE_CONFIG || {};
+          try {
+            setStatus(manageStatus, '', 'Loading…');
+            var urls = [config.tripsUrl, config.tripsFallbackUrl, base ? base + '/api/trips' : null].filter(Boolean);
+            var data = null;
+            for (var i = 0; i < urls.length; i++) {
+              try {
+                var r = await fetch(urls[i], { cache: 'no-store' });
+                if (r.ok) { data = await r.json(); break; }
+              } catch (e) {}
+            }
+            if (!data) throw new Error('Could not load trips');
+            allTrips = data.trips || [];
+            renderTripList('');
+            setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded (view/edit). Password needed to save/delete.');
+          } catch (err) {
+            setStatus(manageStatus, 'err', err.message || 'Load failed');
+          }
+          return;
+        }
+        try {
+          setStatus(manageStatus, '', 'Loading…');
+          localStorage.setItem('natureWorkerUrl', base);
+          var res = await fetch(base + '/api/trips', { cache: 'no-store' });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Load failed');
+          allTrips = data.trips || [];
+          renderTripList('');
+          setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
+        } catch (err) {
+          setStatus(manageStatus, 'err', err.message || 'Load failed');
+        }
+      });
+
+      document.getElementById('search').addEventListener('input', function (e) {
+        renderTripList(e.target.value);
+      });
+    })();
+  </script>
+</body>
+
+</html>

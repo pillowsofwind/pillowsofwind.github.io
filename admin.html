@@ -131,7 +131,8 @@
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
       gap: 8px;
-      margin-top: 12px;
+      margin-top: 4px;
+      min-height: 8px;
     }
 
     .previews figure {
@@ -142,9 +143,21 @@
       overflow: hidden;
       border: 1px solid var(--line);
       background: #eee;
+      cursor: grab;
+      touch-action: none;
     }
 
-    .previews img { width: 100%; height: 100%; object-fit: cover; }
+    .previews figure.dragging {
+      opacity: 0.45;
+      cursor: grabbing;
+    }
+
+    .previews figure.drag-over {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .previews img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
     .previews button {
       position: absolute;
@@ -159,6 +172,35 @@
       cursor: pointer;
       font-size: 14px;
       line-height: 1;
+      z-index: 2;
+    }
+
+    .fmt-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .fmt-bar button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .fmt-bar button:hover { border-color: #cfcfcf; background: #fafafa; }
+
+    textarea#report {
+      min-height: 160px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
     }
 
     .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
@@ -275,22 +317,26 @@
           </div>
           <div class="field">
             <label for="report">Trip report</label>
-            <textarea id="report" name="report" placeholder="What happened, conditions, notes…"></textarea>
+            <div class="fmt-bar" id="fmt-bar">
+              <button type="button" data-fmt="bold" title="Bold">Bold</button>
+              <button type="button" data-fmt="italic" title="Italic">Italic</button>
+              <button type="button" data-fmt="link" title="Link">Link</button>
+              <button type="button" data-fmt="ul" title="Bullet list">List</button>
+            </div>
+            <textarea id="report" name="report" placeholder="What happened, conditions, notes…&#10;&#10;Formatting: **bold**, *italic*, [text](https://…), blank line = new paragraph"></textarea>
+            <span class="hint">Supports simple Markdown: **bold**, *italic*, links, and lists.</span>
           </div>
         </div>
 
         <div class="card">
           <h2>Photos</h2>
-          <div id="existing-wrap" class="hidden">
-            <label>Current photos (click × to remove)</label>
-            <div class="previews" id="existing-previews"></div>
-          </div>
+          <p class="hint" style="margin-top:0">Drag tiles to reorder. Removing a saved photo deletes it from R2 when you save.</p>
+          <div class="previews" id="photo-list"></div>
           <div class="drop" id="drop" style="margin-top:12px">
             <strong>Drop photos here</strong> or tap to choose<br>
             <span class="hint">HEIC/HEIF auto-converts to JPEG on upload</span>
             <input id="photos" type="file" accept="image/*,.heic,.HEIC,.heif,.HEIF" multiple>
           </div>
-          <div class="previews" id="previews"></div>
         </div>
 
         <div class="card">
@@ -339,11 +385,12 @@
     (function () {
       var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'mountaineering', 'kayaking'];
       var JPEG_QUALITY = 0.88;
-      var newFiles = [];
-      var keepPhotos = [];
+      // Unified ordered list: { type:'existing', url } | { type:'new', file, previewUrl }
+      var photoItems = [];
       var allTrips = [];
       var editingId = null;
       var converting = false;
+      var dragFrom = null;
 
       function todayISO() {
         var now = new Date();
@@ -433,53 +480,126 @@
         });
       });
 
-      // Photos UI
+      // Report formatting toolbar
+      var reportEl = document.getElementById('report');
+      function wrapSelection(before, after, placeholder) {
+        var start = reportEl.selectionStart;
+        var end = reportEl.selectionEnd;
+        var val = reportEl.value;
+        var selected = val.slice(start, end) || (placeholder || '');
+        reportEl.value = val.slice(0, start) + before + selected + after + val.slice(end);
+        reportEl.focus();
+        reportEl.selectionStart = start + before.length;
+        reportEl.selectionEnd = start + before.length + selected.length;
+      }
+      document.getElementById('fmt-bar').addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-fmt]');
+        if (!btn) return;
+        var fmt = btn.getAttribute('data-fmt');
+        if (fmt === 'bold') wrapSelection('**', '**', 'bold');
+        else if (fmt === 'italic') wrapSelection('*', '*', 'italic');
+        else if (fmt === 'link') wrapSelection('[', '](https://)', 'text');
+        else if (fmt === 'ul') {
+          var start = reportEl.selectionStart;
+          var end = reportEl.selectionEnd;
+          var val = reportEl.value;
+          var selected = val.slice(start, end) || 'item';
+          var lines = selected.split(/\n/).map(function (line) {
+            return line.replace(/^\s*[-*]\s+/, '').trim()
+              ? '- ' + line.replace(/^\s*[-*]\s+/, '').trim()
+              : '- ';
+          }).join('\n');
+          reportEl.value = val.slice(0, start) + lines + val.slice(end);
+          reportEl.focus();
+        }
+      });
+
+      // Photos UI — unified list with drag reorder
       var drop = document.getElementById('drop');
       var input = document.getElementById('photos');
-      var previews = document.getElementById('previews');
-      var existingPreviews = document.getElementById('existing-previews');
-      var existingWrap = document.getElementById('existing-wrap');
+      var photoList = document.getElementById('photo-list');
 
-      function renderNewPreviews() {
-        previews.innerHTML = '';
-        newFiles.forEach(function (file, idx) {
-          var fig = document.createElement('figure');
-          var img = document.createElement('img');
-          var url = URL.createObjectURL(file);
-          img.src = url;
-          img.alt = file.name;
-          img.onload = function () { URL.revokeObjectURL(url); };
-          var btn = document.createElement('button');
-          btn.type = 'button';
-          btn.textContent = '×';
-          btn.onclick = function () {
-            newFiles.splice(idx, 1);
-            renderNewPreviews();
-          };
-          fig.appendChild(img);
-          fig.appendChild(btn);
-          previews.appendChild(fig);
+      function revokePreviews() {
+        photoItems.forEach(function (item) {
+          if (item.previewUrl) {
+            try { URL.revokeObjectURL(item.previewUrl); } catch (e) {}
+            item.previewUrl = null;
+          }
         });
       }
 
-      function renderExistingPreviews() {
-        existingPreviews.innerHTML = '';
-        existingWrap.classList.toggle('hidden', keepPhotos.length === 0);
-        keepPhotos.forEach(function (src, idx) {
+      function clearPhotos() {
+        revokePreviews();
+        photoItems = [];
+        renderPhotoList();
+      }
+
+      function renderPhotoList() {
+        photoList.innerHTML = '';
+        photoItems.forEach(function (item, idx) {
           var fig = document.createElement('figure');
+          fig.draggable = true;
+          fig.dataset.index = String(idx);
           var img = document.createElement('img');
-          img.src = src;
-          img.alt = '';
+          if (item.type === 'existing') {
+            img.src = item.url;
+            img.alt = '';
+          } else {
+            if (!item.previewUrl) item.previewUrl = URL.createObjectURL(item.file);
+            img.src = item.previewUrl;
+            img.alt = item.file.name || 'new photo';
+          }
           var btn = document.createElement('button');
           btn.type = 'button';
           btn.textContent = '×';
-          btn.onclick = function () {
-            keepPhotos.splice(idx, 1);
-            renderExistingPreviews();
-          };
+          btn.title = item.type === 'existing' ? 'Remove (deletes from R2 on save)' : 'Remove';
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (item.previewUrl) {
+              try { URL.revokeObjectURL(item.previewUrl); } catch (err) {}
+            }
+            photoItems.splice(idx, 1);
+            renderPhotoList();
+          });
           fig.appendChild(img);
           fig.appendChild(btn);
-          existingPreviews.appendChild(fig);
+
+          fig.addEventListener('dragstart', function (e) {
+            dragFrom = idx;
+            fig.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            try { e.dataTransfer.setData('text/plain', String(idx)); } catch (err) {}
+          });
+          fig.addEventListener('dragend', function () {
+            dragFrom = null;
+            fig.classList.remove('dragging');
+            photoList.querySelectorAll('.drag-over').forEach(function (el) {
+              el.classList.remove('drag-over');
+            });
+          });
+          fig.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            fig.classList.add('drag-over');
+          });
+          fig.addEventListener('dragleave', function () {
+            fig.classList.remove('drag-over');
+          });
+          fig.addEventListener('drop', function (e) {
+            e.preventDefault();
+            fig.classList.remove('drag-over');
+            var from = dragFrom;
+            if (from == null) {
+              try { from = Number(e.dataTransfer.getData('text/plain')); } catch (err) { from = null; }
+            }
+            var to = idx;
+            if (from == null || from === to || from < 0 || from >= photoItems.length) return;
+            var moved = photoItems.splice(from, 1)[0];
+            photoItems.splice(to, 0, moved);
+            renderPhotoList();
+          });
+
+          photoList.appendChild(fig);
         });
       }
 
@@ -525,18 +645,19 @@
         try {
           for (var i = 0; i < candidates.length; i++) {
             try {
-              newFiles.push(await normalizeFile(candidates[i]));
+              var file = await normalizeFile(candidates[i]);
+              photoItems.push({ type: 'new', file: file, previewUrl: null });
             } catch (err) {
               console.error(err);
               setStatus(status, 'err', 'Could not convert ' + (candidates[i].name || 'photo') + '. Try exporting as JPEG.');
               converting = false;
-              renderNewPreviews();
+              renderPhotoList();
               return;
             }
           }
           if (heicCount) setStatus(status, 'ok', 'Converted to JPEG — ready to upload');
           else setStatus(status, '', '');
-          renderNewPreviews();
+          renderPhotoList();
         } finally {
           converting = false;
         }
@@ -564,10 +685,7 @@
         document.getElementById('endDate').value = todayISO();
         document.getElementById('endDate').min = todayISO();
         setSelectedTags([]);
-        newFiles = [];
-        keepPhotos = [];
-        renderNewPreviews();
-        renderExistingPreviews();
+        clearPhotos();
         document.getElementById('submit').textContent = 'Upload trip';
         document.getElementById('cancel-edit').classList.add('hidden');
         if (!keepPassword) document.getElementById('password').value = '';
@@ -588,10 +706,11 @@
         document.getElementById('endDate').min = document.getElementById('date').value;
         document.getElementById('report').value = trip.report || '';
         setSelectedTags(trip.tags || []);
-        keepPhotos = (trip.photos || []).slice();
-        newFiles = [];
-        renderExistingPreviews();
-        renderNewPreviews();
+        clearPhotos();
+        photoItems = (trip.photos || []).map(function (url) {
+          return { type: 'existing', url: url };
+        });
+        renderPhotoList();
         document.getElementById('submit').textContent = 'Save changes';
         document.getElementById('cancel-edit').classList.remove('hidden');
         document.getElementById('tab-add').click();
@@ -626,8 +745,7 @@
           return;
         }
 
-        var totalPhotos = keepPhotos.length + newFiles.length;
-        if (!totalPhotos) {
+        if (!photoItems.length) {
           setStatus(status, 'err', 'Keep or add at least one photo.');
           return;
         }
@@ -639,8 +757,24 @@
         fd.append('endDate', document.getElementById('endDate').value);
         fd.append('report', document.getElementById('report').value.trim());
         fd.append('tags', JSON.stringify(selectedTags()));
-        if (editingId) fd.append('keepPhotos', JSON.stringify(keepPhotos));
-        newFiles.forEach(function (f) { fd.append('photos', f, f.name); });
+
+        var keep = [];
+        var order = [];
+        var newIdx = 0;
+        photoItems.forEach(function (item) {
+          if (item.type === 'existing') {
+            keep.push(item.url);
+            order.push(item.url);
+          } else {
+            fd.append('photos', item.file, item.file.name);
+            order.push('__new__:' + newIdx);
+            newIdx += 1;
+          }
+        });
+        if (editingId) {
+          fd.append('keepPhotos', JSON.stringify(keep));
+          fd.append('photoOrder', JSON.stringify(order));
+        }
 
         submit.disabled = true;
         setStatus(status, '', editingId ? 'Saving…' : 'Uploading…');
@@ -655,7 +789,11 @@
           });
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
-          setStatus(status, 'ok', editingId ? 'Saved!' : 'Published!');
+          var msg = editingId ? 'Saved!' : 'Published!';
+          if (editingId && data.deletedPhotos) {
+            msg = 'Saved — deleted ' + data.deletedPhotos + ' photo' + (data.deletedPhotos === 1 ? '' : 's') + ' from storage';
+          }
+          setStatus(status, 'ok', msg);
           setTimeout(function () {
             location.href = './nature.html?t=' + Date.now();
           }, 600);

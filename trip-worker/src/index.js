@@ -128,30 +128,49 @@ function publicBase(env) {
   return (env.PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE).replace(/\/$/, "");
 }
 
+function normalizePhotoUrl(photoUrl) {
+  try {
+    const u = new URL(String(photoUrl));
+    return `${u.origin}${u.pathname}`;
+  } catch {
+    return String(photoUrl || "");
+  }
+}
+
 function keyFromPhotoUrl(photoUrl, base) {
   try {
-    const u = new URL(photoUrl);
-    const b = new URL(base);
-    if (u.host !== b.host) return null;
+    const u = new URL(String(photoUrl));
     const key = decodeURIComponent(u.pathname.replace(/^\//, ""));
     if (!key || key === "trips.json") return null;
-    return key;
+    if (base) {
+      try {
+        const b = new URL(base);
+        if (u.host === b.host) return key;
+      } catch {
+        // fall through
+      }
+    }
+    // Still allow deletes for our public R2 host even if base env differs slightly
+    if (u.hostname.endsWith(".r2.dev") || u.hostname.includes("r2.")) return key;
+    return null;
   } catch {
     return null;
   }
 }
 
 async function deletePhotoKeys(env, urls, base) {
+  let deleted = 0;
   for (const url of urls || []) {
     const key = keyFromPhotoUrl(url, base);
-    if (key) {
-      try {
-        await env.PHOTOS.delete(key);
-      } catch {
-        // ignore missing objects
-      }
+    if (!key) continue;
+    try {
+      await env.PHOTOS.delete(key);
+      deleted += 1;
+    } catch {
+      // ignore missing objects
     }
   }
+  return deleted;
 }
 
 async function loadTrips(env, base) {
@@ -408,17 +427,18 @@ export default {
           }
         }
 
+        const keepSet = new Set(keepPhotos.map(normalizePhotoUrl));
         const removed = (existing.photos || []).filter(
-          (p) => !keepPhotos.includes(p)
+          (p) => !keepSet.has(normalizePhotoUrl(p))
         );
-        await deletePhotoKeys(env, removed, base);
+        const deletedCount = await deletePhotoKeys(env, removed, base);
 
         const newFiles = form
           .getAll("photos")
           .filter((f) => f && typeof f === "object" && f.size > 0);
 
         const slug = slugify(title);
-        const startIndex = keepPhotos.length + 1;
+        const startIndex = Date.now();
         const uploaded = await uploadFiles(
           env,
           base,
@@ -429,7 +449,37 @@ export default {
           startIndex
         );
 
-        const photos = [...keepPhotos, ...uploaded];
+        let photos;
+        const orderRaw = form.get("photoOrder");
+        if (orderRaw != null && String(orderRaw).trim()) {
+          let order;
+          try {
+            order = JSON.parse(String(orderRaw));
+          } catch {
+            return json({ error: "Invalid photoOrder" }, 400, request);
+          }
+          if (!Array.isArray(order)) {
+            return json({ error: "Invalid photoOrder" }, 400, request);
+          }
+          photos = [];
+          let newIdx = 0;
+          for (const token of order) {
+            const s = String(token);
+            if (s.startsWith("__new__:")) {
+              const file = uploaded[newIdx++];
+              if (file) photos.push(file);
+            } else if (keepSet.has(normalizePhotoUrl(s))) {
+              // Prefer canonical URL from existing when possible
+              const match = (existing.photos || []).find(
+                (p) => normalizePhotoUrl(p) === normalizePhotoUrl(s)
+              );
+              photos.push(match || s);
+            }
+          }
+        } else {
+          photos = [...keepPhotos, ...uploaded];
+        }
+
         if (!photos.length) {
           return json({ error: "At least one photo is required" }, 400, request);
         }
@@ -451,7 +501,7 @@ export default {
         data.trips = sortTrips(data.trips);
         data.publicBaseUrl = base;
         await saveTrips(env, data);
-        return json({ ok: true, trip }, 200, request);
+        return json({ ok: true, trip, deletedPhotos: deletedCount }, 200, request);
       } catch (err) {
         return json({ error: err.message || "Update failed" }, 500, request);
       }
@@ -484,12 +534,19 @@ export default {
         const [removedTrip] = data.trips.splice(idx, 1);
 
         if (deleteFiles) {
-          await deletePhotoKeys(env, removedTrip.photos || [], base);
+          const n = await deletePhotoKeys(env, removedTrip.photos || [], base);
+          data.publicBaseUrl = base;
+          await saveTrips(env, data);
+          return json(
+            { ok: true, deleted: removedTrip.id, deletedPhotos: n },
+            200,
+            request
+          );
         }
 
         data.publicBaseUrl = base;
         await saveTrips(env, data);
-        return json({ ok: true, deleted: removedTrip.id }, 200, request);
+        return json({ ok: true, deleted: removedTrip.id, deletedPhotos: 0 }, 200, request);
       } catch (err) {
         return json({ error: err.message || "Delete failed" }, 500, request);
       }

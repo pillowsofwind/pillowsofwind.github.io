@@ -21,7 +21,8 @@
         .fun-wrapper {
             max-width: min(760px, 100%);
             margin: 0 auto;
-            padding: 12px 16px 56px;
+            /* Match other pages: rely on body padding (50px / 15px on phone), no extra inset */
+            padding: 0 0 56px;
             float: none;
             width: auto;
             box-sizing: border-box;
@@ -155,6 +156,42 @@
             color: #686868;
             overflow-wrap: anywhere;
             word-break: break-word;
+        }
+
+        .trip-report p {
+            margin: 0 0 0.65em;
+        }
+
+        .trip-report p:last-child {
+            margin-bottom: 0;
+        }
+
+        .trip-report ul {
+            margin: 0 0 0.65em;
+            padding-left: 1.2em;
+        }
+
+        .trip-report ul:last-child {
+            margin-bottom: 0;
+        }
+
+        .trip-report li {
+            margin: 0.15em 0;
+        }
+
+        .trip-report a {
+            color: #4a6fa5;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .trip-report strong {
+            color: #555;
+            font-weight: 600;
+        }
+
+        .trip-report em {
+            font-style: italic;
         }
 
         .trip-report:empty {
@@ -319,7 +356,7 @@
         @media print,
         screen and (max-width: 720px) {
             .fun-wrapper {
-                padding: 8px 12px 40px;
+                padding: 0 0 40px;
             }
 
             .trip-year {

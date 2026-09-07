@@ -11,6 +11,61 @@
       .replace(/"/g, "&quot;");
   }
 
+  function formatInline(escaped) {
+    return escaped
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g, function (_, text, href) {
+        return (
+          '<a href="' +
+          href +
+          '" target="_blank" rel="noopener noreferrer">' +
+          text +
+          "</a>"
+        );
+      })
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      .replace(/(^|[^*])\*([^*\n]+)\*(?!\*)/g, "$1<em>$2</em>");
+  }
+
+  function renderReport(src) {
+    var text = String(src || "").replace(/\r\n/g, "\n").trim();
+    if (!text) return "";
+    var blocks = text.split(/\n{2,}/);
+    var html = blocks
+      .map(function (block) {
+        var lines = block.split("\n");
+        var isList =
+          lines.length > 0 &&
+          lines.every(function (line) {
+            return /^\s*[-*]\s+/.test(line) || !line.trim();
+          }) &&
+          lines.some(function (line) {
+            return /^\s*[-*]\s+/.test(line);
+          });
+        if (isList) {
+          var items = lines
+            .filter(function (line) {
+              return /^\s*[-*]\s+/.test(line);
+            })
+            .map(function (line) {
+              return (
+                "<li>" +
+                formatInline(escapeHtml(line.replace(/^\s*[-*]\s+/, ""))) +
+                "</li>"
+              );
+            })
+            .join("");
+          return "<ul>" + items + "</ul>";
+        }
+        return (
+          "<p>" +
+          formatInline(escapeHtml(block)).replace(/\n/g, "<br>") +
+          "</p>"
+        );
+      })
+      .join("");
+    return '<div class="trip-report">' + html + "</div>";
+  }
+
   function monthIndex(month) {
     var months = [
       "January", "February", "March", "April", "May", "June",
@@ -141,9 +196,7 @@
     var dateHtml = dateLabel
       ? '<div class="trip-date">' + escapeHtml(dateLabel) + "</div>"
       : "";
-    var report = trip.report
-      ? '<div class="trip-report">' + escapeHtml(trip.report) + "</div>"
-      : "";
+    var report = trip.report ? renderReport(trip.report) : "";
     var mapBtn =
       trip.photos && trip.photos.length
         ? '<button type="button" class="trip-map-btn" data-trip-map="' +

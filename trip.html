@@ -5,9 +5,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light only">
-    <meta name="theme-color" content="#ffffff">
     <link rel="stylesheet" href="stylesheets/styles.css">
-    <title>Trip Reports | Rongwu Xu</title>
+    <title>Trip Archive | Rongwu Xu</title>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" href="/favicon.ico" sizes="48x48">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+    <link rel="shortcut icon" href="/favicon.ico">
     <script src="./javascripts/load_navbar.js"></script>
     <style>
         html {
@@ -19,9 +22,8 @@
         }
 
         .fun-wrapper {
-            max-width: min(760px, 100%);
+            max-width: min(720px, 100%);
             margin: 0 auto;
-            /* Match other pages: rely on body padding (50px / 15px on phone), no extra inset */
             padding: 0 0 56px;
             float: none;
             width: auto;
@@ -42,13 +44,15 @@
             clear: both;
         }
 
-        .fun-intro {
-            margin-bottom: 28px;
+        .fun-wrapper>h1 {
+            margin: 0 0 10px;
+            font-weight: 500;
         }
 
-        .wta-link {
-            margin: 0 0 12px;
+        .trip-lede {
+            margin: 0 0 8px;
             color: #666;
+            line-height: 1.55;
         }
 
         .trips-loading,
@@ -58,34 +62,38 @@
         }
 
         .nature-disclaimer {
-            margin: 0 0 20px;
+            margin: 0 0 28px;
             line-height: 1.5;
-            color: #888;
+            color: #9a9a9a;
         }
 
         .trip-year {
-            margin-top: 28px;
-            margin-bottom: 10px;
-            font-size: 22px;
+            margin-top: 36px;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #222;
             border-bottom: 1px solid #e5e5e5;
-            padding-bottom: 6px;
+            padding-bottom: 8px;
         }
 
         .trip-month {
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 17px;
+            margin-top: 22px;
+            margin-bottom: 8px;
+            font-size: 18px;
+            font-weight: 500;
             color: #4a4a4a;
         }
 
         .trip-entry {
-            margin-bottom: 22px;
+            margin-bottom: 28px;
+            padding-bottom: 4px;
         }
 
         .trip-entry>.trip-title {
             display: inline;
-            margin: 0 8px 8px 0;
+            margin: 0 8px 6px 0;
             font-size: 15px;
+            font-weight: 500;
             color: #222;
         }
 
@@ -94,8 +102,8 @@
         }
 
         .trip-date {
-            margin: 0 0 8px;
-            font-size: 13px;
+            margin: 0 0 6px;
+            font-size: 14px;
             color: #888;
         }
 
@@ -107,52 +115,86 @@
             padding: 0;
             border: 0;
             background: none;
-            color: #f5a560;
+            color: #d97706;
             font: inherit;
-            font-size: 13px;
-            font-weight: 700;
-            letter-spacing: 0.01em;
+            font-size: 14px;
+            font-weight: 600;
             cursor: pointer;
             transition: color 0.2s ease;
         }
 
         .trip-map-btn svg {
-            width: 14px;
-            height: 14px;
+            width: 15px;
+            height: 15px;
             flex-shrink: 0;
-            stroke: #f5a560;
+            stroke: currentColor;
             fill: none;
             stroke-width: 2;
             stroke-linecap: round;
             stroke-linejoin: round;
-            transition: transform 0.25s ease, stroke 0.2s ease;
+            transform-origin: 50% 90%;
+            animation: trip-map-pin 2.8s ease-in-out infinite;
+            transition: transform 0.25s ease;
         }
 
         .trip-map-btn .trip-map-btn-label {
-            border-bottom: 1px solid transparent;
-            transition: border-color 0.2s ease, color 0.2s ease;
+            border-bottom: 1px solid rgba(217, 119, 6, 0.4);
+        }
+
+        .trip-map-btn .trip-map-btn-arrow {
+            display: inline-block;
+            transition: transform 0.25s ease;
         }
 
         .trip-map-btn:hover,
         .trip-map-btn:focus-visible {
-            color: #e08c3d;
+            color: #b45309;
             outline: none;
         }
 
         .trip-map-btn:hover svg,
         .trip-map-btn:focus-visible svg {
-            stroke: #e08c3d;
-            transform: translateY(-1px);
+            animation: none;
+            transform: translateY(-3px);
         }
 
         .trip-map-btn:hover .trip-map-btn-label,
         .trip-map-btn:focus-visible .trip-map-btn-label {
-            border-bottom-color: rgba(224, 140, 61, 0.55);
+            border-bottom-color: rgba(180, 83, 9, 0.65);
+        }
+
+        .trip-map-btn:hover .trip-map-btn-arrow,
+        .trip-map-btn:focus-visible .trip-map-btn-arrow {
+            transform: translateX(4px);
+        }
+
+        @keyframes trip-map-pin {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-2px);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .trip-map-btn svg {
+                animation: none;
+            }
+
+            .trip-map-btn:hover svg,
+            .trip-map-btn:focus-visible svg,
+            .trip-map-btn:hover .trip-map-btn-arrow,
+            .trip-map-btn:focus-visible .trip-map-btn-arrow {
+                transform: none;
+            }
         }
 
         .trip-report {
-            margin: 0 0 10px;
-            line-height: 1.5;
+            margin: 0 0 12px;
+            line-height: 1.55;
             color: #686868;
             overflow-wrap: anywhere;
             word-break: break-word;
@@ -282,7 +324,7 @@
             --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 5h8v3H8z'/%3E%3Cpath d='M9 8v12h6V8'/%3E%3Cpath d='M7 12h2M15 12h2'/%3E%3Cpath d='M11 12v5'/%3E%3C/svg%3E");
         }
 
-        .trip-tag.mountaineering {
+        .trip-tag.scrambling {
             --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 20L12 4l7 16'/%3E%3Cpath d='M17 7l3 11'/%3E%3Cpath d='M17 7l-4 6'/%3E%3Cpath d='M4 18h16'/%3E%3C/svg%3E");
         }
 
@@ -291,21 +333,20 @@
         }
 
         .nature-content {
-            margin-top: 8px;
+            margin-top: 0;
         }
 
         .activity-key {
-            margin: 0 0 20px;
-            padding: 0;
+            margin: 0 0 28px;
+            padding: 0 0 14px;
+            border-bottom: 1px solid #e5e5e5;
         }
 
         .activity-key-title {
-            margin: 0 0 10px;
+            margin: 0 0 8px;
             padding: 0;
             font-weight: 500;
-            color: #777;
-            letter-spacing: 0.02em;
-            text-transform: uppercase;
+            color: #888;
         }
 
         .activity-key-list {
@@ -314,33 +355,35 @@
             list-style: none;
             display: flex;
             flex-wrap: wrap;
-            gap: 10px 18px;
+            gap: 8px 16px;
         }
 
         .activity-key-list li {
             display: flex;
-            gap: 6px;
+            gap: 5px;
             align-items: center;
             margin: 0;
         }
 
         .activity-key-list .trip-tag {
             flex-shrink: 0;
+            width: 16px;
+            height: 16px;
         }
 
         .activity-key-list strong {
-            color: #444;
-            font-weight: 500;
+            color: #666;
+            font-weight: 400;
         }
 
         .nature-content .trip-year:first-of-type {
-            margin-top: 0;
+            margin-top: 8px;
         }
 
         .trip-gallery {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            gap: 8px;
             max-width: 100%;
         }
 
@@ -350,7 +393,8 @@
             aspect-ratio: 1.33 / 1;
             height: auto;
             object-fit: cover;
-            border: 1px solid #ececec;
+            border: 0;
+            background: #f3f3f3;
         }
 
         @media print,
@@ -360,17 +404,11 @@
             }
 
             .trip-year {
-                font-size: 20px;
-                margin-top: 24px;
+                margin-top: 28px;
             }
 
             .trip-month {
-                font-size: 16px;
                 margin-top: 16px;
-            }
-
-            .trip-entry>.trip-title {
-                font-size: 14px;
             }
 
             .trip-entry>.trip-title:has(+ .trip-tags:not(:empty)) {
@@ -506,24 +544,25 @@
             gap: 8px;
         }
 
-        .trip-map-year-end {
-            font-size: 11px;
-            color: #999;
-            flex-shrink: 0;
-        }
-
-        #trip-map-year {
-            flex: 1;
-            min-width: 70px;
-            accent-color: #c07a3a;
-        }
-
         .trip-map-year-current {
             font-size: 13px;
             font-weight: 700;
             color: #f5a560;
             white-space: nowrap;
             min-width: 3.2em;
+        }
+
+        .trip-map-year-end {
+            font-size: 11px;
+            color: #999;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        #trip-map-year {
+            flex: 1;
+            min-width: 70px;
+            accent-color: #c07a3a;
         }
 
         #trip-map-status {
@@ -537,6 +576,11 @@
             min-height: 280px;
             height: 100%;
             background: #ddd;
+        }
+
+        /* Soften OpenTopoMap's loud palette while keeping glacier / contour detail */
+        #trip-map-canvas .trip-map-terrain-tiles {
+            filter: saturate(0.62) contrast(0.94) brightness(1.04);
         }
 
         .trip-map-stage {
@@ -585,7 +629,9 @@
         }
 
         @keyframes trip-map-spin {
-            to { transform: rotate(360deg); }
+            to {
+                transform: rotate(360deg);
+            }
         }
 
         #trip-map-loading-text {
@@ -706,13 +752,11 @@
 
 <body>
     <main class="fun-wrapper">
-        <h1>Welcome to the Nature!</h1>
-        <p class="wta-link">You can find some of my memories on my
-            <a href="https://www.wta.org/@@backpacks/scrnm-rdxu" target="_blank" rel="noopener noreferrer">WTA trip
-                reports page</a>.
+        <h1>Trip Archive</h1>
+        <p class="trip-lede">You can find some of my Washington outdoor memories on my
+            <a href="https://www.wta.org/@@backpacks/scrnm-rdxu" target="_blank" rel="noopener noreferrer">WTA page</a>.
         </p>
-        <p class="nature-disclaimer">Disclaimer: This page records outdoor activities that are inherently dangerous.
-            Always do your own research first.</p>
+        <p class="nature-disclaimer">Some of these activities can be inherently dangerous — do your own research.</p>
 
         <div class="nature-content">
             <div class="activity-key" aria-label="Activity types">
@@ -723,8 +767,7 @@
                     <li><span class="trip-tag cycling" aria-hidden="true"></span><strong>cycling</strong></li>
                     <li><span class="trip-tag camping" aria-hidden="true"></span><strong>camping</strong></li>
                     <li><span class="trip-tag backpacking" aria-hidden="true"></span><strong>backpacking</strong></li>
-                    <li><span class="trip-tag mountaineering"
-                            aria-hidden="true"></span><strong>mountaineering/peakbagging</strong></li>
+                    <li><span class="trip-tag scrambling" aria-hidden="true"></span><strong>scrambling</strong></li>
                     <li><span class="trip-tag kayaking" aria-hidden="true"></span><strong>kayaking</strong></li>
                 </ul>
             </div>
@@ -749,7 +792,8 @@
                         <span class="trip-map-year-hint">Try viewing through the years</span>
                         <div class="trip-map-year-controls">
                             <span class="trip-map-year-end" id="trip-map-year-min">2014</span>
-                            <input id="trip-map-year" type="range" min="0" max="0" value="0" step="1" aria-label="Satellite imagery year">
+                            <input id="trip-map-year" type="range" min="0" max="0" value="0" step="1"
+                                aria-label="Satellite imagery year">
                             <span class="trip-map-year-end" id="trip-map-year-max">now</span>
                             <span id="trip-map-year-label" class="trip-map-year-current"></span>
                         </div>
@@ -762,7 +806,7 @@
                 <div id="trip-map-loading" class="trip-map-loading hidden" aria-live="polite">
                     <div class="trip-map-loading-card">
                         <div class="trip-map-loading-spinner" aria-hidden="true"></div>
-                        <p id="trip-map-loading-text">Please wait — GPS info is being loaded…</p>
+                        <p id="trip-map-loading-text">Loading GPS...</p>
                     </div>
                 </div>
             </div>
@@ -771,13 +815,13 @@
     </div>
 
     <script src="./javascripts/nature-config.js"></script>
-    <script src="./javascripts/nature-map.js"></script>
+    <script src="./javascripts/nature-map.js?v=wayback-trip-year"></script>
     <script src="./javascripts/nature-trips.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tooltips for static activity-key icons
-            var types = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'mountaineering', 'kayaking'];
-            var labels = { mountaineering: 'mountaineering/peakbagging' };
+            var types = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'kayaking'];
+            var labels = {};
             document.querySelectorAll('.activity-key .trip-tag').forEach(function (el) {
                 var fromClass = types.find(function (t) { return el.classList.contains(t); });
                 var label = labels[fromClass] || fromClass;

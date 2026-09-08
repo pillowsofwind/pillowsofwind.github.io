@@ -1,6 +1,6 @@
 (function () {
   var TAG_LABELS = {
-    mountaineering: "mountaineering/peakbagging",
+    scrambling: "scrambling",
   };
 
   function escapeHtml(str) {
@@ -171,11 +171,22 @@
     });
   }
 
+  function normalizeTag(tag) {
+    var t = String(tag || "").trim();
+    if (t === "mountaineering") return "scrambling";
+    return t;
+  }
+
   function renderTags(tags) {
     if (!tags || !tags.length) return "";
+    var normalized = [];
+    tags.forEach(function (tag) {
+      var t = normalizeTag(tag);
+      if (t && normalized.indexOf(t) < 0) normalized.push(t);
+    });
     return (
       '<div class="trip-tags">' +
-      tags
+      normalized
         .map(function (tag) {
           var tip = TAG_LABELS[tag] || tag;
           return (
@@ -201,12 +212,13 @@
       trip.photos && trip.photos.length
         ? '<button type="button" class="trip-map-btn" data-trip-map="' +
           escapeHtml(trip.id || "") +
-          '" aria-label="Show on map">' +
+          '" aria-label="See this trip on the map">' +
           '<svg viewBox="0 0 24 24" aria-hidden="true">' +
           '<path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/>' +
           '<circle cx="12" cy="9.8" r="2.2"/>' +
           "</svg>" +
-          '<span class="trip-map-btn-label">Show on map</span>' +
+          '<span class="trip-map-btn-label">See on map</span>' +
+          '<span class="trip-map-btn-arrow" aria-hidden="true">→</span>' +
           "</button>"
         : "";
     var photos = (trip.photos || [])
@@ -261,7 +273,7 @@
       "cycling",
       "camping",
       "backpacking",
-      "mountaineering",
+      "scrambling",
       "kayaking",
     ];
     root.querySelectorAll(".trip-tag").forEach(function (el) {

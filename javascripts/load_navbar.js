@@ -1,12 +1,110 @@
-document.addEventListener('DOMContentLoaded', function() {
-    const navbar = `
-    <nav class="navbar">
-        <div class="nav-content">
-            <a href="./index.html">home</a>     
-            <a href="./misc.html">misc</a>
-            <a href="./nature.html">trip reports</a>
-        </div>
-    </nav>
-    `;
-    document.body.insertAdjacentHTML('afterbegin', navbar);
-});
+(function () {
+  var ORIGIN = "https://rongwuxu.com";
+  var LOGO = ORIGIN + "/images/logo-512.png";
+
+  var PAGE = {
+    "/": {
+      description: "Rongwu Xu — PhD student at the University of Washington Allen School.",
+    },
+    "/index.html": {
+      description: "Rongwu Xu — PhD student at the University of Washington Allen School.",
+    },
+    "/misc.html": {
+      description: "Interests, music, and miscellany — Rongwu Xu.",
+    },
+    "/trip.html": {
+      description: "Trip archive — outdoor adventures by Rongwu Xu.",
+    },
+  };
+
+  function pathKey() {
+    var p = location.pathname || "/";
+    if (p === "/" || p.endsWith("/")) return "/";
+    var parts = p.split("/");
+    return "/" + (parts[parts.length - 1] || "index.html");
+  }
+
+  function ensureMeta(attr, key, value) {
+    if (!value) return;
+    var sel = "meta[" + attr + '="' + key + '"]';
+    var el = document.head.querySelector(sel);
+    if (!el) {
+      el = document.createElement("meta");
+      el.setAttribute(attr, key);
+      document.head.appendChild(el);
+    }
+    el.setAttribute("content", value);
+  }
+
+  function ensureLink(rel, href, attrs) {
+    var el = document.head.querySelector('link[rel="' + rel + '"]' + (attrs && attrs.sizes ? '[sizes="' + attrs.sizes + '"]' : ""));
+    if (!el) {
+      el = document.createElement("link");
+      el.rel = rel;
+      document.head.appendChild(el);
+    }
+    el.href = href;
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        el.setAttribute(k, attrs[k]);
+      });
+    }
+  }
+
+  function applyBrand() {
+    var key = pathKey();
+    var info = PAGE[key] || {};
+    var title = document.title || "Rongwu Xu";
+    var description = info.description || title;
+    var url = ORIGIN + (key === "/" ? "/" : key);
+
+    ensureLink("apple-touch-icon", "/apple-touch-icon.png", {
+      sizes: "180x180",
+    });
+    ensureLink("icon", "/favicon.ico", { sizes: "48x48" });
+    ensureLink("icon", "/favicon.png", {
+      type: "image/png",
+      sizes: "32x32",
+    });
+    ensureLink("shortcut icon", "/favicon.ico");
+
+    ensureMeta("name", "theme-color", "#1a3a42");
+    ensureMeta("name", "description", description);
+    ensureMeta("property", "og:type", "website");
+    ensureMeta("property", "og:site_name", "Rongwu Xu");
+    ensureMeta("property", "og:title", title);
+    ensureMeta("property", "og:description", description);
+    ensureMeta("property", "og:url", url);
+    ensureMeta("property", "og:image", LOGO);
+    ensureMeta("name", "twitter:card", "summary");
+    ensureMeta("name", "twitter:title", title);
+    ensureMeta("name", "twitter:image", LOGO);
+  }
+
+  function applyNav() {
+    if (window.SITE_NO_NAV) return;
+    var key = pathKey();
+    if (key === "/admin.html") return;
+
+    var navbar =
+      '<nav class="navbar">' +
+      '<div class="nav-content">' +
+      '<a href="./index.html">home</a>' +
+      '<a href="./misc.html">misc</a>' +
+      '<a href="./trip.html">trip archive</a>' +
+      "</div>" +
+      "</nav>";
+
+    function inject() {
+      if (!document.body) return;
+      if (document.querySelector("nav.navbar")) return;
+      document.body.insertAdjacentHTML("afterbegin", navbar);
+    }
+
+    if (document.body) inject();
+    else document.addEventListener("DOMContentLoaded", inject);
+  }
+
+  applyBrand();
+  applyNav();
+})();

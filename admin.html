@@ -6,7 +6,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
   <meta name="color-scheme" content="light only">
-  <title>Manage Trips | Trip Reports</title>
+  <title>Manage Trips | Trip Archive</title>
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+  <script src="./javascripts/load_navbar.js"></script>
   <style>
     :root {
       --bg: #f7f6f3;
@@ -286,7 +291,7 @@
   <div class="wrap">
     <h1>Manage trips</h1>
     <p class="sub">Add, edit, or delete trips. Photos sync to R2 — no Git commit.
-      <a href="./nature.html">View site</a>
+      <a href="./trip.html">View site</a>
     </p>
 
     <div class="tabs">
@@ -360,7 +365,7 @@
           <div class="actions">
             <button class="primary" id="submit" type="submit">Upload trip</button>
             <button class="secondary hidden" id="cancel-edit" type="button">Cancel edit</button>
-            <a class="secondary" href="./nature.html" target="_blank" rel="noopener">View site</a>
+            <a class="secondary" href="./trip.html" target="_blank" rel="noopener">View site</a>
             <span class="status" id="status"></span>
           </div>
         </div>
@@ -385,7 +390,7 @@
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script>
     (function () {
-      var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'mountaineering', 'kayaking'];
+      var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'kayaking'];
       var JPEG_QUALITY = 0.88;
       // Unified ordered list: { type:'existing', url } | { type:'new', file, previewUrl }
       var photoItems = [];

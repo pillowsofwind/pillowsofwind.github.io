@@ -24,7 +24,7 @@ const ALLOWED_TAGS = [
   "cycling",
   "camping",
   "backpacking",
-  "mountaineering",
+  "scrambling",
   "kayaking",
 ];
 
@@ -180,6 +180,28 @@ async function loadTrips(env, base) {
     const data = await obj.json();
     if (!data.trips) data.trips = [];
     if (!data.publicBaseUrl) data.publicBaseUrl = base;
+    let changed = false;
+    data.trips = data.trips.map((trip) => {
+      const tags = Array.isArray(trip.tags) ? trip.tags : [];
+      const next = [
+        ...new Set(
+          tags.map(normalizeTag).filter((t) => ALLOWED_TAGS.includes(t))
+        ),
+      ];
+      if (JSON.stringify(next) !== JSON.stringify(tags)) {
+        changed = true;
+        return { ...trip, tags: next };
+      }
+      return trip;
+    });
+    if (changed) {
+      // Persist rename so stored data matches scrambling
+      try {
+        await saveTrips(env, data);
+      } catch {
+        // still return normalized tags even if save fails
+      }
+    }
     return data;
   } catch {
     return { publicBaseUrl: base, trips: [] };
@@ -195,6 +217,12 @@ async function saveTrips(env, data) {
   });
 }
 
+function normalizeTag(tag) {
+  const t = String(tag || "").trim();
+  if (t === "mountaineering") return "scrambling";
+  return t;
+}
+
 function parseTags(raw) {
   let tags = [];
   try {
@@ -205,7 +233,10 @@ function parseTags(raw) {
       .map((t) => t.trim())
       .filter(Boolean);
   }
-  return tags.filter((t) => ALLOWED_TAGS.includes(t));
+  if (!Array.isArray(tags)) tags = [];
+  return [
+    ...new Set(tags.map(normalizeTag).filter((t) => ALLOWED_TAGS.includes(t))),
+  ];
 }
 
 function validateTripFields({ title, date, endDate }) {

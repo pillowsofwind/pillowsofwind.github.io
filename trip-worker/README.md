@@ -44,7 +44,7 @@ workerUrl: "https://nature-trip-uploader.<account>.workers.dev",
 Or open `admin.html` → **Advanced: Worker URL** and paste it (saved in your browser).
 
 ### 5. Commit & push site code once
-Push `admin.html`, `nature.html`, `javascripts/*`, `data/trips.json`, `trip-worker/*` to GitHub Pages.
+Push `admin.html`, `trip.html`, `javascripts/*`, `data/trips.json`, `trip-worker/*` to GitHub Pages.
 After that, **new trips do not need commits**.
 
 ## Daily use

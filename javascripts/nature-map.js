@@ -9,6 +9,7 @@
   var waybackYears = [];
   var waybackPromise = null;
   var waybackIndex = -1;
+  var preferredWaybackYear = null;
   var satLayer = null;
 
   function $(id) {
@@ -89,6 +90,49 @@
     );
   }
 
+  function tripYear(trip) {
+    if (!trip) return null;
+    if (trip.date && /^\d{4}-\d{2}-\d{2}$/.test(trip.date)) {
+      return Number(trip.date.slice(0, 4));
+    }
+    if (trip.year && /^\d{4}$/.test(String(trip.year))) {
+      return Number(trip.year);
+    }
+    return null;
+  }
+
+  function indexForWaybackYear(year) {
+    if (!waybackYears.length || year == null || !isFinite(year)) {
+      return waybackYears.length ? waybackYears.length - 1 : -1;
+    }
+    var exact = -1;
+    var best = 0;
+    var bestDist = Infinity;
+    for (var i = 0; i < waybackYears.length; i++) {
+      var y = waybackYears[i].year;
+      if (y === year) {
+        exact = i;
+        break;
+      }
+      var dist = Math.abs(y - year);
+      if (dist < bestDist) {
+        bestDist = dist;
+        best = i;
+      }
+    }
+    return exact >= 0 ? exact : best;
+  }
+
+  function applyPreferredWaybackYear() {
+    if (!waybackYears.length) return;
+    applyWaybackYear(indexForWaybackYear(preferredWaybackYear));
+  }
+
+  function formatWaybackLabel(item) {
+    if (!item) return "";
+    return String(item.year || "");
+  }
+
   function updateYearLabel() {
     var label = $("trip-map-year-label");
     if (!label || waybackIndex < 0 || !waybackYears[waybackIndex]) {
@@ -96,7 +140,7 @@
       return;
     }
     var item = waybackYears[waybackIndex];
-    label.textContent = String(item.year);
+    label.textContent = formatWaybackLabel(item);
   }
 
   function applyWaybackYear(index) {
@@ -108,15 +152,16 @@
       maxZoom: 19,
       attribution:
         "Esri World Imagery Wayback (" +
-        item.date +
+        item.year +
         ") &mdash; Esri, Maxar, Earthstar Geographics",
     });
-    if (activeBase === "satellite") {
-      next.addTo(map);
-      if (satLayer) map.removeLayer(satLayer);
-    }
+    var previous = satLayer;
     satLayer = next;
     baseLayers.satellite = satLayer;
+    if (activeBase === "satellite") {
+      if (previous) map.removeLayer(previous);
+      next.addTo(map);
+    }
     updateYearLabel();
     var slider = $("trip-map-year");
     if (slider) {
@@ -149,7 +194,7 @@
             name: item.Name,
           };
         });
-        waybackYears = Object.keys(byYear)
+        var all = Object.keys(byYear)
           .map(Number)
           .sort(function (a, b) {
             return a - b;
@@ -157,6 +202,8 @@
           .map(function (y) {
             return byYear[y];
           });
+        // Keep at most the most recent 20 years
+        waybackYears = all.length > 20 ? all.slice(all.length - 20) : all;
         return waybackYears;
       })
       .catch(function (err) {
@@ -196,6 +243,7 @@
       {
         maxZoom: 17,
         subdomains: "abc",
+        className: "trip-map-terrain-tiles",
         attribution:
           'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, <a href="https://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (CC-BY-SA)',
       }
@@ -217,7 +265,7 @@
       var maxLabel = $("trip-map-year-max");
       if (minLabel) minLabel.textContent = String(years[0].year);
       if (maxLabel) maxLabel.textContent = String(years[years.length - 1].year);
-      applyWaybackYear(years.length - 1);
+      applyPreferredWaybackYear();
       setBasemapButtons();
     });
   }
@@ -243,18 +291,16 @@
       return [p.lat, p.lng];
     });
     if (bounds.length === 1) {
-      // A bit broader than street-level so surroundings are visible
-      map.setView(bounds[0], 13);
+      map.setView(bounds[0], 15);
       return;
     }
     var latLngBounds = window.L.latLngBounds(bounds);
-    // Nearly identical points still get a sensible close zoom
+    // Nearly identical points — zoom in instead of leaving a wide empty frame
     if (latLngBounds.getNorthEast().distanceTo(latLngBounds.getSouthWest()) < 40) {
-      map.setView(latLngBounds.getCenter(), 12);
+      map.setView(latLngBounds.getCenter(), 15);
       return;
     }
-    // Extra padding + lower max zoom = slightly larger region around the photos
-    map.fitBounds(latLngBounds, { padding: [72, 72], maxZoom: 13 });
+    map.fitBounds(latLngBounds, { padding: [36, 36], maxZoom: 16 });
   }
 
   async function fetchGpsViaWorker(photos) {
@@ -312,7 +358,7 @@
     if (!list.length) return [];
 
     setStatus("Reading GPS from photos…");
-    setLoading(true, "Please wait — GPS info is being loaded…");
+    setLoading(true, "Loading GPS...");
     try {
       points = await fetchGpsViaWorker(list);
     } catch (err) {
@@ -421,9 +467,10 @@
 
   async function showTripOnMap(trip) {
     var loadId = ++mapLoadId;
+    preferredWaybackYear = tripYear(trip);
     openModal(trip.title || "Trip map");
     setStatus("Loading map…");
-    setLoading(true, "Please wait — GPS info is being loaded…");
+    setLoading(true, "Loading GPS...");
     try {
       await ensureLibs();
       if (loadId !== mapLoadId) return;
@@ -436,6 +483,14 @@
         strip.classList.add("hidden");
       }
       map.setView([20, 0], 2);
+
+      // Match satellite archive to the trip year (or closest available)
+      if (activeBase !== "satellite") switchBasemap("satellite");
+      loadWaybackYears().then(function () {
+        if (loadId !== mapLoadId) return;
+        applyPreferredWaybackYear();
+        setBasemapButtons();
+      });
 
       var points = await collectPoints(trip.photos || [], trip.photoLocations || []);
       if (loadId !== mapLoadId) return;

@@ -36,37 +36,12 @@
     el.setAttribute("content", value);
   }
 
-  function ensureLink(rel, href, attrs) {
-    var el = document.head.querySelector('link[rel="' + rel + '"]' + (attrs && attrs.sizes ? '[sizes="' + attrs.sizes + '"]' : ""));
-    if (!el) {
-      el = document.createElement("link");
-      el.rel = rel;
-      document.head.appendChild(el);
-    }
-    el.href = href;
-    if (attrs) {
-      Object.keys(attrs).forEach(function (k) {
-        el.setAttribute(k, attrs[k]);
-      });
-    }
-  }
-
   function applyBrand() {
     var key = pathKey();
     var info = PAGE[key] || {};
     var title = document.title || "Rongwu Xu";
     var description = info.description || title;
     var url = ORIGIN + (key === "/" ? "/" : key);
-
-    ensureLink("apple-touch-icon", "/apple-touch-icon.png", {
-      sizes: "180x180",
-    });
-    ensureLink("icon", "/favicon.ico", { sizes: "48x48" });
-    ensureLink("icon", "/favicon.png", {
-      type: "image/png",
-      sizes: "32x32",
-    });
-    ensureLink("shortcut icon", "/favicon.ico");
 
     ensureMeta("name", "theme-color", "#1a3a42");
     ensureMeta("name", "description", description);

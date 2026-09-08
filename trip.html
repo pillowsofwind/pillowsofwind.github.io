@@ -7,10 +7,8 @@
     <meta name="color-scheme" content="light only">
     <link rel="stylesheet" href="stylesheets/styles.css">
     <title>Trip Archive | Rongwu Xu</title>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" href="/favicon.ico" sizes="48x48">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
-    <link rel="shortcut icon" href="/favicon.ico">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <script src="./javascripts/load_navbar.js"></script>
     <style>
         html {
@@ -53,6 +51,23 @@
             margin: 0 0 8px;
             color: #666;
             line-height: 1.55;
+        }
+
+        .trip-lede-photo {
+            margin: 14px 0 18px;
+        }
+
+        .trip-lede-photo img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .trip-lede-photo figcaption {
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.45;
+            color: #888;
         }
 
         .trips-loading,
@@ -169,6 +184,7 @@
         }
 
         @keyframes trip-map-pin {
+
             0%,
             100% {
                 transform: translateY(0);
@@ -753,10 +769,54 @@
 <body>
     <main class="fun-wrapper">
         <h1>Trip Archive</h1>
-        <p class="trip-lede">You can find some of my Washington outdoor memories on my
-            <a href="https://www.wta.org/@@backpacks/scrnm-rdxu" target="_blank" rel="noopener noreferrer">WTA page</a>.
-        </p>
-        <p class="nature-disclaimer">Some of these activities can be inherently dangerous — do your own research.</p>
+        <p class="trip-lede">I started this page in mid-2026 to share some of my trips outside, including hiking,
+            camping, climbing, and whatever else pulls me into the open air. I have loved scenic views since I was
+            young, but I did not really spend time in the wilderness until I moved to Seattle for my PhD. Growing up
+            near Beijing, I “climbed” the usual paved <a href="https://en.wikipedia.org/wiki/Mount_Miaofeng">hills</a>
+            and did the usual tourist trips back in my country; looking
+            back, they were closer to walking stairs in a well-maintained park. Here I began with trails around the
+            city, then — once I had a car — the state parks on the outskirts and forests farther out. Mountains,
+            especially, took hold of me. I am a little obsessed with them.</p>
+        <p class="trip-lede">The summer after finishing my Master’s degree, I went to Yunnan province and stood below
+            the <a href="https://en.wikipedia.org/wiki/Jade_Dragon_Snow_Mountain" target="_blank"
+                rel="noopener noreferrer">Jade Dragon Snow Mountain (玉龙雪山)</a>. It was another tourist trip, but we were
+            at 4600m and it felt so real. The weather was not ideal: heavy cloud, a whiteout, almost no view from the
+            high places. Still, the granite walls and the shapes glaciers had carved left me speechless. Since then I
+            have dreamed of returning to mountains, visiting more and perhaps climbing — especially taller ones, snow
+            and ice — and, yes, crazy as I always
+            am, of one day standing on an eight-thousander if money, body, and luck allow. It sounds like I am going too
+            far when I say it out loud. I mean it anyway.</p>
+        <figure class="trip-lede-photo">
+            <img src="./images/jade-dragon-snow-mountain.jpg" width="1024" height="768"
+                alt="Jade Dragon Snow Mountain peaks breaking through cloud under a clear blue sky, Yunnan, 2025"
+                loading="lazy" decoding="async">
+            <figcaption>玉龙雪山 — a brief clear window above the cloud, Yunnan, China, July 2025.</figcaption>
+        </figure>
+        <p class="trip-lede">In Washington I learned that hills like Mount Si, beautiful as they always are, were not
+            enough for me. I always wanted to be on the top, not only on the trail around it. In the North Cascades
+            there are two-thousand-meter glaciated peaks you can reach without altitude sickness; on the road and from
+            the plane, snowy volcanoes like Mt. Rainier and Mt. Baker keep appearing, as if they were saying: start here
+            — train yourself — maybe someday you will finish what you began. I asked around for alpine summits that were
+            not too technical, preferably with snow and glaciers. On a hitchhike back down from Hidden Lake Lookout, a
+            former local mountaineer told me Ruth Mountain could be a choice; later I confirmed with <a
+                href="https://galenweld.com/blog">Galen</a>, a true mountain man who never tires of my endless beginner
+            questions. It took me two attempts (early season is honest about how unready you can feel). When I finally
+            stood up there, I realized it was possible for me to stand where I had once only stared. If I could summit
+            Ruth with average fitness and almost no skills, nothing could hold me back, especially since I can always
+            learn from failures. After that I planned, failed, and climbed more alpine peaks in this state that season
+            — each one its own memory and its own hardness. I do not know whether I will ever go very technical or very
+            fast. I would rather stay an admirer of the mountains, carrying myself up under my own power, than become a
+            conqueror or a racer. Lately I have also been visiting Washington fire lookouts — history folded into a
+            view.</p>
+        <p class="trip-lede">I believe many things are destined to be, like what brought me to Washington to resume
+            and pursue my love for mountains. Do I have a target list of peaks I want to climb? No, I don’t. If it’s
+            meant to be, it will be.</p>
+
+        <p class="trip-lede">Some of these trips also live on my <a href="https://www.wta.org/@@backpacks/scrnm-rdxu"
+                target="_blank" rel="noopener noreferrer">WTA
+                page</a>.</p>
+        <p class="nature-disclaimer">Disclaimer: Some of these activities can be inherently dangerous — do your own
+            research.</p>
 
         <div class="nature-content">
             <div class="activity-key" aria-label="Activity types">

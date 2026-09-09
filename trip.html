@@ -81,7 +81,7 @@
             color: #222;
             border-bottom: 1px solid #e5e5e5;
             padding-bottom: 8px;
-            scroll-margin-top: calc(var(--trip-jump-top, 0px) + 52px);
+            scroll-margin-top: 88px;
         }
 
         .trip-month {
@@ -90,12 +90,13 @@
             font-size: 18px;
             font-weight: 500;
             color: #4a4a4a;
-            scroll-margin-top: calc(var(--trip-jump-top, 0px) + 52px);
+            scroll-margin-top: 88px;
         }
 
         .trip-jump {
             position: sticky;
-            top: var(--trip-jump-top, 0px);
+            /* Flush under fixed .navbar (10px + 16px/1.5 line + 10px ≈ 44px) */
+            top: 44px;
             z-index: 30;
             margin: 0 0 4px;
             padding: 2px 0 0;
@@ -257,6 +258,13 @@
         .trip-jump-month:focus-visible {
             color: #222;
             outline: none;
+        }
+
+        .trip-jump-latest-tag {
+            color: #d97706;
+            font-weight: 500;
+            font-size: 12px;
+            margin-left: 6px;
         }
 
         .trip-entry {
@@ -608,12 +616,12 @@
             }
 
             .trip-jump {
-                top: var(--trip-jump-top, 0px);
+                top: 44px;
             }
 
             .trip-year,
             .trip-month {
-                scroll-margin-top: calc(var(--trip-jump-top, 0px) + 48px);
+                scroll-margin-top: 84px;
             }
         }
 
@@ -953,7 +961,7 @@
             especially, took hold of me. I am a little obsessed with them.</p>
         <p class="trip-lede">The summer after finishing my Master’s degree, I went to Yunnan province and stood below
             the <a href="https://en.wikipedia.org/wiki/Jade_Dragon_Snow_Mountain" target="_blank"
-                rel="noopener noreferrer">Yulong Xueshan</a> (玉龙雪山, also known as Jade Dragon Snow Mountain). It was
+                rel="noopener noreferrer">Yulong Xueshan</a> (玉龙雪山). It was
             another tourist trip,
             but we were
             at 4600m and it felt so real. The weather was not ideal: heavy cloud, a whiteout, almost no view from the
@@ -1064,7 +1072,7 @@
 
     <script src="./javascripts/nature-config.js"></script>
     <script src="./javascripts/nature-map.js?v=wayback-trip-year"></script>
-    <script src="./javascripts/nature-trips.js?v=jump-latest-inner"></script>
+    <script src="./javascripts/nature-trips.js?v=lazy-imgs"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tooltips for static activity-key icons

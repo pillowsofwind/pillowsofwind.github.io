@@ -223,7 +223,11 @@
         : "";
     var photos = (trip.photos || [])
       .map(function (src) {
-        return '<img src="' + escapeHtml(src) + '" alt="">';
+        return (
+          '<img src="' +
+          escapeHtml(src) +
+          '" alt="" loading="lazy" decoding="async">'
+        );
       })
       .join("");
     var gallery = photos
@@ -289,55 +293,11 @@
     return { html: html, trips: sorted, toc: toc };
   }
 
-  function syncTripJumpSticky() {
-    var siteNav = document.querySelector("nav.navbar");
-    var top = 0;
-    if (siteNav) {
-      // Exact bottom edge of the fixed nav (no ceil → no 1px gap)
-      top = Math.max(0, siteNav.getBoundingClientRect().bottom);
-    }
-    document.documentElement.style.setProperty(
-      "--trip-jump-top",
-      top + "px"
-    );
-    return top;
-  }
-
-  function bindTripJumpStickySync() {
-    if (bindTripJumpStickySync.bound) return;
-    bindTripJumpStickySync.bound = true;
-    var tick = function () {
-      syncTripJumpSticky();
-    };
-    window.addEventListener("scroll", tick, { passive: true });
-    window.addEventListener("resize", tick);
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", tick);
-      window.visualViewport.addEventListener("scroll", tick);
-    }
-  }
-
   function scrollToTripId(id) {
     var el = document.getElementById(id);
     if (!el) return;
-
-    function run() {
-      var stickyTop = syncTripJumpSticky();
-      var nav = document.getElementById("trip-jump");
-      var bar = nav && nav.querySelector(".trip-jump-bar");
-      var barH = bar ? bar.getBoundingClientRect().height : 40;
-      var offset = stickyTop + barH + 8;
-      var top =
-        el.getBoundingClientRect().top + window.pageYOffset - offset;
-      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
-      try {
-        history.replaceState(null, "", "#" + id);
-      } catch (e) {}
-    }
-
-    requestAnimationFrame(function () {
-      requestAnimationFrame(run);
-    });
+    // Instant jump only — smooth scroll crashes iPhone Safari on this image-heavy page.
+    el.scrollIntoView(true);
   }
 
   function mountTripJumpNav(toc) {
@@ -349,25 +309,21 @@
 
     if (!toc || !toc.length) {
       nav.hidden = true;
-      nav.setAttribute("aria-hidden", "true");
       panel.innerHTML = "";
       return;
     }
 
     nav.hidden = false;
-    nav.setAttribute("aria-hidden", "false");
-    bindTripJumpStickySync();
-    syncTripJumpSticky();
 
     panel.innerHTML = toc
       .map(function (y, yi) {
-        var yearBtnId = "trip-jump-year-" + yi;
         var monthsId = "trip-jump-months-" + yi;
         var monthItems = y.months
           .map(function (m, mi) {
             var label =
               yi === 0 && mi === 0
-                ? escapeHtml(m.name) + " · latest"
+                ? escapeHtml(m.name) +
+                  ' <span class="trip-jump-latest-tag">latest</span>'
                 : escapeHtml(m.name);
             return (
               '<li><button type="button" class="trip-jump-month" data-jump="' +
@@ -380,9 +336,7 @@
           .join("");
         return (
           '<div class="trip-jump-year-block">' +
-          '<button type="button" class="trip-jump-year" id="' +
-          yearBtnId +
-          '" aria-expanded="' +
+          '<button type="button" class="trip-jump-year" aria-expanded="' +
           (yi === 0 ? "true" : "false") +
           '" aria-controls="' +
           monthsId +
@@ -422,17 +376,16 @@
 
     topBtn.onclick = function () {
       setOpen(false);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-      try {
-        history.replaceState(null, "", location.pathname + location.search);
-      } catch (e) {}
+      window.scrollTo(0, 0);
     };
 
-    document.addEventListener("click", function (e) {
-      if (!nav.classList.contains("is-open")) return;
-      if (nav.contains(e.target)) return;
-      setOpen(false);
-    });
+    if (!mountTripJumpNav.clickBound) {
+      mountTripJumpNav.clickBound = true;
+      document.addEventListener("click", function (e) {
+        if (!nav.classList.contains("is-open") || nav.contains(e.target)) return;
+        setOpen(false);
+      });
+    }
 
     panel.onclick = function (e) {
       var yearBtn = e.target.closest(".trip-jump-year");
@@ -441,7 +394,6 @@
           yearBtn.getAttribute("aria-controls")
         );
         var expanded = yearBtn.getAttribute("aria-expanded") === "true";
-        // Accordion: close other years
         panel.querySelectorAll(".trip-jump-year").forEach(function (btn) {
           if (btn === yearBtn) return;
           btn.setAttribute("aria-expanded", "false");
@@ -455,9 +407,8 @@
 
       var monthBtn = e.target.closest(".trip-jump-month");
       if (monthBtn && panel.contains(monthBtn)) {
-        var jump = monthBtn.getAttribute("data-jump");
         setOpen(false);
-        if (jump) scrollToTripId(jump);
+        scrollToTripId(monthBtn.getAttribute("data-jump"));
       }
     };
   }

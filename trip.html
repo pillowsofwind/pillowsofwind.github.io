@@ -12,14 +12,6 @@
     <link rel="apple-touch-icon" href="/icon-180.png">
     <script src="./javascripts/load_navbar.js"></script>
     <style>
-        html {
-            overflow-x: clip;
-        }
-
-        body {
-            overflow-x: clip;
-        }
-
         .fun-wrapper {
             max-width: min(720px, 100%);
             margin: 0 auto;
@@ -28,7 +20,6 @@
             width: auto;
             box-sizing: border-box;
             background-color: #ffffff;
-            overflow-x: clip;
         }
 
         /* Override site theme: section { float: right } is for index layout only */
@@ -80,7 +71,7 @@
         .nature-disclaimer {
             margin: 0 0 28px;
             line-height: 1.5;
-            color: #9a9a9a;
+            color: #666;
         }
 
         .trip-year {
@@ -90,6 +81,7 @@
             color: #222;
             border-bottom: 1px solid #e5e5e5;
             padding-bottom: 8px;
+            scroll-margin-top: calc(var(--trip-jump-top, 0px) + 52px);
         }
 
         .trip-month {
@@ -98,6 +90,173 @@
             font-size: 18px;
             font-weight: 500;
             color: #4a4a4a;
+            scroll-margin-top: calc(var(--trip-jump-top, 0px) + 52px);
+        }
+
+        .trip-jump {
+            position: sticky;
+            top: var(--trip-jump-top, 0px);
+            z-index: 30;
+            margin: 0 0 4px;
+            padding: 2px 0 0;
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .trip-jump[hidden] {
+            display: none !important;
+        }
+
+        .trip-jump-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-height: 36px;
+        }
+
+        .trip-jump-toggle,
+        .trip-jump-top {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-size: 13px;
+            color: #888;
+            cursor: pointer;
+            padding: 6px 0;
+            text-align: left;
+        }
+
+        .trip-jump-toggle {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .trip-jump-toggle::after {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-right: 1.5px solid #999;
+            border-bottom: 1.5px solid #999;
+            transform: rotate(45deg);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            margin-top: -2px;
+        }
+
+        .trip-jump.is-open .trip-jump-toggle::after {
+            transform: rotate(-135deg);
+            margin-top: 2px;
+        }
+
+        .trip-jump-top {
+            flex-shrink: 0;
+            padding-left: 14px;
+            color: #888;
+        }
+
+        .trip-jump-toggle:hover,
+        .trip-jump-top:hover,
+        .trip-jump-toggle:focus-visible,
+        .trip-jump-top:focus-visible {
+            color: #222;
+            outline: none;
+        }
+
+        .trip-jump-panel {
+            border-top: 1px solid #f0f0f0;
+            max-height: min(50vh, 320px);
+            overflow: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 2px 0 4px;
+        }
+
+        .trip-jump-panel[hidden] {
+            display: none !important;
+        }
+
+        .trip-jump-year {
+            appearance: none;
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-size: 13px;
+            color: #333;
+            cursor: pointer;
+            padding: 5px 0;
+            text-align: left;
+            min-height: 32px;
+        }
+
+        .trip-jump-year:hover,
+        .trip-jump-year:focus-visible {
+            color: #111;
+            outline: none;
+        }
+
+        .trip-jump-year-label {
+            font-weight: 500;
+        }
+
+        .trip-jump-year-meta {
+            margin-left: auto;
+            font-size: 11px;
+            color: #aaa;
+        }
+
+        .trip-jump-chevron {
+            width: 5px;
+            height: 5px;
+            border-right: 1.5px solid #aaa;
+            border-bottom: 1.5px solid #aaa;
+            transform: rotate(45deg);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            margin-top: -2px;
+        }
+
+        .trip-jump-year[aria-expanded="true"] .trip-jump-chevron {
+            transform: rotate(-135deg);
+            margin-top: 2px;
+        }
+
+        .trip-jump-months {
+            list-style: none;
+            margin: 0;
+            padding: 0 0 2px;
+        }
+
+        .trip-jump-months[hidden] {
+            display: none !important;
+        }
+
+        .trip-jump-month {
+            appearance: none;
+            width: 100%;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-size: 13px;
+            color: #666;
+            cursor: pointer;
+            padding: 4px 0 4px 12px;
+            text-align: left;
+            min-height: 28px;
+            line-height: 1.3;
+        }
+
+        .trip-jump-month:hover,
+        .trip-jump-month:focus-visible {
+            color: #222;
+            outline: none;
         }
 
         .trip-entry {
@@ -354,16 +513,17 @@
         }
 
         .activity-key {
-            margin: 0 0 28px;
-            padding: 0 0 14px;
-            border-bottom: 1px solid #e5e5e5;
+            margin: 0 0 8px;
+            padding: 0;
+            border-bottom: 0;
         }
 
         .activity-key-title {
-            margin: 0 0 8px;
+            margin: 0 0 6px;
             padding: 0;
             font-weight: 500;
-            color: #888;
+            font-size: 13px;
+            color: #999;
         }
 
         .activity-key-list {
@@ -372,7 +532,7 @@
             list-style: none;
             display: flex;
             flex-wrap: wrap;
-            gap: 8px 16px;
+            gap: 6px 14px;
         }
 
         .activity-key-list li {
@@ -384,32 +544,35 @@
 
         .activity-key-list .trip-tag {
             flex-shrink: 0;
-            width: 16px;
-            height: 16px;
+            width: 15px;
+            height: 15px;
         }
 
         .activity-key-list strong {
-            color: #666;
+            color: #888;
             font-weight: 400;
+            font-size: 13px;
         }
 
         .nature-content .trip-year:first-of-type {
-            margin-top: 8px;
+            margin-top: 12px;
         }
 
         .trip-gallery {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            column-count: 2;
+            column-gap: 10px;
             max-width: 100%;
         }
 
         .trip-gallery img {
             width: 100%;
             max-width: 100%;
-            aspect-ratio: 1.33 / 1;
             height: auto;
-            object-fit: cover;
+            display: block;
+            margin: 0 0 10px;
+            break-inside: avoid;
+            -webkit-column-break-inside: avoid;
+            page-break-inside: avoid;
             border: 0;
             background: #f3f3f3;
         }
@@ -441,8 +604,16 @@
             }
 
             .trip-gallery {
-                grid-template-columns: 1fr;
-                gap: 8px;
+                column-count: 1;
+            }
+
+            .trip-jump {
+                top: var(--trip-jump-top, 0px);
+            }
+
+            .trip-year,
+            .trip-month {
+                scroll-margin-top: calc(var(--trip-jump-top, 0px) + 48px);
             }
         }
 
@@ -770,7 +941,8 @@
 <body>
     <main class="fun-wrapper">
         <h1>Trip Archive</h1>
-        <p class="trip-lede">I started this page in mid-2026 to share some of my trips outside, including hiking,
+
+        <p class="trip-lede">I started this page in May 2026 to share some of my trips outside, including hiking,
             camping, climbing, and whatever else pulls me into the open air. I have loved scenic views since I was
             young, but I did not really spend time in the wilderness until I moved to Seattle for my PhD. Growing up
             in the city of Beijing, I “climbed” the usual paved <a href="https://en.wikipedia.org/wiki/Mount_Miaofeng"
@@ -781,7 +953,9 @@
             especially, took hold of me. I am a little obsessed with them.</p>
         <p class="trip-lede">The summer after finishing my Master’s degree, I went to Yunnan province and stood below
             the <a href="https://en.wikipedia.org/wiki/Jade_Dragon_Snow_Mountain" target="_blank"
-                rel="noopener noreferrer">Jade Dragon Snow Mountain (玉龙雪山)</a>. It was another tourist trip, but we were
+                rel="noopener noreferrer">Yulong Xueshan</a> (玉龙雪山, also known as Jade Dragon Snow Mountain). It was
+            another tourist trip,
+            but we were
             at 4600m and it felt so real. The weather was not ideal: heavy cloud, a whiteout, almost no view from the
             high places. Still, the granite walls and the shapes glaciers had carved left me speechless. Since then I
             have dreamed of returning to mountains, visiting more and perhaps climbing — especially taller ones, snow
@@ -837,6 +1011,15 @@
                 </ul>
             </div>
 
+            <nav class="trip-jump" id="trip-jump" hidden aria-hidden="true" aria-label="Jump to trip dates">
+                <div class="trip-jump-bar">
+                    <button type="button" class="trip-jump-toggle" id="trip-jump-toggle" aria-expanded="false"
+                        aria-controls="trip-jump-panel">Jump to date</button>
+                    <button type="button" class="trip-jump-top" id="trip-jump-top">Top</button>
+                </div>
+                <div class="trip-jump-panel" id="trip-jump-panel" hidden></div>
+            </nav>
+
             <div id="trips-list">
                 <p class="trips-loading">Loading trips…</p>
             </div>
@@ -881,7 +1064,7 @@
 
     <script src="./javascripts/nature-config.js"></script>
     <script src="./javascripts/nature-map.js?v=wayback-trip-year"></script>
-    <script src="./javascripts/nature-trips.js"></script>
+    <script src="./javascripts/nature-trips.js?v=jump-latest-inner"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tooltips for static activity-key icons

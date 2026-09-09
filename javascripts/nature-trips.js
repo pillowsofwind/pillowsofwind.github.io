@@ -249,21 +249,217 @@
     var html = "";
     var currentYear = null;
     var currentMonth = null;
+    var toc = [];
 
     sorted.forEach(function (trip) {
       if (trip.year !== currentYear) {
         currentYear = trip.year;
         currentMonth = null;
-        html += '<h2 class="trip-year">' + escapeHtml(currentYear) + "</h2>";
+        var yearId = "trip-year-" + currentYear;
+        html +=
+          '<h2 class="trip-year" id="' +
+          escapeHtml(yearId) +
+          '">' +
+          escapeHtml(currentYear) +
+          "</h2>";
+        toc.push({ year: currentYear, id: yearId, months: [] });
       }
       if (trip.month !== currentMonth) {
         currentMonth = trip.month;
-        html += '<h3 class="trip-month">' + escapeHtml(currentMonth) + "</h3>";
+        var mi = monthIndex(currentMonth);
+        var monthId =
+          "trip-" +
+          currentYear +
+          "-" +
+          String(mi || 0).padStart(2, "0");
+        html +=
+          '<h3 class="trip-month" id="' +
+          escapeHtml(monthId) +
+          '">' +
+          escapeHtml(currentMonth) +
+          "</h3>";
+        toc[toc.length - 1].months.push({
+          name: currentMonth,
+          id: monthId,
+        });
       }
       html += renderTrip(trip);
     });
 
-    return { html: html, trips: sorted };
+    return { html: html, trips: sorted, toc: toc };
+  }
+
+  function syncTripJumpSticky() {
+    var siteNav = document.querySelector("nav.navbar");
+    var top = 0;
+    if (siteNav) {
+      // Exact bottom edge of the fixed nav (no ceil → no 1px gap)
+      top = Math.max(0, siteNav.getBoundingClientRect().bottom);
+    }
+    document.documentElement.style.setProperty(
+      "--trip-jump-top",
+      top + "px"
+    );
+    return top;
+  }
+
+  function bindTripJumpStickySync() {
+    if (bindTripJumpStickySync.bound) return;
+    bindTripJumpStickySync.bound = true;
+    var tick = function () {
+      syncTripJumpSticky();
+    };
+    window.addEventListener("scroll", tick, { passive: true });
+    window.addEventListener("resize", tick);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", tick);
+      window.visualViewport.addEventListener("scroll", tick);
+    }
+  }
+
+  function scrollToTripId(id) {
+    var el = document.getElementById(id);
+    if (!el) return;
+
+    function run() {
+      var stickyTop = syncTripJumpSticky();
+      var nav = document.getElementById("trip-jump");
+      var bar = nav && nav.querySelector(".trip-jump-bar");
+      var barH = bar ? bar.getBoundingClientRect().height : 40;
+      var offset = stickyTop + barH + 8;
+      var top =
+        el.getBoundingClientRect().top + window.pageYOffset - offset;
+      window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+      try {
+        history.replaceState(null, "", "#" + id);
+      } catch (e) {}
+    }
+
+    requestAnimationFrame(function () {
+      requestAnimationFrame(run);
+    });
+  }
+
+  function mountTripJumpNav(toc) {
+    var nav = document.getElementById("trip-jump");
+    var panel = document.getElementById("trip-jump-panel");
+    var toggle = document.getElementById("trip-jump-toggle");
+    var topBtn = document.getElementById("trip-jump-top");
+    if (!nav || !panel || !toggle || !topBtn) return;
+
+    if (!toc || !toc.length) {
+      nav.hidden = true;
+      nav.setAttribute("aria-hidden", "true");
+      panel.innerHTML = "";
+      return;
+    }
+
+    nav.hidden = false;
+    nav.setAttribute("aria-hidden", "false");
+    bindTripJumpStickySync();
+    syncTripJumpSticky();
+
+    panel.innerHTML = toc
+      .map(function (y, yi) {
+        var yearBtnId = "trip-jump-year-" + yi;
+        var monthsId = "trip-jump-months-" + yi;
+        var monthItems = y.months
+          .map(function (m, mi) {
+            var label =
+              yi === 0 && mi === 0
+                ? escapeHtml(m.name) + " · latest"
+                : escapeHtml(m.name);
+            return (
+              '<li><button type="button" class="trip-jump-month" data-jump="' +
+              escapeHtml(m.id) +
+              '">' +
+              label +
+              "</button></li>"
+            );
+          })
+          .join("");
+        return (
+          '<div class="trip-jump-year-block">' +
+          '<button type="button" class="trip-jump-year" id="' +
+          yearBtnId +
+          '" aria-expanded="' +
+          (yi === 0 ? "true" : "false") +
+          '" aria-controls="' +
+          monthsId +
+          '">' +
+          '<span class="trip-jump-year-label">' +
+          escapeHtml(String(y.year)) +
+          "</span>" +
+          '<span class="trip-jump-year-meta">' +
+          y.months.length +
+          (y.months.length === 1 ? " month" : " months") +
+          "</span>" +
+          '<span class="trip-jump-chevron" aria-hidden="true"></span>' +
+          "</button>" +
+          '<ul class="trip-jump-months" id="' +
+          monthsId +
+          '"' +
+          (yi === 0 ? "" : " hidden") +
+          ">" +
+          monthItems +
+          "</ul>" +
+          "</div>"
+        );
+      })
+      .join("");
+
+    function setOpen(open) {
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      panel.hidden = !open;
+      nav.classList.toggle("is-open", open);
+    }
+
+    setOpen(false);
+
+    toggle.onclick = function () {
+      setOpen(toggle.getAttribute("aria-expanded") !== "true");
+    };
+
+    topBtn.onclick = function () {
+      setOpen(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      try {
+        history.replaceState(null, "", location.pathname + location.search);
+      } catch (e) {}
+    };
+
+    document.addEventListener("click", function (e) {
+      if (!nav.classList.contains("is-open")) return;
+      if (nav.contains(e.target)) return;
+      setOpen(false);
+    });
+
+    panel.onclick = function (e) {
+      var yearBtn = e.target.closest(".trip-jump-year");
+      if (yearBtn && panel.contains(yearBtn)) {
+        var monthsList = document.getElementById(
+          yearBtn.getAttribute("aria-controls")
+        );
+        var expanded = yearBtn.getAttribute("aria-expanded") === "true";
+        // Accordion: close other years
+        panel.querySelectorAll(".trip-jump-year").forEach(function (btn) {
+          if (btn === yearBtn) return;
+          btn.setAttribute("aria-expanded", "false");
+          var other = document.getElementById(btn.getAttribute("aria-controls"));
+          if (other) other.hidden = true;
+        });
+        yearBtn.setAttribute("aria-expanded", expanded ? "false" : "true");
+        if (monthsList) monthsList.hidden = expanded;
+        return;
+      }
+
+      var monthBtn = e.target.closest(".trip-jump-month");
+      if (monthBtn && panel.contains(monthBtn)) {
+        var jump = monthBtn.getAttribute("data-jump");
+        setOpen(false);
+        if (jump) scrollToTripId(jump);
+      }
+    };
   }
 
   function initTips(root) {
@@ -316,6 +512,15 @@
       var rendered = renderAll(data.trips || []);
       target.innerHTML = rendered.html;
       initTips(document);
+      mountTripJumpNav(rendered.toc);
+      if (location.hash) {
+        var hashId = location.hash.slice(1);
+        if (hashId && document.getElementById(hashId)) {
+          requestAnimationFrame(function () {
+            scrollToTripId(hashId);
+          });
+        }
+      }
       var byId = Object.create(null);
       rendered.trips.forEach(function (t) {
         if (t.id) byId[t.id] = t;
@@ -323,9 +528,10 @@
       if (typeof window.bindNatureMapButtons === "function") {
         window.bindNatureMapButtons(target, byId);
       }
-    } catch (err) {
+      } catch (err) {
       target.innerHTML =
         '<p class="trips-load-error">Could not load trips. Check trips.json on R2 or ./data/trips.json.</p>';
+      mountTripJumpNav([]);
       console.error(err);
     }
   };

@@ -296,8 +296,15 @@
   function scrollToTripId(id) {
     var el = document.getElementById(id);
     if (!el) return;
-    // Instant jump only — smooth scroll crashes iPhone Safari on this image-heavy page.
-    el.scrollIntoView(true);
+    // Instant jump — smooth scroll crashes iPhone Safari on this page.
+    // Lazy images keep natural height, so a couple of re-sticks catch
+    // layout shift without scroll listeners.
+    function go() {
+      el.scrollIntoView(true);
+    }
+    go();
+    setTimeout(go, 200);
+    setTimeout(go, 600);
   }
 
   function mountTripJumpNav(toc) {

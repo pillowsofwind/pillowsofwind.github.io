@@ -6,4 +6,6 @@ window.NATURE_CONFIG = {
   tripsFallbackUrl: "./data/trips.json",
   // Cloudflare Worker for admin upload/edit
   workerUrl: "https://nature-trip-uploader.nature-trip-uploader.workers.dev",
+  // Max photos per archive page (trips stay whole; Newer/Older when over)
+  photoChunk: 60,
 };

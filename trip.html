@@ -12,6 +12,18 @@
     <link rel="apple-touch-icon" href="/icon-180.png">
     <script src="./javascripts/load_navbar.js"></script>
     <style>
+        /* Nav (44px) + jump (~28px) + ~36px gap like other pages under the nav */
+        body {
+            padding-top: 108px;
+        }
+
+        @media print,
+        screen and (max-width: 480px) {
+            body {
+                padding-top: 108px;
+            }
+        }
+
         .fun-wrapper {
             max-width: min(720px, 100%);
             margin: 0 auto;
@@ -74,34 +86,25 @@
             color: #666;
         }
 
-        .trip-year {
-            margin-top: 36px;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #222;
-            border-bottom: 1px solid #e5e5e5;
-            padding-bottom: 8px;
-            scroll-margin-top: 88px;
-        }
-
-        .trip-month {
-            margin-top: 22px;
-            margin-bottom: 8px;
-            font-size: 18px;
-            font-weight: 500;
-            color: #4a4a4a;
-            scroll-margin-top: 88px;
-        }
-
         .trip-jump {
-            position: sticky;
-            /* Flush under fixed .navbar (10px + 16px/1.5 line + 10px ≈ 44px) */
+            position: fixed;
             top: 44px;
-            z-index: 30;
-            margin: 0 0 4px;
-            padding: 2px 0 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(720px, calc(100% - 100px));
+            z-index: 40;
+            margin: 0;
+            padding: 0;
             background: #fff;
             border-bottom: 1px solid #e5e5e5;
+            box-sizing: border-box;
+        }
+
+        @media print,
+        screen and (max-width: 480px) {
+            .trip-jump {
+                width: min(720px, calc(100% - 30px));
+            }
         }
 
         .trip-jump[hidden] {
@@ -112,7 +115,7 @@
             display: flex;
             align-items: center;
             gap: 0;
-            min-height: 36px;
+            min-height: 28px;
         }
 
         .trip-jump-toggle,
@@ -121,10 +124,10 @@
             border: 0;
             background: transparent;
             font: inherit;
-            font-size: 13px;
+            font-size: 14px;
             color: #888;
             cursor: pointer;
-            padding: 6px 0;
+            padding: 2px 0;
             text-align: left;
         }
 
@@ -132,32 +135,33 @@
             flex: 1;
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             font-weight: 400;
             color: #666;
         }
 
         .trip-jump-toggle::after {
             content: "";
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-right: 1.5px solid #999;
             border-bottom: 1.5px solid #999;
             transform: rotate(45deg);
             transition: transform 0.2s ease;
             flex-shrink: 0;
-            margin-top: -2px;
+            margin-top: -1px;
         }
 
         .trip-jump.is-open .trip-jump-toggle::after {
             transform: rotate(-135deg);
-            margin-top: 2px;
+            margin-top: 1px;
         }
 
         .trip-jump-top {
             flex-shrink: 0;
-            padding-left: 14px;
-            color: #888;
+            padding-left: 12px;
+            color: #d97706;
+            font-weight: 500;
         }
 
         .trip-jump-toggle:hover,
@@ -168,90 +172,46 @@
             outline: none;
         }
 
+        .trip-jump-top:hover,
+        .trip-jump-top:focus-visible {
+            color: #b45309;
+        }
+
         .trip-jump-panel {
             border-top: 1px solid #f0f0f0;
-            max-height: min(50vh, 320px);
-            overflow: auto;
+            max-height: min(40vh, 260px);
+            overflow-x: hidden;
+            overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            padding: 2px 0 4px;
+            padding: 1px 0 4px;
         }
 
         .trip-jump-panel[hidden] {
             display: none !important;
         }
 
-        .trip-jump-year {
-            appearance: none;
-            width: 100%;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 0;
-            background: transparent;
-            font: inherit;
-            font-size: 13px;
-            color: #333;
-            cursor: pointer;
-            padding: 5px 0;
-            text-align: left;
-            min-height: 32px;
-        }
-
-        .trip-jump-year:hover,
-        .trip-jump-year:focus-visible {
-            color: #111;
-            outline: none;
-        }
-
-        .trip-jump-year-label {
-            font-weight: 500;
-        }
-
-        .trip-jump-year-meta {
-            margin-left: auto;
-            font-size: 11px;
-            color: #aaa;
-        }
-
-        .trip-jump-chevron {
-            width: 5px;
-            height: 5px;
-            border-right: 1.5px solid #aaa;
-            border-bottom: 1.5px solid #aaa;
-            transform: rotate(45deg);
-            transition: transform 0.2s ease;
-            flex-shrink: 0;
-            margin-top: -2px;
-        }
-
-        .trip-jump-year[aria-expanded="true"] .trip-jump-chevron {
-            transform: rotate(-135deg);
-            margin-top: 2px;
-        }
-
         .trip-jump-months {
             list-style: none;
             margin: 0;
-            padding: 0 0 2px;
-        }
-
-        .trip-jump-months[hidden] {
-            display: none !important;
+            padding: 0;
+            max-width: 100%;
         }
 
         .trip-jump-month {
             appearance: none;
+            display: block;
             width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
             border: 0;
             background: transparent;
             font: inherit;
-            font-size: 13px;
+            font-size: 14px;
             color: #666;
             cursor: pointer;
-            padding: 4px 0 4px 12px;
+            padding: 3px 0;
             text-align: left;
-            min-height: 28px;
-            line-height: 1.3;
+            line-height: 1.25;
         }
 
         .trip-jump-month:hover,
@@ -260,33 +220,114 @@
             outline: none;
         }
 
-        .trip-jump-latest-tag {
-            color: #d97706;
+        .trip-jump-older {
+            display: block;
+            padding: 3px 0 0;
+            font-size: 14px;
+            color: #39c;
+            text-decoration: none;
+        }
+
+        .trip-jump-older:hover {
+            color: #069;
+        }
+
+        .trip-chunk-nav {
+            margin: 28px 0 8px;
+        }
+
+        .trip-chunk-nav[hidden] {
+            display: none !important;
+        }
+
+        .trip-chunk-bar {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .trip-chunk-label {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            min-width: 0;
+        }
+
+        .trip-chunk-link {
+            flex-shrink: 0;
+            color: #39c;
+            text-decoration: none;
+        }
+
+        .trip-chunk-link:hover {
+            color: #069;
             font-weight: 500;
-            font-size: 12px;
-            margin-left: 6px;
+        }
+
+        .trip-chunk-link.is-disabled {
+            color: #ccc;
+            pointer-events: none;
         }
 
         .trip-entry {
-            margin-bottom: 28px;
+            margin-bottom: 40px;
             padding-bottom: 4px;
+            scroll-margin-top: 88px;
         }
 
         .trip-entry>.trip-title {
-            display: inline;
-            margin: 0 8px 6px 0;
-            font-size: 15px;
+            display: block;
+            margin: 0 0 6px;
+            font-size: 17px;
             font-weight: 500;
-            color: #222;
+            color: #4a4a4a;
         }
 
-        .trip-entry>.trip-title:has(+ .trip-tags:not(:empty)) {
-            margin-bottom: 0;
+        .trip-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px 12px;
+            margin: 0 0 24px;
+        }
+
+        .trip-meta-left {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 8px;
+            min-width: 0;
+        }
+
+        .trip-meta .trip-tags {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin: 0;
+            align-items: center;
+        }
+
+        .trip-meta .trip-tags:empty {
+            display: none;
         }
 
         .trip-date {
-            margin: 0 0 6px;
+            margin: 0;
             font-size: 14px;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .trip-date-month {
+            color: #222;
+            font-weight: 500;
+        }
+
+        .trip-date-rest {
             color: #888;
         }
 
@@ -294,16 +335,17 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            margin: 2px 0 12px;
+            margin: 0 0 0 auto;
             padding: 0;
             border: 0;
             background: none;
             color: #d97706;
             font: inherit;
             font-size: 14px;
-            font-weight: 600;
+            font-weight: 500;
             cursor: pointer;
             transition: color 0.2s ease;
+            flex-shrink: 0;
         }
 
         .trip-map-btn svg {
@@ -427,8 +469,8 @@
         .trip-entry>.trip-tags:not(:empty) {
             display: inline-flex;
             flex-wrap: wrap;
-            gap: 6px;
-            margin: 0 0 8px;
+            gap: 2px;
+            margin: 0;
             vertical-align: middle;
             align-items: center;
         }
@@ -489,31 +531,31 @@
         }
 
         .trip-tag.casual {
-            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12h9'/%3E%3Cpath d='M5 12V9h7v3'/%3E%3Cpath d='M5 12v5M12 12v5'/%3E%3Cpath d='M16 20v-4'/%3E%3Cpath d='M16 16c-2-2-3-4-3-5.5a3 3 0 016 0C19 12 18 14 16 16'/%3E%3Cpath d='M3 20h18'/%3E%3C/svg%3E");
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='5' r='2'/%3E%3Cpath d='M12 7v6M9 21l3-8 3 8M8 11h8'/%3E%3C/svg%3E");
         }
 
         .trip-tag.hiking {
-            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 6L9 10M12 6l3 4'/%3E%3Cpath d='M12 10l-4 5M12 10l4 5'/%3E%3Cpath d='M12 14l-5 5M12 14l5 5'/%3E%3Cpath d='M12 19v2'/%3E%3C/svg%3E");
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='4.5' r='2'/%3E%3Cpath d='M12 6.5v5.5M9.5 21l2.5-9 2.5 9M8 11h8'/%3E%3Cpath d='M8 7L6.5 21M16 7l1.5 14'/%3E%3C/svg%3E");
         }
 
         .trip-tag.cycling {
-            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='17' r='2.5'/%3E%3Ccircle cx='18' cy='17' r='2.5'/%3E%3Cpath d='M6 17l3-6h5l2 3h2M9 11l2-4h2l1 4'/%3E%3C/svg%3E");
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5.5' cy='17' r='4'/%3E%3Ccircle cx='18.5' cy='17' r='4'/%3E%3Cpath d='M5.5 17L10 8h4l4.5 9M10 8h4'/%3E%3C/svg%3E");
         }
 
         .trip-tag.camping {
-            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20L12 5l8 15H4z'/%3E%3Cpath d='M12 14v6'/%3E%3Cpath d='M9 20h6'/%3E%3C/svg%3E");
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 19L10 5l5 14H3z'/%3E%3Cpath d='M10 5l9 4v10H15'/%3E%3Cpath d='M8 19v-5h3v5'/%3E%3C/svg%3E");
         }
 
         .trip-tag.backpacking {
-            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 5h8v3H8z'/%3E%3Cpath d='M9 8v12h6V8'/%3E%3Cpath d='M7 12h2M15 12h2'/%3E%3Cpath d='M11 12v5'/%3E%3C/svg%3E");
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10' cy='5' r='2'/%3E%3Cpath d='M10 7v7M8 21l2-7 2 7M8 12h4'/%3E%3Cpath d='M14 5.5h3a1 1 0 011 1V16a1 1 0 01-1 1h-3'/%3E%3C/svg%3E");
         }
 
         .trip-tag.scrambling {
-            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 20L12 4l7 16'/%3E%3Cpath d='M17 7l3 11'/%3E%3Cpath d='M17 7l-4 6'/%3E%3Cpath d='M4 18h16'/%3E%3C/svg%3E");
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 20l5.5-11 2.5 5 3.5-8L22 20H2z'/%3E%3Cpath d='M13 20l2-5'/%3E%3C/svg%3E");
         }
 
         .trip-tag.kayaking {
-            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 16c5-3 13-3 18 0'/%3E%3Cpath d='M12 6v7'/%3E%3Cpath d='M6 9l12 4'/%3E%3Ccircle cx='12' cy='6' r='1'/%3E%3C/svg%3E");
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 15c5-2.5 15-2.5 20 0-2 2.5-5.5 4-10 4s-8-1.5-10-4z'/%3E%3Cpath d='M6 9l12 7'/%3E%3Ccircle cx='12' cy='8' r='2'/%3E%3C/svg%3E");
         }
 
         .nature-content {
@@ -521,16 +563,16 @@
         }
 
         .activity-key {
-            margin: 0 0 8px;
-            padding: 0;
-            border-bottom: 0;
+            margin: 0 0 20px;
+            padding: 0 0 16px;
+            border-bottom: 1px solid #e5e5e5;
         }
 
         .activity-key-title {
             margin: 0 0 6px;
             padding: 0;
             font-weight: 500;
-            font-size: 13px;
+            font-size: 14px;
             color: #999;
         }
 
@@ -559,11 +601,7 @@
         .activity-key-list strong {
             color: #888;
             font-weight: 400;
-            font-size: 13px;
-        }
-
-        .nature-content .trip-year:first-of-type {
-            margin-top: 12px;
+            font-size: 14px;
         }
 
         .trip-gallery {
@@ -591,20 +629,8 @@
                 padding: 0 0 40px;
             }
 
-            .trip-year {
-                margin-top: 28px;
-            }
-
-            .trip-month {
-                margin-top: 16px;
-            }
-
-            .trip-entry>.trip-title:has(+ .trip-tags:not(:empty)) {
-                margin-bottom: 0;
-            }
-
             .trip-entry>.trip-tags:not(:empty) {
-                margin-bottom: 6px;
+                margin-bottom: 0;
             }
 
             .trip-report {
@@ -615,12 +641,7 @@
                 column-count: 1;
             }
 
-            .trip-jump {
-                top: 44px;
-            }
-
-            .trip-year,
-            .trip-month {
+            .trip-entry {
                 scroll-margin-top: 84px;
             }
         }
@@ -948,6 +969,15 @@
 
 <body>
     <main class="fun-wrapper">
+        <nav class="trip-jump" id="trip-jump" aria-label="Jump to trip dates">
+            <div class="trip-jump-bar">
+                <button type="button" class="trip-jump-toggle" id="trip-jump-toggle" aria-expanded="false"
+                    aria-controls="trip-jump-panel">Jump to date</button>
+                <button type="button" class="trip-jump-top" id="trip-jump-top">Latest</button>
+            </div>
+            <div class="trip-jump-panel" id="trip-jump-panel" hidden></div>
+        </nav>
+
         <h1>Trip Archive</h1>
 
         <p class="trip-lede">I started this page in May 2026 to share some of my trips outside, including hiking,
@@ -1019,18 +1049,11 @@
                 </ul>
             </div>
 
-            <nav class="trip-jump" id="trip-jump" hidden aria-hidden="true" aria-label="Jump to trip dates">
-                <div class="trip-jump-bar">
-                    <button type="button" class="trip-jump-toggle" id="trip-jump-toggle" aria-expanded="false"
-                        aria-controls="trip-jump-panel">Jump to date</button>
-                    <button type="button" class="trip-jump-top" id="trip-jump-top">Top</button>
-                </div>
-                <div class="trip-jump-panel" id="trip-jump-panel" hidden></div>
-            </nav>
-
             <div id="trips-list">
                 <p class="trips-loading">Loading trips…</p>
             </div>
+
+            <nav class="trip-chunk-nav" data-trip-chunk-nav hidden aria-label="Trip archive pages"></nav>
         </div>
     </main>
 
@@ -1072,7 +1095,7 @@
 
     <script src="./javascripts/nature-config.js"></script>
     <script src="./javascripts/nature-map.js?v=wayback-trip-year"></script>
-    <script src="./javascripts/nature-trips.js?v=natural-realign"></script>
+    <script src="./javascripts/nature-trips.js?v=meta-map"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tooltips for static activity-key icons

@@ -177,6 +177,68 @@
     return t;
   }
 
+  function formatTripDateRangeHtml(start, end) {
+    var months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+    if (!start || !/^\d{4}-\d{2}-\d{2}$/.test(start)) return "";
+
+    function monthName(iso) {
+      return months[Number(iso.split("-")[1]) - 1] || "";
+    }
+    function dayNum(iso) {
+      return Number(iso.split("-")[2]);
+    }
+    function yearNum(iso) {
+      return iso.split("-")[0];
+    }
+    function mo(text) {
+      return '<span class="trip-date-month">' + escapeHtml(text) + "</span>";
+    }
+    function rest(text) {
+      return '<span class="trip-date-rest">' + escapeHtml(text) + "</span>";
+    }
+
+    if (!end || end === start) {
+      return (
+        mo(monthName(start)) +
+        " " +
+        rest(dayNum(start) + ", " + yearNum(start))
+      );
+    }
+
+    var sp = start.split("-");
+    var ep = end.split("-");
+    // Same month+year: "June 24–26, 2026"
+    if (sp[0] === ep[0] && sp[1] === ep[1]) {
+      return (
+        mo(monthName(start)) +
+        " " +
+        rest(dayNum(start) + "–" + dayNum(end) + ", " + yearNum(start))
+      );
+    }
+    // Same year: "June 28 – July 1, 2026"
+    if (sp[0] === ep[0]) {
+      return (
+        mo(monthName(start)) +
+        " " +
+        rest(dayNum(start) + " – ") +
+        mo(monthName(end)) +
+        " " +
+        rest(dayNum(end) + ", " + yearNum(start))
+      );
+    }
+    return (
+      mo(monthName(start)) +
+      " " +
+      rest(dayNum(start) + ", " + yearNum(start) + " – ") +
+      mo(monthName(end)) +
+      " " +
+      rest(dayNum(end) + ", " + yearNum(end))
+    );
+  }
+
   function renderTags(tags) {
     if (!tags || !tags.length) return "";
     var normalized = [];
@@ -202,12 +264,10 @@
     );
   }
 
-  function renderTrip(trip) {
-    var dateLabel = formatTripDateRange(trip.date, trip.endDate);
-    var dateHtml = dateLabel
-      ? '<div class="trip-date">' + escapeHtml(dateLabel) + "</div>"
-      : "";
-    var report = trip.report ? renderReport(trip.report) : "";
+  function renderTrip(trip, opts) {
+    opts = opts || {};
+    var tagsHtml = renderTags(trip.tags);
+    var dateHtml = formatTripDateRangeHtml(trip.date, trip.endDate);
     var mapBtn =
       trip.photos && trip.photos.length
         ? '<button type="button" class="trip-map-btn" data-trip-map="' +
@@ -221,31 +281,141 @@
           '<span class="trip-map-btn-arrow" aria-hidden="true">→</span>' +
           "</button>"
         : "";
+    var metaLeft =
+      tagsHtml || dateHtml
+        ? '<div class="trip-meta-left">' +
+          tagsHtml +
+          (dateHtml ? '<div class="trip-date">' + dateHtml + "</div>" : "") +
+          "</div>"
+        : "";
+    var meta =
+      metaLeft || mapBtn
+        ? '<div class="trip-meta">' + metaLeft + mapBtn + "</div>"
+        : "";
+    var report = trip.report ? renderReport(trip.report) : "";
     var photos = (trip.photos || [])
-      .map(function (src) {
-        return (
-          '<img src="' +
-          escapeHtml(src) +
-          '" alt="" loading="lazy" decoding="async">'
-        );
+      .map(function (photo) {
+        var src = photoSrc(photo);
+        if (!src) return "";
+        return '<img src="' + escapeHtml(src) + '" alt="" decoding="async">';
       })
       .join("");
     var gallery = photos
       ? '<div class="trip-gallery">' + photos + "</div>"
       : "";
 
+    var idAttr = "";
+    if (opts.monthId) {
+      idAttr =
+        ' id="' +
+        escapeHtml(opts.monthId) +
+        '"' +
+        (opts.isChunkStart ? " data-trip-chunk-start" : "");
+    } else if (opts.isChunkStart) {
+      idAttr = ' id="trip-chunk-start"';
+    }
+
     return (
-      '<article class="trip-entry">' +
+      '<article class="trip-entry"' +
+      idAttr +
+      ">" +
       '<div class="trip-title">' +
       escapeHtml(trip.title) +
       "</div>" +
-      renderTags(trip.tags) +
-      dateHtml +
-      mapBtn +
+      meta +
       report +
       gallery +
       "</article>"
     );
+  }
+
+  function tripPhotoCount(trip) {
+    return (trip && trip.photos && trip.photos.length) || 0;
+  }
+
+  function photoSrc(photo) {
+    if (!photo) return "";
+    if (typeof photo === "string") return photo;
+    return photo.src || photo.url || "";
+  }
+
+  function chunkTripsByPhotos(sorted, budget) {
+    var chunks = [];
+    var current = [];
+    var count = 0;
+    sorted.forEach(function (trip) {
+      var n = tripPhotoCount(trip);
+      if (current.length && count + n > budget) {
+        chunks.push({ trips: current, photos: count });
+        current = [];
+        count = 0;
+      }
+      current.push(trip);
+      count += n;
+    });
+    if (current.length) chunks.push({ trips: current, photos: count });
+    return chunks;
+  }
+
+  function shortMonthYear(dateStr, fallbackYear, fallbackMonth) {
+    if (dateStr && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      var parts = dateStr.split("-");
+      var months = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+      ];
+      return (months[Number(parts[1]) - 1] || parts[1]) + " " + parts[0];
+    }
+    if (fallbackMonth && fallbackYear) {
+      return String(fallbackMonth).slice(0, 3) + " " + fallbackYear;
+    }
+    return "";
+  }
+
+  function chunkRangeLabel(chunk) {
+    var trips = chunk.trips || [];
+    if (!trips.length) return "";
+    var newest = trips[0];
+    var oldest = trips[trips.length - 1];
+    var a = shortMonthYear(newest.date, newest.year, newest.month);
+    var b = shortMonthYear(oldest.date, oldest.year, oldest.month);
+    if (a && b && a !== b) return a + " – " + b;
+    return a || b;
+  }
+
+  function chunkHref(index) {
+    var url = new URL(location.href);
+    if (index <= 0) url.searchParams.delete("chunk");
+    else url.searchParams.set("chunk", String(index));
+    // Land on the first trip of that chunk, not the page chrome.
+    return url.pathname + url.search + "#trip-chunk-start";
+  }
+
+  function readChunkIndex(chunkCount) {
+    var raw = new URLSearchParams(location.search).get("chunk");
+    var n = parseInt(raw || "0", 10);
+    if (!isFinite(n) || n < 0) n = 0;
+    if (chunkCount > 0 && n >= chunkCount) n = chunkCount - 1;
+    return n;
+  }
+
+  function tripMatchesHash(trip, hashId) {
+    if (!hashId || !trip) return false;
+    var mi = monthIndex(trip.month);
+    var monthId =
+      "trip-" + trip.year + "-" + String(mi || 0).padStart(2, "0");
+    return hashId === monthId;
+  }
+
+  function findChunkIndexForHash(chunks, hashId) {
+    if (!hashId) return -1;
+    for (var i = 0; i < chunks.length; i++) {
+      var trips = chunks[i].trips || [];
+      for (var j = 0; j < trips.length; j++) {
+        if (tripMatchesHash(trips[j], hashId)) return i;
+      }
+    }
+    return -1;
   }
 
   function renderAll(trips) {
@@ -254,67 +424,118 @@
     var currentYear = null;
     var currentMonth = null;
     var toc = [];
+    var isChunkStart = true;
 
     sorted.forEach(function (trip) {
+      var monthId = "";
       if (trip.year !== currentYear) {
         currentYear = trip.year;
         currentMonth = null;
-        var yearId = "trip-year-" + currentYear;
-        html +=
-          '<h2 class="trip-year" id="' +
-          escapeHtml(yearId) +
-          '">' +
-          escapeHtml(currentYear) +
-          "</h2>";
-        toc.push({ year: currentYear, id: yearId, months: [] });
+        toc.push({ year: currentYear, months: [] });
       }
       if (trip.month !== currentMonth) {
         currentMonth = trip.month;
         var mi = monthIndex(currentMonth);
-        var monthId =
+        monthId =
           "trip-" +
           currentYear +
           "-" +
           String(mi || 0).padStart(2, "0");
-        html +=
-          '<h3 class="trip-month" id="' +
-          escapeHtml(monthId) +
-          '">' +
-          escapeHtml(currentMonth) +
-          "</h3>";
         toc[toc.length - 1].months.push({
           name: currentMonth,
           id: monthId,
         });
       }
-      html += renderTrip(trip);
+      html += renderTrip(trip, {
+        isChunkStart: isChunkStart,
+        monthId: monthId || "",
+      });
+      isChunkStart = false;
     });
 
-    return { html: html, trips: sorted, toc: toc };
+    return {
+      html: html,
+      trips: sorted,
+      toc: toc,
+    };
+  }
+
+  function scrollToChunkStart() {
+    var el =
+      document.getElementById("trip-chunk-start") ||
+      document.querySelector("[data-trip-chunk-start]") ||
+      document.querySelector("#trips-list .trip-entry");
+    if (el) el.scrollIntoView(true);
   }
 
   function scrollToTripId(id) {
     var el = document.getElementById(id);
     if (!el) return;
-    // Instant jump — smooth scroll crashes iPhone Safari on this page.
-    // Lazy images keep natural height, so a couple of re-sticks catch
-    // layout shift without scroll listeners.
-    function go() {
-      el.scrollIntoView(true);
-    }
-    go();
-    setTimeout(go, 200);
-    setTimeout(go, 600);
+    el.scrollIntoView(true);
   }
 
-  function mountTripJumpNav(toc) {
+  function mountChunkNav(chunks, index) {
+    var nodes = document.querySelectorAll("[data-trip-chunk-nav]");
+    if (!nodes.length) return;
+
+    if (chunks.length <= 1) {
+      nodes.forEach(function (el) {
+        el.hidden = true;
+        el.innerHTML = "";
+      });
+      return;
+    }
+
+    var label = escapeHtml(chunkRangeLabel(chunks[index] || { trips: [] }));
+    var newer =
+      index > 0
+        ? '<a class="trip-chunk-link" href="' +
+          escapeHtml(chunkHref(index - 1)) +
+          '">Newer</a>'
+        : '<span class="trip-chunk-link is-disabled">Newer</span>';
+    var older =
+      index < chunks.length - 1
+        ? '<a class="trip-chunk-link" href="' +
+          escapeHtml(chunkHref(index + 1)) +
+          '">Older</a>'
+        : '<span class="trip-chunk-link is-disabled">Older</span>';
+
+    var html =
+      '<div class="trip-chunk-bar">' +
+      newer +
+      '<span class="trip-chunk-label">' +
+      label +
+      "</span>" +
+      older +
+      "</div>";
+
+    nodes.forEach(function (el) {
+      el.hidden = false;
+      el.innerHTML = html;
+    });
+  }
+
+  function mountTripJumpNav(toc, opts) {
+    opts = opts || {};
+    var chunkIndex = opts.chunkIndex || 0;
+    var chunkCount = opts.chunkCount || 1;
     var nav = document.getElementById("trip-jump");
     var panel = document.getElementById("trip-jump-panel");
     var toggle = document.getElementById("trip-jump-toggle");
     var topBtn = document.getElementById("trip-jump-top");
     if (!nav || !panel || !toggle || !topBtn) return;
 
-    if (!toc || !toc.length) {
+    var months = [];
+    (toc || []).forEach(function (y) {
+      (y.months || []).forEach(function (m) {
+        months.push({
+          id: m.id,
+          label: String(m.name || "").slice(0, 3) + " " + y.year,
+        });
+      });
+    });
+
+    if (!months.length) {
       nav.hidden = true;
       panel.innerHTML = "";
       return;
@@ -322,52 +543,28 @@
 
     nav.hidden = false;
 
-    panel.innerHTML = toc
-      .map(function (y, yi) {
-        var monthsId = "trip-jump-months-" + yi;
-        var monthItems = y.months
-          .map(function (m, mi) {
-            var label =
-              yi === 0 && mi === 0
-                ? escapeHtml(m.name) +
-                  ' <span class="trip-jump-latest-tag">latest</span>'
-                : escapeHtml(m.name);
-            return (
-              '<li><button type="button" class="trip-jump-month" data-jump="' +
-              escapeHtml(m.id) +
-              '">' +
-              label +
-              "</button></li>"
-            );
-          })
-          .join("");
-        return (
-          '<div class="trip-jump-year-block">' +
-          '<button type="button" class="trip-jump-year" aria-expanded="' +
-          (yi === 0 ? "true" : "false") +
-          '" aria-controls="' +
-          monthsId +
-          '">' +
-          '<span class="trip-jump-year-label">' +
-          escapeHtml(String(y.year)) +
-          "</span>" +
-          '<span class="trip-jump-year-meta">' +
-          y.months.length +
-          (y.months.length === 1 ? " month" : " months") +
-          "</span>" +
-          '<span class="trip-jump-chevron" aria-hidden="true"></span>' +
-          "</button>" +
-          '<ul class="trip-jump-months" id="' +
-          monthsId +
-          '"' +
-          (yi === 0 ? "" : " hidden") +
-          ">" +
-          monthItems +
-          "</ul>" +
-          "</div>"
-        );
-      })
-      .join("");
+    var html =
+      '<ul class="trip-jump-months">' +
+      months
+        .map(function (m) {
+          return (
+            '<li><button type="button" class="trip-jump-month" data-jump="' +
+            escapeHtml(m.id) +
+            '">' +
+            escapeHtml(m.label) +
+            "</button></li>"
+          );
+        })
+        .join("") +
+      "</ul>";
+
+    if (chunkIndex < chunkCount - 1) {
+      html +=
+        '<a class="trip-jump-older" href="' +
+        escapeHtml(chunkHref(chunkIndex + 1)) +
+        '">Older</a>';
+    }
+    panel.innerHTML = html;
 
     function setOpen(open) {
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
@@ -383,7 +580,13 @@
 
     topBtn.onclick = function () {
       setOpen(false);
-      window.scrollTo(0, 0);
+      if (chunkIndex > 0) {
+        location.href = chunkHref(0);
+        return;
+      }
+      var first = document.querySelector("#trips-list .trip-entry");
+      if (first) first.scrollIntoView(true);
+      else window.scrollTo(0, 0);
     };
 
     if (!mountTripJumpNav.clickBound) {
@@ -395,28 +598,10 @@
     }
 
     panel.onclick = function (e) {
-      var yearBtn = e.target.closest(".trip-jump-year");
-      if (yearBtn && panel.contains(yearBtn)) {
-        var monthsList = document.getElementById(
-          yearBtn.getAttribute("aria-controls")
-        );
-        var expanded = yearBtn.getAttribute("aria-expanded") === "true";
-        panel.querySelectorAll(".trip-jump-year").forEach(function (btn) {
-          if (btn === yearBtn) return;
-          btn.setAttribute("aria-expanded", "false");
-          var other = document.getElementById(btn.getAttribute("aria-controls"));
-          if (other) other.hidden = true;
-        });
-        yearBtn.setAttribute("aria-expanded", expanded ? "false" : "true");
-        if (monthsList) monthsList.hidden = expanded;
-        return;
-      }
-
       var monthBtn = e.target.closest(".trip-jump-month");
-      if (monthBtn && panel.contains(monthBtn)) {
-        setOpen(false);
-        scrollToTripId(monthBtn.getAttribute("data-jump"));
-      }
+      if (!monthBtn || !panel.contains(monthBtn)) return;
+      setOpen(false);
+      scrollToTripId(monthBtn.getAttribute("data-jump"));
     };
   }
 
@@ -465,20 +650,50 @@
     var target = document.querySelector(targetSelector);
     if (!target) return;
     var config = window.NATURE_CONFIG || {};
+    var budget = Number(config.photoChunk);
+    if (!isFinite(budget) || budget < 1) budget = 60;
+
     try {
       var data = await loadTripsData(config);
-      var rendered = renderAll(data.trips || []);
-      target.innerHTML = rendered.html;
-      initTips(document);
-      mountTripJumpNav(rendered.toc);
-      if (location.hash) {
-        var hashId = location.hash.slice(1);
-        if (hashId && document.getElementById(hashId)) {
-          requestAnimationFrame(function () {
-            scrollToTripId(hashId);
-          });
+      var sorted = sortTrips((data.trips || []).map(normalizeTrip));
+      var chunks = chunkTripsByPhotos(sorted, budget);
+      if (!chunks.length) {
+        target.innerHTML = '<p class="trips-load-error">No trips yet.</p>';
+        mountTripJumpNav([]);
+        mountChunkNav([], 0);
+        return;
+      }
+
+      var hashId = location.hash ? location.hash.slice(1) : "";
+      var index = readChunkIndex(chunks.length);
+      if (hashId && hashId !== "trip-chunk-start") {
+        var hashChunk = findChunkIndexForHash(chunks, hashId);
+        if (hashChunk >= 0 && hashChunk !== index) {
+          location.replace(chunkHref(hashChunk).split("#")[0] + "#" + hashId);
+          return;
         }
       }
+
+      var chunk = chunks[index];
+      var rendered = renderAll(chunk.trips);
+      target.innerHTML = rendered.html;
+      initTips(document);
+      mountTripJumpNav(rendered.toc, {
+        chunkIndex: index,
+        chunkCount: chunks.length,
+      });
+      mountChunkNav(chunks, index);
+
+      if (hashId === "trip-chunk-start") {
+        requestAnimationFrame(scrollToChunkStart);
+      } else if (hashId && document.getElementById(hashId)) {
+        requestAnimationFrame(function () {
+          scrollToTripId(hashId);
+        });
+      } else if (index > 0) {
+        requestAnimationFrame(scrollToChunkStart);
+      }
+
       var byId = Object.create(null);
       rendered.trips.forEach(function (t) {
         if (t.id) byId[t.id] = t;
@@ -486,10 +701,11 @@
       if (typeof window.bindNatureMapButtons === "function") {
         window.bindNatureMapButtons(target, byId);
       }
-      } catch (err) {
+    } catch (err) {
       target.innerHTML =
         '<p class="trips-load-error">Could not load trips. Check trips.json on R2 or ./data/trips.json.</p>';
       mountTripJumpNav([]);
+      mountChunkNav([], 0);
       console.error(err);
     }
   };

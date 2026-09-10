@@ -27,7 +27,7 @@
         .fun-wrapper {
             max-width: min(720px, 100%);
             margin: 0 auto;
-            padding: 0 0 56px;
+            padding: 0;
             float: none;
             width: auto;
             box-sizing: border-box;
@@ -625,10 +625,6 @@
 
         @media print,
         screen and (max-width: 720px) {
-            .fun-wrapper {
-                padding: 0 0 40px;
-            }
-
             .trip-entry>.trip-tags:not(:empty) {
                 margin-bottom: 0;
             }
@@ -1095,7 +1091,7 @@
 
     <script src="./javascripts/nature-config.js"></script>
     <script src="./javascripts/nature-map.js?v=wayback-trip-year"></script>
-    <script src="./javascripts/nature-trips.js?v=meta-map"></script>
+    <script src="./javascripts/nature-trips.js?v=jump-menu-scroll"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tooltips for static activity-key icons

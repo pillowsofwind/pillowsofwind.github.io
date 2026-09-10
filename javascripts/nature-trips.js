@@ -603,6 +603,23 @@
       setOpen(false);
       scrollToTripId(monthBtn.getAttribute("data-jump"));
     };
+
+    if (!mountTripJumpNav.scrollBound) {
+      mountTripJumpNav.scrollBound = true;
+      window.addEventListener(
+        "scroll",
+        function () {
+          var bar = document.getElementById("trip-jump");
+          if (!bar || bar.hidden || !bar.classList.contains("is-open")) return;
+          bar.classList.remove("is-open");
+          var p = document.getElementById("trip-jump-panel");
+          var t = document.getElementById("trip-jump-toggle");
+          if (p) p.hidden = true;
+          if (t) t.setAttribute("aria-expanded", "false");
+        },
+        { passive: true }
+      );
+    }
   }
 
   function initTips(root) {

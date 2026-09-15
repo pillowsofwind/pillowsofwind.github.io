@@ -10,7 +10,7 @@
     <link rel="icon" href="/favicon.ico">
     <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
     <link rel="apple-touch-icon" href="/icon-180.png">
-    <script src="./javascripts/load_navbar.js"></script>
+    <script src="./javascripts/load_navbar.js?v=copyright-once"></script>
     <style>
         /* Nav (44px) + jump (~28px) + ~36px gap like other pages under the nav */
         body {
@@ -81,9 +81,10 @@
         }
 
         .nature-disclaimer {
-            margin: 0 0 28px;
+            margin: 10px 0 0;
             line-height: 1.5;
-            color: #666;
+            font-size: 14px;
+            color: #888;
         }
 
         .trip-jump {
@@ -559,7 +560,7 @@
         }
 
         .nature-content {
-            margin-top: 0;
+            margin-top: 28px;
         }
 
         .activity-key {
@@ -572,7 +573,7 @@
             margin: 0 0 6px;
             padding: 0;
             font-weight: 500;
-            font-size: 14px;
+            font-size: 15px;
             color: #999;
         }
 
@@ -594,8 +595,8 @@
 
         .activity-key-list .trip-tag {
             flex-shrink: 0;
-            width: 15px;
-            height: 15px;
+            width: 18px;
+            height: 18px;
         }
 
         .activity-key-list strong {
@@ -982,8 +983,10 @@
             in the city of Beijing, I “climbed” the usual paved <a href="https://en.wikipedia.org/wiki/Mount_Miaofeng"
                 target="_blank" rel="noopener noreferrer">hills</a>
             and did the usual tourist trips back in my country; looking
-            back, they were closer to walking stairs in a well-maintained park. Here I began with trails around the
-            city, then, once I had a car, the state parks on the outskirts and forests farther out. Mountains,
+            back, they were closer to walking stairs in a well-maintained park. Here I began with trails
+            around the
+            city and suburbs, then, once I had a car, the state parks and forests farther out.
+            Mountains,
             especially, took hold of me. I am a little obsessed with them.</p>
         <p class="trip-lede">The summer after finishing my Master’s degree, I went to Yunnan province and stood below
             the <a href="https://en.wikipedia.org/wiki/Jade_Dragon_Snow_Mountain" target="_blank"
@@ -1003,12 +1006,16 @@
             <figcaption>玉龙雪山 — a brief clear window above the cloud, Yunnan, China, July 2025.</figcaption>
         </figure>
         <p class="trip-lede">In Washington I learned that green hills like Mount Si, beautiful as they always are, were
-            not enough for me. For the breathtaking snowy alpine peaks, I always wanted to be on the top, not only on
-            the trail
+            not enough for me. For the breathtaking snow-capped alpine peaks, I always wanted to be on the top, not only
+            on
+            the trails
             around them. In the North Cascades
-            there are two-thousand-meter glaciated peaks you can reach without altitude sickness; on the road and from
-            the plane, snowy volcanoes like Mt. Rainier and Mt. Baker keep appearing, as if they were saying: start here
-            — train yourself — maybe someday you will finish what you began. I asked around for alpine summits that were
+            there are two-thousand-meter glaciated peaks you can stand on without altitude sickness; on the road and
+            from
+            the plane, snowy volcanoes like Mt. Rainier and Mt. Baker keep showing up. Looking at them, I keep
+            imagining a ridge underfoot and how small a person would be against those flanks — that scale is hard to
+            shake.</p>
+        <p class="trip-lede">I asked around for summits that were
             not too technical, preferably with snow and glaciers. On a hitchhike back down from Hidden Lake Lookout, a
             former local mountaineer told me Ruth Mountain could be a choice; later I confirmed with <a
                 href="https://galenweld.com/blog" target="_blank" rel="noopener noreferrer">Galen</a>, a true mountain
@@ -1017,19 +1024,20 @@
             stood up there, I realized it was possible for me to stand where I had once only stared. If I could summit
             Ruth with average fitness and almost no skills, nothing could hold me back, especially since I can always
             learn from failures. After that I planned, failed, and climbed more alpine peaks in this state that season,
-            each one its own memory and its own hardness. I do not know whether I will ever go very technical or very
-            fast. I would rather stay an admirer of the mountains, carrying myself up under my own power, than become a
-            conqueror or a racer. Lately I have also been visiting Washington fire lookouts, history folded into a
-            view.</p>
-        <p class="trip-lede">I believe many things are destined to be, like what brought me to Washington to resume
+            each one its own memory and its own hardness. I do not know whether I will ever go very technical and
+            certainly I have little interest in being super fast. What keeps me interested is scenic touring under my
+            own power, hardship included, where I can appreciate and feel the beauty of the landscape along the
+            way.</p>
+        <p class="trip-lede">I believe many things are destined to be, like
+            what brought me to Washington to resume
             and pursue my love for mountains. Do I have a target list of peaks I want to climb? No, I don’t. If it’s
-            meant to be, it will be.</p>
+            meant to be, it will be. Lately I am more interested in mountain peaks whose <a
+                href="https://glaciers.nichols.edu/foss-glacier/" target="_blank" rel="noopener noreferrer">glaciers are
+                dying or recently gone</a> and Washington fire lookouts, both of which are points of history.</p>
 
         <p class="trip-lede">Some of these trips also live on my <a href="https://www.wta.org/@@backpacks/scrnm-rdxu"
                 target="_blank" rel="noopener noreferrer">WTA
                 page</a>.</p>
-        <p class="nature-disclaimer">Disclaimer: Some of these activities can be inherently dangerous — do your own
-            research.</p>
 
         <div class="nature-content">
             <div class="activity-key" aria-label="Activity types">
@@ -1043,6 +1051,8 @@
                     <li><span class="trip-tag scrambling" aria-hidden="true"></span><strong>scrambling</strong></li>
                     <li><span class="trip-tag kayaking" aria-hidden="true"></span><strong>kayaking</strong></li>
                 </ul>
+                <p class="nature-disclaimer"><strong>Disclaimer:</strong> Some of these activities can be inherently
+                    dangerous. Always do your own research.</p>
             </div>
 
             <div id="trips-list">
@@ -1051,6 +1061,8 @@
 
             <nav class="trip-chunk-nav" data-trip-chunk-nav hidden aria-label="Trip archive pages"></nav>
         </div>
+
+        <footer class="site-footer"></footer>
     </main>
 
     <div id="trip-map-modal" class="trip-map-modal hidden" aria-hidden="true">

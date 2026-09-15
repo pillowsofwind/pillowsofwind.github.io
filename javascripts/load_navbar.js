@@ -1,6 +1,8 @@
 (function () {
   var ORIGIN = "https://rongwuxu.com";
   var LOGO = ORIGIN + "/images/logo-512.png";
+  // Single place for the site copyright end year (auto-updates each Jan 1).
+  var COPYRIGHT_YEAR_END = new Date().getFullYear();
 
   var PAGE = {
     "/": {
@@ -59,6 +61,14 @@
     ensureMeta("name", "twitter:image", LOGO);
   }
 
+  function whenReady(fn) {
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", fn);
+    } else {
+      fn();
+    }
+  }
+
   function applyNav() {
     if (window.SITE_NO_NAV) return;
     var key = pathKey();
@@ -73,14 +83,11 @@
       "</div>" +
       "</nav>";
 
-    function inject() {
+    whenReady(function () {
       if (!document.body) return;
       if (document.querySelector("nav.navbar")) return;
       document.body.insertAdjacentHTML("afterbegin", navbar);
-    }
-
-    if (document.body) inject();
-    else document.addEventListener("DOMContentLoaded", inject);
+    });
   }
 
   function applyFooter() {
@@ -89,21 +96,21 @@
     if (key === "/admin.html") return;
 
     var copy =
-      '<p class="site-copyright">© Copyright 2022-2026 Rongwu Xu.</p>';
+      '<p class="site-copyright">© Copyright 2022-' +
+      COPYRIGHT_YEAR_END +
+      " Rongwu Xu.</p>";
 
-    function inject() {
+    whenReady(function () {
       if (!document.body) return;
       if (document.querySelector(".site-copyright")) return;
 
       var footer = document.querySelector("footer");
       if (footer) {
-        if (/Copyright/i.test(footer.textContent || "")) return;
         footer.insertAdjacentHTML("beforeend", copy);
         return;
       }
 
       var host =
-        document.querySelector(".fun-wrapper .nature-content") ||
         document.querySelector("main.fun-wrapper") ||
         document.querySelector(".fun-wrapper") ||
         document.body;
@@ -111,10 +118,7 @@
         "beforeend",
         '<footer class="site-footer">' + copy + "</footer>"
       );
-    }
-
-    if (document.body) inject();
-    else document.addEventListener("DOMContentLoaded", inject);
+    });
   }
 
   applyBrand();

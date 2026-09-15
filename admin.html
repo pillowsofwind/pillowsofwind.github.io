@@ -10,7 +10,7 @@
   <link rel="icon" href="/favicon.ico">
   <link rel="apple-touch-icon" sizes="180x180" href="/icon-180.png">
   <link rel="apple-touch-icon" href="/icon-180.png">
-  <script src="./javascripts/load_navbar.js"></script>
+  <script src="./javascripts/load_navbar.js?v=copyright-once"></script>
   <style>
     :root {
       --bg: #f7f6f3;
@@ -205,6 +205,8 @@
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
       font-size: 13px;
       line-height: 1.5;
+      -webkit-user-select: text;
+      user-select: text;
     }
 
     .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
@@ -264,6 +266,10 @@
       font: inherit;
     }
     .trip-item:hover { border-color: var(--accent); }
+    .trip-item.just-saved {
+      border-color: var(--accent);
+      background: #fff4ea;
+    }
     .trip-item img {
       width: 64px;
       height: 64px;
@@ -395,6 +401,7 @@
       var photoItems = [];
       var allTrips = [];
       var editingId = null;
+      var pendingScrollTripId = null;
       var converting = false;
       var dragFrom = null;
       var endDateManual = false;
@@ -526,6 +533,22 @@
       setSelectedTags(lastTags());
 
       // Tabs
+      function showManageTab() {
+        document.querySelectorAll('.tabs button').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-tab') === 'manage');
+        });
+        document.getElementById('panel-add').classList.add('hidden');
+        document.getElementById('panel-manage').classList.remove('hidden');
+      }
+
+      function showManageAndScrollTo(tripId, msg) {
+        pendingScrollTripId = tripId;
+        showManageTab();
+        renderTripList(document.getElementById('search').value || '');
+        setStatus(document.getElementById('manage-status'), 'ok', msg || 'Saved!');
+        loadTrips({ quiet: true, preserveScrollId: tripId });
+      }
+
       document.querySelectorAll('.tabs button').forEach(function (btn) {
         btn.addEventListener('click', function () {
           document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('active'); });
@@ -539,6 +562,37 @@
 
       // Report formatting toolbar
       var reportEl = document.getElementById('report');
+
+      // Keep textarea selection when tapping Bold/Italic/etc (Safari clears it on mousedown).
+      document.getElementById('fmt-bar').addEventListener('mousedown', function (e) {
+        if (e.target.closest('button[data-fmt]')) e.preventDefault();
+      });
+
+      // Rich paste from Notes/Word/web → plain text only (this box is Markdown, not HTML).
+      // Avoids Safari leaving the field hard to select after an HTML clipboard paste.
+      reportEl.addEventListener('paste', function (e) {
+        var cd = e.clipboardData;
+        if (!cd) return;
+        var text = cd.getData('text/plain');
+        if (!text) {
+          var html = cd.getData('text/html');
+          if (!html) return;
+          var tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          text = tmp.textContent || tmp.innerText || '';
+        }
+        if (text == null) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var start = reportEl.selectionStart;
+        var end = reportEl.selectionEnd;
+        var val = reportEl.value;
+        var normalized = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        reportEl.value = val.slice(0, start) + normalized + val.slice(end);
+        var caret = start + normalized.length;
+        reportEl.setSelectionRange(caret, caret);
+      });
+
       function wrapSelection(before, after, placeholder) {
         var start = reportEl.selectionStart;
         var end = reportEl.selectionEnd;
@@ -733,23 +787,23 @@
       });
       drop.addEventListener('drop', function (e) { addFiles(e.dataTransfer.files); });
 
-      // Paste images from clipboard (skip when pasting text into inputs)
+      // Paste images from clipboard — never steal paste inside text fields (Safari often
+      // attaches an image preview alongside copied text/HTML).
       document.getElementById('trip-form').addEventListener('paste', function (e) {
+        var t = e.target;
+        if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) {
+          return;
+        }
         var items = e.clipboardData && e.clipboardData.items;
         if (!items) return;
         var files = [];
-        var hasText = false;
         for (var i = 0; i < items.length; i++) {
           if (items[i].type && items[i].type.indexOf('image/') === 0) {
             var f = items[i].getAsFile();
             if (f) files.push(f);
-          } else if (items[i].type === 'text/plain') {
-            hasText = true;
           }
         }
         if (!files.length) return;
-        var tag = (e.target && e.target.tagName) || '';
-        if (hasText && (tag === 'TEXTAREA' || tag === 'INPUT')) return;
         e.preventDefault();
         addFiles(files);
       });
@@ -891,6 +945,7 @@
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
           var wasEdit = !!editingId;
+          var editedId = editingId;
           var msg = wasEdit ? 'Saved!' : 'Published!';
           if (wasEdit && data.deletedPhotos) {
             msg = 'Saved — deleted ' + data.deletedPhotos + ' photo' + (data.deletedPhotos === 1 ? '' : 's') + ' from storage';
@@ -904,8 +959,12 @@
             allTrips = [data.trip].concat(allTrips.filter(function (t) { return t.id !== data.trip.id; }));
           }
           resetForm();
-          setStatus(status, 'ok', msg + ' Stay here to add another, or open View site.');
           submit.disabled = false;
+          if (wasEdit && editedId) {
+            showManageAndScrollTo(editedId, msg);
+          } else {
+            setStatus(status, 'ok', msg + ' Stay here to add another, or open View site.');
+          }
         } catch (err) {
           setStatus(status, 'err', err.message || 'Failed');
           submit.disabled = false;
@@ -913,6 +972,29 @@
       });
 
       // Manage list
+      function scrollToTripInList(id) {
+        if (!id) return false;
+        var el = null;
+        if (window.CSS && CSS.escape) {
+          el = document.querySelector('.trip-item[data-trip-id="' + CSS.escape(id) + '"]');
+        } else {
+          var nodes = document.querySelectorAll('.trip-item[data-trip-id]');
+          for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].getAttribute('data-trip-id') === id) {
+              el = nodes[i];
+              break;
+            }
+          }
+        }
+        if (!el) return false;
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        el.classList.add('just-saved');
+        setTimeout(function () {
+          el.classList.remove('just-saved');
+        }, 1800);
+        return true;
+      }
+
       function renderTripList(filter) {
         var list = document.getElementById('trip-list');
         var q = (filter || '').toLowerCase();
@@ -928,6 +1010,7 @@
           var btn = document.createElement('button');
           btn.type = 'button';
           btn.className = 'trip-item';
+          if (trip.id) btn.setAttribute('data-trip-id', trip.id);
           var thumb = (trip.photos && trip.photos[0]) || '';
           btn.innerHTML =
             (thumb ? '<img src="' + thumb.replace(/"/g, '&quot;') + '" alt="">' : '<div></div>') +
@@ -946,6 +1029,12 @@
           btn.addEventListener('click', function () { fillForm(trip); });
           list.appendChild(btn);
         });
+        if (pendingScrollTripId) {
+          var scrollId = pendingScrollTripId;
+          requestAnimationFrame(function () {
+            if (scrollToTripInList(scrollId)) pendingScrollTripId = null;
+          });
+        }
       }
 
       async function deleteTrip(trip) {
@@ -982,6 +1071,7 @@
       var tripsLoading = false;
       async function loadTrips(opts) {
         var quiet = opts && opts.quiet;
+        if (opts && opts.preserveScrollId) pendingScrollTripId = opts.preserveScrollId;
         var base = workerUrl();
         var manageStatus = document.getElementById('manage-status');
         if (tripsLoading) return;

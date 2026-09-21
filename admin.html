@@ -348,7 +348,7 @@
           <div class="previews" id="photo-list"></div>
           <div class="drop" id="drop" style="margin-top:12px">
             <strong>Drop photos here</strong>, paste, or tap to choose<br>
-            <span class="hint">HEIC/HEIF auto-converts to JPEG · ⌘/Ctrl+Enter to publish</span>
+            <span class="hint">Originals upload in batches (no resize) · HEIC→JPEG only when needed · ⌘/Ctrl+Enter to publish</span>
             <input id="photos" type="file" accept="image/*,.heic,.HEIC,.heif,.HEIF" multiple>
           </div>
         </div>
@@ -396,7 +396,9 @@
   <script>
     (function () {
       var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'kayaking'];
-      var JPEG_QUALITY = 0.88;
+      // HEIC must become JPEG for browsers; keep quality high. Other formats upload unchanged.
+      var HEIC_JPEG_QUALITY = 0.95;
+      var MAX_BATCH_BYTES = 70 * 1024 * 1024; // under Cloudflare ~100MB request limit
       // Unified ordered list: { type:'existing', url } | { type:'new', file, previewUrl }
       var photoItems = [];
       var allTrips = [];
@@ -729,15 +731,16 @@
         var result = await window.heic2any({
           blob: file,
           toType: 'image/jpeg',
-          quality: JPEG_QUALITY,
+          quality: HEIC_JPEG_QUALITY,
         });
         var blob = Array.isArray(result) ? result[0] : result;
         return new File([blob], baseName(file.name) + '.jpg', { type: 'image/jpeg' });
       }
 
+      // Keep originals as-is. Only HEIC/HEIF needs conversion so browsers can display them.
       async function normalizeFile(file) {
-        if (!isHeicLike(file)) return file;
-        return toJpegFile(file);
+        if (isHeicLike(file)) return toJpegFile(file);
+        return file;
       }
 
       async function addFiles(list) {
@@ -749,25 +752,31 @@
 
         converting = true;
         var heicCount = candidates.filter(isHeicLike).length;
-        if (heicCount) {
-          setStatus(status, '', 'Converting ' + heicCount + ' HEIC photo' + (heicCount === 1 ? '' : 's') + '…');
-        }
-
         try {
           for (var i = 0; i < candidates.length; i++) {
+            if (heicCount) {
+              setStatus(
+                status,
+                '',
+                'Preparing photo ' + (i + 1) + '/' + candidates.length + '…'
+              );
+            }
             try {
               var file = await normalizeFile(candidates[i]);
               photoItems.push({ type: 'new', file: file, previewUrl: null });
             } catch (err) {
               console.error(err);
-              setStatus(status, 'err', 'Could not convert ' + (candidates[i].name || 'photo') + '. Try exporting as JPEG.');
+              setStatus(status, 'err', 'Could not prepare ' + (candidates[i].name || 'photo') + '. Try exporting as JPEG.');
               converting = false;
               renderPhotoList();
               return;
             }
           }
-          if (heicCount) setStatus(status, 'ok', 'Converted to JPEG — ready to upload');
-          else setStatus(status, '', '');
+          if (heicCount) {
+            setStatus(status, 'ok', candidates.length + ' photo' + (candidates.length === 1 ? '' : 's') + ' ready (HEIC converted at high quality)');
+          } else {
+            setStatus(status, 'ok', candidates.length + ' original photo' + (candidates.length === 1 ? '' : 's') + ' ready');
+          }
           renderPhotoList();
         } finally {
           converting = false;
@@ -879,7 +888,7 @@
         localStorage.setItem('natureWorkerUrl', base);
 
         if (converting) {
-          setStatus(status, 'err', 'Still converting photos — wait a moment.');
+          setStatus(status, 'err', 'Still preparing photos — wait a moment.');
           return;
         }
 
@@ -905,63 +914,182 @@
           return;
         }
 
-        var fd = new FormData();
-        fd.append('password', password);
-        fd.append('title', document.getElementById('title').value.trim());
-        fd.append('date', document.getElementById('date').value);
-        fd.append('endDate', document.getElementById('endDate').value);
-        fd.append('report', document.getElementById('report').value.trim());
-        fd.append('tags', JSON.stringify(selectedTags()));
+        function appendMeta(fd) {
+          fd.append('password', password);
+          fd.append('title', document.getElementById('title').value.trim());
+          fd.append('date', document.getElementById('date').value);
+          fd.append('endDate', document.getElementById('endDate').value);
+          fd.append('report', document.getElementById('report').value.trim());
+          fd.append('tags', JSON.stringify(selectedTags()));
+        }
 
-        var keep = [];
-        var order = [];
-        var newIdx = 0;
-        photoItems.forEach(function (item) {
-          if (item.type === 'existing') {
-            keep.push(item.url);
-            order.push(item.url);
-          } else {
-            fd.append('photos', item.file, item.file.name);
-            order.push('__new__:' + newIdx);
-            newIdx += 1;
+        async function sendTrip(method, url, fd, label) {
+          setStatus(status, '', label || (method === 'PUT' ? 'Saving…' : 'Uploading…'));
+          var res = await fetch(url, { method: method, body: fd });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) {
+            if (res.status === 413) {
+              throw new Error(
+                'Upload too large for one request (Cloudflare ~100MB limit). Retry — originals are uploaded in smaller batches automatically.'
+              );
+            }
+            throw new Error(data.error || ('Request failed (' + res.status + ')'));
           }
-        });
-        if (editingId) {
-          fd.append('keepPhotos', JSON.stringify(keep));
-          fd.append('photoOrder', JSON.stringify(order));
+          return data;
+        }
+
+        function chunkBySize(items, maxBytes) {
+          var out = [];
+          var current = [];
+          var bytes = 0;
+          items.forEach(function (item) {
+            var size = (item.file && item.file.size) || 0;
+            if (current.length && bytes + size > maxBytes) {
+              out.push(current);
+              current = [];
+              bytes = 0;
+            }
+            current.push(item);
+            bytes += size;
+            if (bytes > maxBytes && current.length === 1) {
+              out.push(current);
+              current = [];
+              bytes = 0;
+            }
+          });
+          if (current.length) out.push(current);
+          return out;
         }
 
         submit.disabled = true;
-        setStatus(status, '', editingId ? 'Saving…' : 'Uploading…');
 
         try {
-          var endpoint = editingId
-            ? base + '/api/trips/' + encodeURIComponent(editingId)
-            : base + '/api/trips';
-          var res = await fetch(endpoint, {
-            method: editingId ? 'PUT' : 'POST',
-            body: fd,
-          });
-          var data = await res.json().catch(function () { return {}; });
-          if (!res.ok) throw new Error(data.error || ('Request failed (' + res.status + ')'));
+          var existingItems = photoItems.filter(function (item) { return item.type === 'existing'; });
+          var newItems = photoItems.filter(function (item) { return item.type === 'new'; });
+          var keepUrls = existingItems.map(function (item) { return item.url; });
           var wasEdit = !!editingId;
           var editedId = editingId;
-          var msg = wasEdit ? 'Saved!' : 'Published!';
-          if (wasEdit && data.deletedPhotos) {
-            msg = 'Saved — deleted ' + data.deletedPhotos + ' photo' + (data.deletedPhotos === 1 ? '' : 's') + ' from storage';
-          }
-          rememberTags(selectedTags());
-          if (wasEdit && data.trip) {
-            allTrips = allTrips.map(function (t) {
-              return t.id === data.trip.id ? data.trip : t;
+          var data;
+          var msg;
+          var batches = chunkBySize(newItems, MAX_BATCH_BYTES);
+          var useBatches = batches.length > 1;
+
+          // Upload originals in size-capped batches (no resize) so large albums fit under ~100MB/request
+          if (useBatches) {
+            var currentKeep = keepUrls.slice();
+            var tripId = editingId;
+            var uploadedCount = 0;
+
+            for (var b = 0; b < batches.length; b++) {
+              var batch = batches[b];
+              var fd = new FormData();
+              appendMeta(fd);
+              uploadedCount += batch.length;
+              var label =
+                'Uploading originals ' +
+                (uploadedCount - batch.length + 1) +
+                '–' +
+                uploadedCount +
+                ' of ' +
+                newItems.length +
+                '…';
+
+              if (!tripId) {
+                batch.forEach(function (item) {
+                  fd.append('photos', item.file, item.file.name);
+                });
+                data = await sendTrip('POST', base + '/api/trips', fd, label);
+                tripId = data.trip && data.trip.id;
+                currentKeep = (data.trip && data.trip.photos) || [];
+                if (!tripId) throw new Error('Upload succeeded but no trip id returned');
+              } else {
+                fd.append('keepPhotos', JSON.stringify(currentKeep));
+                batch.forEach(function (item) {
+                  fd.append('photos', item.file, item.file.name);
+                });
+                data = await sendTrip(
+                  'PUT',
+                  base + '/api/trips/' + encodeURIComponent(tripId),
+                  fd,
+                  label
+                );
+                currentKeep = (data.trip && data.trip.photos) || currentKeep;
+              }
+            }
+
+            var finalOrder = [];
+            var newUrlQueue = currentKeep.filter(function (url) {
+              return keepUrls.indexOf(url) < 0;
             });
-          } else if (!wasEdit && data.trip) {
-            allTrips = [data.trip].concat(allTrips.filter(function (t) { return t.id !== data.trip.id; }));
+            var newPtr = 0;
+            photoItems.forEach(function (item) {
+              if (item.type === 'existing') finalOrder.push(item.url);
+              else if (newPtr < newUrlQueue.length) finalOrder.push(newUrlQueue[newPtr++]);
+            });
+            if (finalOrder.length === currentKeep.length && finalOrder.join('\0') !== currentKeep.join('\0')) {
+              var orderFd = new FormData();
+              appendMeta(orderFd);
+              orderFd.append('keepPhotos', JSON.stringify(finalOrder));
+              orderFd.append('photoOrder', JSON.stringify(finalOrder));
+              data = await sendTrip(
+                'PUT',
+                base + '/api/trips/' + encodeURIComponent(tripId),
+                orderFd,
+                'Finalizing photo order…'
+              );
+            }
+
+            editedId = tripId;
+            msg = wasEdit ? 'Saved!' : 'Published!';
+          } else {
+            var fd = new FormData();
+            appendMeta(fd);
+            var order = [];
+            var newIdx = 0;
+            photoItems.forEach(function (item) {
+              if (item.type === 'existing') {
+                order.push(item.url);
+              } else {
+                fd.append('photos', item.file, item.file.name);
+                order.push('__new__:' + newIdx);
+                newIdx += 1;
+              }
+            });
+            if (editingId) {
+              fd.append('keepPhotos', JSON.stringify(keepUrls));
+              fd.append('photoOrder', JSON.stringify(order));
+            } else if (!newItems.length) {
+              throw new Error('At least one photo is required.');
+            }
+
+            var endpoint = editingId
+              ? base + '/api/trips/' + encodeURIComponent(editingId)
+              : base + '/api/trips';
+            data = await sendTrip(editingId ? 'PUT' : 'POST', endpoint, fd);
+            msg = wasEdit ? 'Saved!' : 'Published!';
+            if (wasEdit && data.deletedPhotos) {
+              msg = 'Saved — deleted ' + data.deletedPhotos + ' photo' + (data.deletedPhotos === 1 ? '' : 's') + ' from storage';
+            }
+            if (data.trip && data.trip.id) editedId = data.trip.id;
+          }
+
+          rememberTags(selectedTags());
+          if (data.trip) {
+            if (wasEdit) {
+              allTrips = allTrips.map(function (t) {
+                return t.id === data.trip.id ? data.trip : t;
+              });
+            } else {
+              allTrips = [data.trip].concat(allTrips.filter(function (t) { return t.id !== data.trip.id; }));
+            }
           }
           resetForm();
           submit.disabled = false;
           if (wasEdit && editedId) {
             showManageAndScrollTo(editedId, msg);
+          } else if (!wasEdit && editedId) {
+            // New trip with batches: still stay on add form with success
+            setStatus(status, 'ok', msg + ' Stay here to add another, or open View site.');
           } else {
             setStatus(status, 'ok', msg + ' Stay here to add another, or open View site.');
           }

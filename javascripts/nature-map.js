@@ -226,6 +226,7 @@
       zoomControl: true,
       attributionControl: true,
       worldCopyJump: true,
+      preferCanvas: true,
     }).setView([20, 0], 2);
 
     // Temporary current imagery until Wayback years load
@@ -238,14 +239,14 @@
       }
     );
     baseLayers.satellite = satLayer;
+    // OpenTopoMap: contours, glaciers, relief (markers stay canvas so switch stays usable)
     baseLayers.terrain = window.L.tileLayer(
       "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
       {
         maxZoom: 17,
-        subdomains: "abc",
         className: "trip-map-terrain-tiles",
         attribution:
-          'Map data: &copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a>, <a href="https://viewfinderpanoramas.org" target="_blank" rel="noopener noreferrer">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org" target="_blank" rel="noopener noreferrer">OpenTopoMap</a> (CC-BY-SA)',
+          'Map data: &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors, <a href="http://viewfinderpanoramas.org">SRTM</a> | Map style: &copy; <a href="https://opentopomap.org">OpenTopoMap</a> (<a href="https://creativecommons.org/licenses/by-sa/3.0/">CC-BY-SA</a>)',
       }
     );
     satLayer.addTo(map);
@@ -283,6 +284,10 @@
     }
     activeBase = name;
     setBasemapButtons();
+    // Let tiles settle without blocking UI
+    requestAnimationFrame(function () {
+      if (map) map.invalidateSize({ animate: false });
+    });
   }
 
   function fitToPhotoGps(points) {
@@ -303,18 +308,36 @@
     map.fitBounds(latLngBounds, { padding: [36, 36], maxZoom: 16 });
   }
 
-  async function fetchGpsViaWorker(photos) {
+  async function fetchGpsViaWorker(photos, tripId) {
     var base = workerBase();
     if (!base || !photos || !photos.length) return [];
 
+    // Skip URLs already resolved in this session
+    var need = [];
+    var points = [];
+    photos.forEach(function (url) {
+      if (Object.prototype.hasOwnProperty.call(gpsCache, url)) {
+        if (gpsCache[url]) points.push(gpsCache[url]);
+        return;
+      }
+      need.push(url);
+    });
+    if (!need.length) return points;
+
+    setStatus(
+      need.length < photos.length
+        ? "Reading GPS… " + (photos.length - need.length) + " cached"
+        : "Reading GPS from photos…"
+    );
+
+    // One request — worker ranges EXIF headers + runs high concurrency
     var res = await fetch(base + "/api/gps", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ urls: photos }),
+      body: JSON.stringify({ urls: need, tripId: tripId || undefined }),
     });
     if (!res.ok) throw new Error("GPS lookup failed (" + res.status + ")");
     var data = await res.json();
-    var points = [];
     (data.points || []).forEach(function (p) {
       if (
         p &&
@@ -333,41 +356,57 @@
     return points;
   }
 
-  async function collectPoints(photos, stored) {
-    var points = [];
-    if (stored && stored.length) {
-      stored.forEach(function (p) {
-        if (
-          p &&
-          typeof p.lat === "number" &&
-          typeof p.lng === "number" &&
-          isFinite(p.lat) &&
-          isFinite(p.lng)
-        ) {
-          points.push({
-            lat: p.lat,
-            lng: p.lng,
-            url: p.url || "",
-          });
-        }
-      });
-      if (points.length) return points;
-    }
+  async function collectPoints(photos, stored, tripId) {
+    var byUrl = Object.create(null);
+    (stored || []).forEach(function (p) {
+      if (
+        p &&
+        p.url &&
+        typeof p.lat === "number" &&
+        typeof p.lng === "number" &&
+        isFinite(p.lat) &&
+        isFinite(p.lng)
+      ) {
+        byUrl[p.url] = { lat: p.lat, lng: p.lng, url: p.url };
+        gpsCache[p.url] = byUrl[p.url];
+      }
+    });
 
     var list = photos || [];
-    if (!list.length) return [];
+    var missing = list.filter(function (url) {
+      return !Object.prototype.hasOwnProperty.call(byUrl, url) &&
+        !Object.prototype.hasOwnProperty.call(gpsCache, url);
+    });
+
+    // All locations already on the trip — instant open
+    if (!missing.length) {
+      return list
+        .map(function (url) {
+          return byUrl[url] || gpsCache[url] || null;
+        })
+        .filter(Boolean);
+    }
 
     setStatus("Reading GPS from photos…");
     setLoading(true, "Loading GPS...");
     try {
-      points = await fetchGpsViaWorker(list);
+      await fetchGpsViaWorker(missing, tripId);
     } catch (err) {
       console.warn(err);
       setStatus("Could not read GPS (" + (err.message || "error") + ")");
       setLoading(false);
-      return [];
+      // Still return whatever we already had stored
+      return list
+        .map(function (url) {
+          return byUrl[url] || gpsCache[url] || null;
+        })
+        .filter(Boolean);
     }
-    return points;
+    return list
+      .map(function (url) {
+        return byUrl[url] || gpsCache[url] || null;
+      })
+      .filter(Boolean);
   }
 
   function escapeAttr(str) {
@@ -392,7 +431,7 @@
           escapeAttr(pt.url) +
           '" alt="Photo ' +
           label +
-          '" loading="lazy">'
+          '" loading="lazy" decoding="async">'
         : '<span class="trip-map-thumb-fallback">' + label + "</span>";
 
       var icon = window.L.divIcon({
@@ -412,7 +451,11 @@
       var popupHtml =
         '<div class="trip-map-popup">' +
         (pt.url
-          ? '<img src="' + escapeAttr(pt.url) + '" alt="Photo ' + label + '">'
+          ? '<img src="' +
+            escapeAttr(pt.url) +
+            '" alt="Photo ' +
+            label +
+            '" loading="lazy">'
           : "") +
         "<div>Photo " +
         label +
@@ -433,8 +476,8 @@
           escapeAttr(pt.url) +
           '" alt="Photo ' +
           label +
-          '" loading="lazy">' +
-          '<span>' +
+          '" loading="lazy" decoding="async">' +
+          "<span>" +
           label +
           "</span>";
         btn.addEventListener("click", function () {
@@ -492,7 +535,11 @@
         setBasemapButtons();
       });
 
-      var points = await collectPoints(trip.photos || [], trip.photoLocations || []);
+      var points = await collectPoints(
+        trip.photos || [],
+        trip.photoLocations || [],
+        trip.id
+      );
       if (loadId !== mapLoadId) return;
       if (!points.length) {
         layerGroup && layerGroup.clearLayers();

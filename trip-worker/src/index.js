@@ -249,6 +249,7 @@ function validateTripFields({ title, date, endDate }) {
 
 async function uploadFiles(env, base, year, month, slug, files, startIndex) {
   const photoUrls = [];
+  const locations = [];
   let idx = startIndex;
   for (const file of files) {
     const ext = extFromFile(file);
@@ -259,12 +260,13 @@ async function uploadFiles(env, base, year, month, slug, files, startIndex) {
         cacheControl: "public, max-age=31536000, immutable",
       },
     });
-    photoUrls.push(
-      `${base}/${key.split("/").map(encodeURIComponent).join("/")}`
-    );
+    const photoUrl = `${base}/${key.split("/").map(encodeURIComponent).join("/")}`;
+    photoUrls.push(photoUrl);
+    const gps = await gpsFromR2Key(env, key);
+    if (gps) locations.push({ url: photoUrl, lat: gps.lat, lng: gps.lng });
     idx += 1;
   }
-  return photoUrls;
+  return { photoUrls, locations };
 }
 
 function tripIdFromPath(pathname) {
@@ -272,10 +274,40 @@ function tripIdFromPath(pathname) {
   return m ? decodeURIComponent(m[1]) : null;
 }
 
-async function gpsFromR2Object(obj) {
-  if (!obj) return null;
+function gpsCacheRequest(key) {
+  return new Request("https://gps-cache.internal/" + encodeURIComponent(key));
+}
+
+async function getGpsCache(key) {
   try {
-    const buf = await obj.arrayBuffer();
+    const hit = await caches.default.match(gpsCacheRequest(key));
+    if (!hit) return undefined;
+    return await hit.json();
+  } catch {
+    return undefined;
+  }
+}
+
+async function putGpsCache(key, gps) {
+  try {
+    const body = JSON.stringify(gps || null);
+    await caches.default.put(
+      gpsCacheRequest(key),
+      new Response(body, {
+        headers: {
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      })
+    );
+  } catch {
+    // cache is best-effort
+  }
+}
+
+async function gpsFromBuffer(buf) {
+  if (!buf || !buf.byteLength) return null;
+  try {
     const slice = buf.byteLength > 262144 ? buf.slice(0, 262144) : buf;
     const gps = await exifr.gps(slice);
     if (
@@ -293,31 +325,102 @@ async function gpsFromR2Object(obj) {
   return null;
 }
 
-async function gpsForPhotoUrls(env, base, urls) {
-  const out = [];
-  for (const photoUrl of urls.slice(0, 40)) {
-    const key = keyFromPhotoUrl(photoUrl, base);
-    if (!key) {
-      out.push({ url: photoUrl, lat: null, lng: null });
-      continue;
+async function gpsFromR2Key(env, key) {
+  const cached = await getGpsCache(key);
+  if (cached !== undefined) {
+    return cached; // null = known no-GPS
+  }
+  try {
+    // Only pull EXIF header bytes — full originals made /api/gps crawl
+    const obj = await env.PHOTOS.get(key, {
+      range: { offset: 0, length: 262144 },
+    });
+    if (!obj) {
+      await putGpsCache(key, null);
+      return null;
     }
-    try {
-      const obj = await env.PHOTOS.get(key);
-      const gps = await gpsFromR2Object(obj);
-      out.push({
-        url: photoUrl,
-        lat: gps ? gps.lat : null,
-        lng: gps ? gps.lng : null,
-      });
-    } catch {
-      out.push({ url: photoUrl, lat: null, lng: null });
+    const buf = await obj.arrayBuffer();
+    const gps = await gpsFromBuffer(buf);
+    await putGpsCache(key, gps);
+    return gps;
+  } catch {
+    return null;
+  }
+}
+
+async function gpsForPhotoUrls(env, base, urls) {
+  const CONCURRENCY = 16;
+  const out = new Array(urls.length);
+  let next = 0;
+
+  async function worker() {
+    while (next < urls.length) {
+      const i = next++;
+      const photoUrl = urls[i];
+      const key = keyFromPhotoUrl(photoUrl, base);
+      if (!key) {
+        out[i] = { url: photoUrl, lat: null, lng: null };
+        continue;
+      }
+      try {
+        const gps = await gpsFromR2Key(env, key);
+        out[i] = {
+          url: photoUrl,
+          lat: gps ? gps.lat : null,
+          lng: gps ? gps.lng : null,
+        };
+      } catch {
+        out[i] = { url: photoUrl, lat: null, lng: null };
+      }
     }
   }
+
+  const n = Math.min(CONCURRENCY, Math.max(1, urls.length));
+  await Promise.all(Array.from({ length: n }, function () { return worker(); }));
   return out;
 }
 
+async function persistTripPhotoLocations(env, base, tripId, points) {
+  if (!tripId || !points || !points.length) return;
+  try {
+    const data = await loadTrips(env, base);
+    const idx = (data.trips || []).findIndex((t) => t.id === tripId);
+    if (idx < 0) return;
+    const trip = data.trips[idx];
+    const byUrl = Object.create(null);
+    (trip.photoLocations || []).forEach((p) => {
+      if (p && p.url) byUrl[normalizePhotoUrl(p.url)] = p;
+    });
+    points.forEach((p) => {
+      if (
+        p &&
+        p.url &&
+        typeof p.lat === "number" &&
+        typeof p.lng === "number" &&
+        Number.isFinite(p.lat) &&
+        Number.isFinite(p.lng)
+      ) {
+        byUrl[normalizePhotoUrl(p.url)] = {
+          url: p.url,
+          lat: p.lat,
+          lng: p.lng,
+        };
+      }
+    });
+    const photoSet = new Set((trip.photos || []).map(normalizePhotoUrl));
+    trip.photoLocations = Object.values(byUrl).filter((p) =>
+      photoSet.has(normalizePhotoUrl(p.url))
+    );
+    trip.updatedAt = new Date().toISOString();
+    data.trips[idx] = trip;
+    await saveTrips(env, data);
+  } catch {
+    // persistence is best-effort; GPS response still returns
+  }
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const base = publicBase(env);
 
@@ -336,6 +439,12 @@ export default {
         const urls = Array.isArray(body?.urls) ? body.urls.map(String) : [];
         if (!urls.length) return json({ error: "urls required" }, 400, request);
         const points = await gpsForPhotoUrls(env, base, urls);
+        const tripId = body?.tripId ? String(body.tripId) : "";
+        if (tripId && ctx && typeof ctx.waitUntil === "function") {
+          ctx.waitUntil(persistTripPhotoLocations(env, base, tripId, points));
+        } else if (tripId) {
+          await persistTripPhotoLocations(env, base, tripId, points);
+        }
         return json({ points }, 200, request);
       } catch (err) {
         return json({ error: err.message || "GPS lookup failed" }, 500, request);
@@ -375,7 +484,7 @@ export default {
         }
 
         const slug = slugify(title);
-        const photoUrls = await uploadFiles(
+        const uploaded = await uploadFiles(
           env,
           base,
           year,
@@ -395,7 +504,8 @@ export default {
           title,
           tags,
           report,
-          photos: photoUrls,
+          photos: uploaded.photoUrls,
+          photoLocations: uploaded.locations,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -470,7 +580,7 @@ export default {
 
         const slug = slugify(title);
         const startIndex = Date.now();
-        const uploaded = await uploadFiles(
+        const uploadedBundle = await uploadFiles(
           env,
           base,
           year,
@@ -479,6 +589,8 @@ export default {
           newFiles,
           startIndex
         );
+        const uploaded = uploadedBundle.photoUrls;
+        const uploadedLocations = uploadedBundle.locations;
 
         let photos;
         const orderRaw = form.get("photoOrder");
@@ -515,6 +627,17 @@ export default {
           return json({ error: "At least one photo is required" }, 400, request);
         }
 
+        const photoSet = new Set(photos.map(normalizePhotoUrl));
+        const locationByUrl = Object.create(null);
+        (existing.photoLocations || []).forEach((p) => {
+          if (p && p.url && photoSet.has(normalizePhotoUrl(p.url))) {
+            locationByUrl[normalizePhotoUrl(p.url)] = p;
+          }
+        });
+        uploadedLocations.forEach((p) => {
+          if (p && p.url) locationByUrl[normalizePhotoUrl(p.url)] = p;
+        });
+
         const trip = {
           ...existing,
           title,
@@ -525,6 +648,7 @@ export default {
           tags,
           report,
           photos,
+          photoLocations: Object.values(locationByUrl),
           updatedAt: new Date().toISOString(),
         };
 

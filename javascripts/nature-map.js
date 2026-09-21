@@ -431,7 +431,7 @@
           escapeAttr(pt.url) +
           '" alt="Photo ' +
           label +
-          '" loading="lazy" decoding="async">'
+          '" draggable="false">'
         : '<span class="trip-map-thumb-fallback">' + label + "</span>";
 
       var icon = window.L.divIcon({

@@ -1,0 +1,15 @@
+name = "nature-trip-uploader"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Bind your existing R2 bucket (change name if different)
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "trips"
+
+# After first deploy, set:
+#   wrangler secret put ADMIN_PASSWORD
+# Optional override for public photo URL base:
+#   wrangler secret put PUBLIC_BASE_URL
+# Default used in code if unset:
+#   https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev

@@ -1,0 +1,1154 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light only">
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <title>Trip Archive | Rongwu Xu</title>
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script src="./javascripts/load_navbar.js?v=copyright-once"></script>
+    <style>
+        /* Nav (44px) + jump (~28px) + ~36px gap like other pages under the nav */
+        body {
+            padding-top: 108px;
+        }
+
+        @media print,
+        screen and (max-width: 480px) {
+            body {
+                padding-top: 108px;
+            }
+        }
+
+        .fun-wrapper {
+            max-width: min(720px, 100%);
+            margin: 0 auto;
+            padding: 0;
+            float: none;
+            width: auto;
+            box-sizing: border-box;
+            background-color: #ffffff;
+        }
+
+        /* Override site theme: section { float: right } is for index layout only */
+        .fun-wrapper section {
+            float: none;
+            width: auto;
+        }
+
+        .fun-wrapper .nature-content {
+            float: none;
+            width: 100%;
+            clear: both;
+        }
+
+        .fun-wrapper>h1 {
+            margin: 0 0 10px;
+            font-weight: 500;
+        }
+
+        .trip-lede {
+            margin: 0 0 8px;
+            color: #666;
+            line-height: 1.55;
+        }
+
+        .trip-lede-photo {
+            margin: 14px 0 18px;
+        }
+
+        .trip-lede-photo img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .trip-lede-photo figcaption {
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.45;
+            color: #888;
+        }
+
+        .trips-loading,
+        .trips-load-error {
+            margin: 16px 0;
+            color: #888;
+        }
+
+        .nature-disclaimer {
+            margin: 10px 0 0;
+            line-height: 1.5;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .trip-jump {
+            position: fixed;
+            top: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(720px, calc(100% - 100px));
+            z-index: 40;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            box-sizing: border-box;
+        }
+
+        @media print,
+        screen and (max-width: 480px) {
+            .trip-jump {
+                width: min(720px, calc(100% - 30px));
+            }
+        }
+
+        .trip-jump[hidden] {
+            display: none !important;
+        }
+
+        .trip-jump-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-height: 28px;
+        }
+
+        .trip-jump-toggle,
+        .trip-jump-top {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-size: 14px;
+            color: #888;
+            cursor: pointer;
+            padding: 2px 0;
+            text-align: left;
+        }
+
+        .trip-jump-toggle {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .trip-jump-toggle::after {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-right: 1.5px solid #999;
+            border-bottom: 1.5px solid #999;
+            transform: rotate(45deg);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            margin-top: -1px;
+        }
+
+        .trip-jump.is-open .trip-jump-toggle::after {
+            transform: rotate(-135deg);
+            margin-top: 1px;
+        }
+
+        .trip-jump-top {
+            flex-shrink: 0;
+            padding-left: 12px;
+            color: #d97706;
+            font-weight: 500;
+        }
+
+        .trip-jump-toggle:hover,
+        .trip-jump-top:hover,
+        .trip-jump-toggle:focus-visible,
+        .trip-jump-top:focus-visible {
+            color: #222;
+            outline: none;
+        }
+
+        .trip-jump-top:hover,
+        .trip-jump-top:focus-visible {
+            color: #b45309;
+        }
+
+        .trip-jump-panel {
+            border-top: 1px solid #f0f0f0;
+            max-height: min(40vh, 260px);
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1px 0 4px;
+        }
+
+        .trip-jump-panel[hidden] {
+            display: none !important;
+        }
+
+        .trip-jump-months {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-width: 100%;
+        }
+
+        .trip-jump-month {
+            appearance: none;
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            padding: 3px 0;
+            text-align: left;
+            line-height: 1.25;
+        }
+
+        .trip-jump-month:hover,
+        .trip-jump-month:focus-visible {
+            color: #222;
+            outline: none;
+        }
+
+        .trip-jump-older {
+            display: block;
+            padding: 3px 0 0;
+            font-size: 14px;
+            color: #39c;
+            text-decoration: none;
+        }
+
+        .trip-jump-older:hover {
+            color: #069;
+        }
+
+        .trip-chunk-nav {
+            margin: 28px 0 8px;
+        }
+
+        .trip-chunk-nav[hidden] {
+            display: none !important;
+        }
+
+        .trip-chunk-bar {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .trip-chunk-label {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            min-width: 0;
+        }
+
+        .trip-chunk-link {
+            flex-shrink: 0;
+            color: #39c;
+            text-decoration: none;
+        }
+
+        .trip-chunk-link:hover {
+            color: #069;
+            font-weight: 500;
+        }
+
+        .trip-chunk-link.is-disabled {
+            color: #ccc;
+            pointer-events: none;
+        }
+
+        .trip-entry {
+            margin-bottom: 40px;
+            padding-bottom: 4px;
+            scroll-margin-top: 88px;
+        }
+
+        .trip-entry>.trip-title {
+            display: block;
+            margin: 0 0 6px;
+            font-size: 17px;
+            font-weight: 500;
+            color: #4a4a4a;
+        }
+
+        .trip-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px 12px;
+            margin: 0 0 24px;
+        }
+
+        .trip-meta-left {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 8px;
+            min-width: 0;
+        }
+
+        .trip-meta .trip-tags {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin: 0;
+            align-items: center;
+        }
+
+        .trip-meta .trip-tags:empty {
+            display: none;
+        }
+
+        .trip-date {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .trip-date-month {
+            color: #222;
+            font-weight: 500;
+        }
+
+        .trip-date-rest {
+            color: #888;
+        }
+
+        .trip-map-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 0 0 auto;
+            padding: 0;
+            border: 0;
+            background: none;
+            color: #d97706;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .trip-map-btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transform-origin: 50% 90%;
+            animation: trip-map-pin 2.8s ease-in-out infinite;
+            transition: transform 0.25s ease;
+        }
+
+        .trip-map-btn .trip-map-btn-label {
+            border-bottom: 1px solid rgba(217, 119, 6, 0.4);
+        }
+
+        .trip-map-btn .trip-map-btn-arrow {
+            display: inline-block;
+            transition: transform 0.25s ease;
+        }
+
+        .trip-map-btn:hover,
+        .trip-map-btn:focus-visible {
+            color: #b45309;
+            outline: none;
+        }
+
+        .trip-map-btn:hover svg,
+        .trip-map-btn:focus-visible svg {
+            animation: none;
+            transform: translateY(-3px);
+        }
+
+        .trip-map-btn:hover .trip-map-btn-label,
+        .trip-map-btn:focus-visible .trip-map-btn-label {
+            border-bottom-color: rgba(180, 83, 9, 0.65);
+        }
+
+        .trip-map-btn:hover .trip-map-btn-arrow,
+        .trip-map-btn:focus-visible .trip-map-btn-arrow {
+            transform: translateX(4px);
+        }
+
+        @keyframes trip-map-pin {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-2px);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .trip-map-btn svg {
+                animation: none;
+            }
+
+            .trip-map-btn:hover svg,
+            .trip-map-btn:focus-visible svg,
+            .trip-map-btn:hover .trip-map-btn-arrow,
+            .trip-map-btn:focus-visible .trip-map-btn-arrow {
+                transform: none;
+            }
+        }
+
+        .trip-report {
+            margin: 0 0 12px;
+            line-height: 1.55;
+            color: #686868;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .trip-report p {
+            margin: 0 0 0.65em;
+        }
+
+        .trip-report p:last-child {
+            margin-bottom: 0;
+        }
+
+        .trip-report ul {
+            margin: 0 0 0.65em;
+            padding-left: 1.2em;
+        }
+
+        .trip-report ul:last-child {
+            margin-bottom: 0;
+        }
+
+        .trip-report li {
+            margin: 0.15em 0;
+        }
+
+        .trip-report a {
+            color: #4a6fa5;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .trip-report strong {
+            color: #555;
+            font-weight: 600;
+        }
+
+        .trip-report em {
+            font-style: italic;
+        }
+
+        .trip-report:empty {
+            display: none;
+        }
+
+        .trip-entry>.trip-tags:not(:empty) {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin: 0;
+            vertical-align: middle;
+            align-items: center;
+        }
+
+        .trip-entry>.trip-tags:empty {
+            display: none;
+        }
+
+        .trip-tag {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            background: center / contain no-repeat var(--tag-icon);
+        }
+
+        .trip-tag[data-tip] {
+            position: relative;
+            cursor: default;
+        }
+
+        .trip-tag[data-tip]::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: calc(100% + 5px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            padding: 3px 8px;
+            font-size: 11px;
+            line-height: 1.3;
+            color: #444;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 3px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            white-space: normal;
+            max-width: min(180px, 70vw);
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition:
+                opacity 0.55s ease,
+                transform 0.55s ease,
+                visibility 0s linear 0.55s;
+            z-index: 20;
+        }
+
+        .trip-tag[data-tip]:hover::after,
+        .trip-tag[data-tip]:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+            transition:
+                opacity 0.5s ease,
+                transform 0.5s ease,
+                visibility 0s linear 0s;
+        }
+
+        .trip-tag.casual {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='5' r='2'/%3E%3Cpath d='M12 7v6M9 21l3-8 3 8M8 11h8'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.hiking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='4.5' r='2'/%3E%3Cpath d='M12 6.5v5.5M9.5 21l2.5-9 2.5 9M8 11h8'/%3E%3Cpath d='M8 7L6.5 21M16 7l1.5 14'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.cycling {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5.5' cy='17' r='4'/%3E%3Ccircle cx='18.5' cy='17' r='4'/%3E%3Cpath d='M5.5 17L10 8h4l4.5 9M10 8h4'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.camping {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 19L10 5l5 14H3z'/%3E%3Cpath d='M10 5l9 4v10H15'/%3E%3Cpath d='M8 19v-5h3v5'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.backpacking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10' cy='5' r='2'/%3E%3Cpath d='M10 7v7M8 21l2-7 2 7M8 12h4'/%3E%3Cpath d='M14 5.5h3a1 1 0 011 1V16a1 1 0 01-1 1h-3'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.scrambling {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 20l5.5-11 2.5 5 3.5-8L22 20H2z'/%3E%3Cpath d='M13 20l2-5'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.kayaking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 15c5-2.5 15-2.5 20 0-2 2.5-5.5 4-10 4s-8-1.5-10-4z'/%3E%3Cpath d='M6 9l12 7'/%3E%3Ccircle cx='12' cy='8' r='2'/%3E%3C/svg%3E");
+        }
+
+        .nature-content {
+            margin-top: 28px;
+        }
+
+        .activity-key {
+            margin: 0 0 20px;
+            padding: 0 0 16px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .activity-key-title {
+            margin: 0 0 6px;
+            padding: 0;
+            font-weight: 500;
+            font-size: 15px;
+            color: #999;
+        }
+
+        .activity-key-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+        }
+
+        .activity-key-list li {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin: 0;
+        }
+
+        .activity-key-list .trip-tag {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+        }
+
+        .activity-key-list strong {
+            color: #888;
+            font-weight: 400;
+            font-size: 14px;
+        }
+
+        .trip-gallery {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 100%;
+        }
+
+        .trip-gallery-col {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hidden until photo sizes are known, so photos appear already in place */
+        .trip-gallery.is-measuring {
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .trip-gallery img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 0 10px;
+            border: 0;
+            background: #f3f3f3;
+        }
+
+        @media print,
+        screen and (max-width: 720px) {
+            .trip-entry>.trip-tags:not(:empty) {
+                margin-bottom: 0;
+            }
+
+            .trip-report {
+                margin-bottom: 8px;
+            }
+
+            /* Single column: left column then right column is already upload order */
+            .trip-gallery {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .trip-gallery-col {
+                display: contents;
+            }
+
+            .trip-entry {
+                scroll-margin-top: 84px;
+            }
+        }
+
+        body.trip-map-open {
+            overflow: hidden;
+        }
+
+        .trip-map-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 12px;
+            background: rgba(20, 20, 20, 0.55);
+            box-sizing: border-box;
+        }
+
+        .trip-map-modal.hidden {
+            display: none;
+        }
+
+        .trip-map-dialog {
+            display: flex;
+            flex-direction: column;
+            width: min(960px, 100%);
+            height: min(860px, 100%);
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+        }
+
+        .trip-map-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .trip-map-header h2 {
+            flex: 1;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #222;
+            line-height: 1.3;
+        }
+
+        .trip-map-close {
+            border: 0;
+            background: transparent;
+            font-size: 24px;
+            line-height: 1;
+            color: #666;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .trip-map-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .trip-map-toolbar button {
+            border: 1px solid #d5d5d5;
+            background: #fff;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            color: #444;
+        }
+
+        .trip-map-toolbar button.active {
+            border-color: #666;
+            background: #f3f3f3;
+            color: #111;
+        }
+
+        .trip-map-year-row {
+            display: flex;
+            align-items: center;
+            flex: 1 1 220px;
+            min-width: 180px;
+        }
+
+        .trip-map-year-row.hidden {
+            display: none;
+        }
+
+        .trip-map-year-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .trip-map-year-hint {
+            font-size: 12px;
+            color: #888;
+            font-style: italic;
+        }
+
+        .trip-map-year-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trip-map-year-current {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f5a560;
+            white-space: nowrap;
+            min-width: 3.2em;
+        }
+
+        .trip-map-year-end {
+            font-size: 11px;
+            color: #999;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        #trip-map-year {
+            flex: 1;
+            min-width: 70px;
+            accent-color: #c07a3a;
+        }
+
+        #trip-map-status {
+            margin-left: auto;
+            font-size: 12px;
+            color: #888;
+        }
+
+        #trip-map-canvas {
+            flex: 1;
+            min-height: 280px;
+            height: 100%;
+            background: #ddd;
+        }
+
+        /* Soften OpenTopoMap's loud palette while keeping glacier / contour detail */
+        #trip-map-canvas .trip-map-terrain-tiles {
+            filter: saturate(0.62) contrast(0.94) brightness(1.04);
+        }
+
+        .trip-map-stage {
+            position: relative;
+            flex: 1;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trip-map-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(2px);
+            box-sizing: border-box;
+        }
+
+        .trip-map-loading.hidden {
+            display: none;
+        }
+
+        .trip-map-loading-card {
+            max-width: 280px;
+            text-align: center;
+            padding: 22px 20px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+        }
+
+        .trip-map-loading-spinner {
+            width: 28px;
+            height: 28px;
+            margin: 0 auto 14px;
+            border: 2.5px solid #e6e6e6;
+            border-top-color: #f5a560;
+            border-radius: 50%;
+            animation: trip-map-spin 0.8s linear infinite;
+        }
+
+        @keyframes trip-map-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #trip-map-loading-text {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.45;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .trip-map-strip {
+            display: flex;
+            gap: 8px;
+            padding: 10px 12px;
+            overflow-x: auto;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .trip-map-strip.hidden {
+            display: none;
+        }
+
+        .trip-map-strip-item {
+            position: relative;
+            flex: 0 0 auto;
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            border: 1px solid #e2e2e2;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .trip-map-strip-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .trip-map-strip-item span {
+            position: absolute;
+            left: 4px;
+            bottom: 4px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            font-size: 10px;
+            line-height: 16px;
+            text-align: center;
+        }
+
+        .trip-map-photo-marker {
+            background: transparent;
+            border: 0;
+        }
+
+        .trip-map-thumb {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+            background: #333;
+        }
+
+        .trip-map-thumb-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+            /* Keep decoded thumbs alive through Leaflet transform / zoom */
+            content-visibility: visible;
+        }
+
+        .trip-map-thumb-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .trip-map-thumb-num {
+            position: absolute;
+            right: 2px;
+            bottom: 2px;
+            min-width: 14px;
+            height: 14px;
+            padding: 0 3px;
+            border-radius: 7px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            font-size: 9px;
+            line-height: 14px;
+            text-align: center;
+        }
+
+        .trip-map-popup img {
+            display: block;
+            width: 180px;
+            height: 120px;
+            object-fit: cover;
+            margin: 0 0 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="fun-wrapper">
+        <nav class="trip-jump" id="trip-jump" aria-label="Jump to trip dates">
+            <div class="trip-jump-bar">
+                <button type="button" class="trip-jump-toggle" id="trip-jump-toggle" aria-expanded="false"
+                    aria-controls="trip-jump-panel">Jump to date</button>
+                <button type="button" class="trip-jump-top" id="trip-jump-top">Latest</button>
+            </div>
+            <div class="trip-jump-panel" id="trip-jump-panel" hidden></div>
+        </nav>
+
+        <h1>Trip Archive</h1>
+
+        <p class="trip-lede">I started this page in May 2026 to share my trips outdoors: hikes, backpacking, long
+            wilderness days, and sightseeing trips that do not need to be physically hard at all. I have loved scenic
+            views
+            since I was
+            young, but I did not really spend time in the wilderness until I moved to Seattle for my PhD. Growing up
+            in Beijing, I “climbed” the usual paved <a href="https://en.wikipedia.org/wiki/Mount_Miaofeng"
+                target="_blank" rel="noopener noreferrer">hills</a>
+            and did the usual tourist trips in China; looking
+            back, they were closer to walking stairs in a well-kept park. Here I started with trails
+            around the
+            city and suburbs, then, once I had a car, the state parks and forests farther out. Lakes, forests, and
+            the coast all pulled me in, but mountains took hold of me the most.</p>
+        <p class="trip-lede">The summer after I finished my Master’s degree, I went to Yunnan and stood below
+            <a href="https://en.wikipedia.org/wiki/Jade_Dragon_Snow_Mountain" target="_blank"
+                rel="noopener noreferrer">Yulong Xueshan</a> (玉龙雪山). It was
+            another tourist trip,
+            but we were
+            at 4600m and it felt so real. The weather was rough: heavy cloud, a whiteout, almost no view from the
+            high places. Still, the granite walls and the shapes the glaciers had cut left me speechless. Since then I
+            have wanted to see more mountains up close, and maybe stand on top of a few, especially ones with snow
+            and ice. And yes, crazy as it sounds, I also dream of an eight-thousander someday, if money, body, and luck
+            allow.
+        </p>
+        <figure class="trip-lede-photo">
+            <img src="./images/jade-dragon-snow-mountain.jpg" width="1024" height="768"
+                alt="Jade Dragon Snow Mountain peaks breaking through cloud under a clear blue sky, Yunnan, 2025"
+                loading="lazy" decoding="async">
+            <figcaption>玉龙雪山 — a brief clear window above the cloud, Yunnan, China, July 2025.</figcaption>
+        </figure>
+        <p class="trip-lede">In Washington I loved green hills like Mount Si, but over time I found myself wanting to
+            go higher. Looking at alpine peaks, I wanted to be on top, not only on the trails around them. In the
+            North Cascades
+            there are 2000m glaciated peaks you can reach without altitude sickness; from the road and from the
+            plane, snow-capped volcanoes like Mt. Rainier and Mt. Baker keep showing up. Looking at them, I keep
+            imagining a ridge underfoot and how small a person would look against those flanks. That scale is hard to
+            shake.</p>
+        <p class="trip-lede">I asked around for summits that were
+            not too technical, preferably with snow and glaciers. On a hitchhike back down from Hidden Lake Lookout, a
+            former local mountaineer told me Ruth Mountain might be a good start, with no crevasses to worry about
+            (actually there
+            are); later I checked with <a href="https://galenweld.com/blog" target="_blank"
+                rel="noopener noreferrer">Galen</a>, a true mountain
+            person who never tires of my endless beginner
+            questions. It took me two attempts (early season is honest about how unready you can feel). When I finally
+            stood up there, I realized I could stand where I had once only stared. If I could summit
+            Ruth with average fitness and almost no skills, nothing could hold me back, especially since I can always
+            learn from failing. After that I planned, failed, and summited more alpine peaks in this state that season,
+            each with its own memory and its own kind of challenge. I do not know whether I will ever go very technical,
+            and
+            I have little interest in being super fast. What keeps me going is moving through the scenery under my
+            own power, hardship included, and actually feeling the beauty of the landscape along the
+            way.</p>
+        <p class="trip-lede">I believe many things are destined to be, like what brought me to Washington and back to my
+            love for the outdoors. Do I have a bucket list? Not really. If
+            it’s
+            meant to be, it will be. Lately I am more drawn to places where <a
+                href="https://glaciers.nichols.edu/foss-glacier/" target="_blank" rel="noopener noreferrer">glaciers are
+                dying or recently gone</a>, places with interesting geologic features, and Washington’s fire lookouts.
+            All of
+            them feel like pieces of history.
+        </p>
+
+        <p class="trip-lede">For the most part, I think of myself as a hiker who loves mountains and challenging
+            adventures,
+            but you will also find easy walks, scenic drives, and trips that are just about seeing somewhere
+            beautiful. Some of these trips
+            also live on my <a href="https://www.wta.org/@@backpacks/scrnm-rdxu" target="_blank"
+                rel="noopener noreferrer">WTA
+                page</a>. I log my summits on <a href="https://www.peakbagger.com/climber/climber.aspx?cid=59163"
+                target="_blank" rel="noopener noreferrer">Peakbagger</a>.</p>
+
+        <div class="nature-content">
+            <div class="activity-key" aria-label="Activity types">
+                <p class="activity-key-title">Activity types</p>
+                <ul class="activity-key-list">
+                    <li><span class="trip-tag casual" aria-hidden="true"></span><strong>casual</strong></li>
+                    <li><span class="trip-tag hiking" aria-hidden="true"></span><strong>hiking</strong></li>
+                    <li><span class="trip-tag cycling" aria-hidden="true"></span><strong>cycling</strong></li>
+                    <li><span class="trip-tag camping" aria-hidden="true"></span><strong>camping</strong></li>
+                    <li><span class="trip-tag backpacking" aria-hidden="true"></span><strong>backpacking</strong></li>
+                    <li><span class="trip-tag scrambling" aria-hidden="true"></span><strong>scrambling</strong></li>
+                    <li><span class="trip-tag kayaking" aria-hidden="true"></span><strong>kayaking</strong></li>
+                </ul>
+                <p class="nature-disclaimer"><strong>Disclaimer:</strong> Some of these activities can be inherently
+                    dangerous. Always do your own research.</p>
+            </div>
+
+            <div id="trips-list">
+                <p class="trips-loading">Loading trips…</p>
+            </div>
+
+            <nav class="trip-chunk-nav" data-trip-chunk-nav hidden aria-label="Trip archive pages"></nav>
+        </div>
+
+        <footer class="site-footer"></footer>
+    </main>
+
+    <div id="trip-map-modal" class="trip-map-modal hidden" aria-hidden="true">
+        <div class="trip-map-dialog" role="dialog" aria-modal="true" aria-labelledby="trip-map-title">
+            <div class="trip-map-header">
+                <h2 id="trip-map-title">Trip map</h2>
+                <button type="button" class="trip-map-close" id="trip-map-close" aria-label="Close map">×</button>
+            </div>
+            <div class="trip-map-toolbar">
+                <button type="button" data-basemap="satellite" class="active">Satellite</button>
+                <button type="button" data-basemap="terrain">Terrain</button>
+                <div id="trip-map-year-row" class="trip-map-year-row">
+                    <div class="trip-map-year-copy">
+                        <span class="trip-map-year-hint">Try viewing through the years</span>
+                        <div class="trip-map-year-controls">
+                            <span class="trip-map-year-end" id="trip-map-year-min">2014</span>
+                            <input id="trip-map-year" type="range" min="0" max="0" value="0" step="1"
+                                aria-label="Satellite imagery year">
+                            <span class="trip-map-year-end" id="trip-map-year-max">now</span>
+                            <span id="trip-map-year-label" class="trip-map-year-current"></span>
+                        </div>
+                    </div>
+                </div>
+                <span id="trip-map-status"></span>
+            </div>
+            <div class="trip-map-stage">
+                <div id="trip-map-canvas"></div>
+                <div id="trip-map-loading" class="trip-map-loading hidden" aria-live="polite">
+                    <div class="trip-map-loading-card">
+                        <div class="trip-map-loading-spinner" aria-hidden="true"></div>
+                        <p id="trip-map-loading-text">Loading GPS...</p>
+                    </div>
+                </div>
+            </div>
+            <div id="trip-map-strip" class="trip-map-strip hidden" aria-label="Photos on map"></div>
+        </div>
+    </div>
+
+    <script src="./javascripts/nature-config.js"></script>
+    <script src="./javascripts/nature-map.js?v=terrain-retry"></script>
+    <script src="./javascripts/nature-trips.js?v=balanced-gallery"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tooltips for static activity-key icons
+            var types = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'kayaking'];
+            var labels = {};
+            document.querySelectorAll('.activity-key .trip-tag').forEach(function (el) {
+                var fromClass = types.find(function (t) { return el.classList.contains(t); });
+                var label = labels[fromClass] || fromClass;
+                if (!label) return;
+                el.dataset.tip = label;
+                el.setAttribute('aria-label', label);
+            });
+            window.renderNatureTrips('#trips-list');
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,18 @@
+{
+  "name": "trip-worker",
+  "version": "1.0.0",
+  "description": "Upload trips from a simple web form. Photos and `trips.json` go to R2 — **no Git commit** for new trips.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "wrangler": "^4.86.0"
+  },
+  "dependencies": {
+    "exifr": "^7.1.3"
+  }
+}

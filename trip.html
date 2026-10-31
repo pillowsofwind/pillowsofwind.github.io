@@ -1,0 +1,1238 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script>
+        (function () {
+            var q = /[?&]chunk=(\d+)/.exec(location.search || "");
+            var n = q ? parseInt(q[1], 10) : 0;
+            if (!isFinite(n) || n < 0) n = 0;
+            document.documentElement.setAttribute("data-trip-chunk", String(n));
+        })();
+    </script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light only">
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <title>Trip Archive | Rongwu Xu</title>
+    <meta name="description" content="Trip archive — outdoor adventures by Rongwu Xu.">
+    <link rel="canonical" href="https://rongwuxu.com/trip.html">
+    <link rel="icon" href="/favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <script src="./javascripts/load_navbar.js?v=copyright-once"></script>
+    <style>
+        /* Nav (44px) + jump (~28px) + ~36px gap like other pages under the nav */
+        body {
+            padding-top: 108px;
+        }
+
+        @media print,
+        screen and (max-width: 480px) {
+            body {
+                padding-top: 108px;
+            }
+        }
+
+        .fun-wrapper {
+            max-width: min(720px, 100%);
+            margin: 0 auto;
+            padding: 0;
+            float: none;
+            width: auto;
+            box-sizing: border-box;
+            background-color: #ffffff;
+        }
+
+        /* Override site theme: section { float: right } is for index layout only */
+        .fun-wrapper section {
+            float: none;
+            width: auto;
+        }
+
+        .fun-wrapper .nature-content {
+            float: none;
+            width: 100%;
+            clear: both;
+        }
+
+        .fun-wrapper>h1 {
+            margin: 0 0 10px;
+            font-weight: 500;
+        }
+
+        .trip-lede {
+            margin: 0 0 8px;
+            color: #666;
+            line-height: 1.55;
+        }
+
+        .trip-lede-photo {
+            margin: 14px 0 18px;
+        }
+
+        .trip-lede-photo img {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+
+        .trip-lede-photo figcaption {
+            margin-top: 8px;
+            font-size: 13px;
+            line-height: 1.45;
+            color: #888;
+        }
+
+        .peak-map {
+            margin: 14px 0 18px;
+        }
+
+        .peak-map iframe {
+            display: block;
+            width: 100%;
+            height: 520px;
+            border: 1px solid #e5e5e5;
+        }
+
+        @media screen and (max-width: 480px) {
+            .peak-map iframe {
+                height: 380px;
+            }
+        }
+
+        .trips-loading,
+        .trips-load-error {
+            margin: 16px 0;
+            color: #888;
+        }
+
+        /* One chunk on screen. The others stay in the HTML for search engines. */
+        #trips-list .trip-chunk {
+            display: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        html:not([data-trip-chunk]) #trips-list .trip-chunk[data-chunk="0"],
+        html[data-trip-chunk="0"] #trips-list .trip-chunk[data-chunk="0"] {
+            display: block;
+        }
+
+        html[data-trip-chunk="1"] #trips-list .trip-chunk[data-chunk="1"],
+        html[data-trip-chunk="2"] #trips-list .trip-chunk[data-chunk="2"],
+        html[data-trip-chunk="3"] #trips-list .trip-chunk[data-chunk="3"],
+        html[data-trip-chunk="4"] #trips-list .trip-chunk[data-chunk="4"],
+        html[data-trip-chunk="5"] #trips-list .trip-chunk[data-chunk="5"],
+        html[data-trip-chunk="6"] #trips-list .trip-chunk[data-chunk="6"],
+        html[data-trip-chunk="7"] #trips-list .trip-chunk[data-chunk="7"],
+        html[data-trip-chunk="8"] #trips-list .trip-chunk[data-chunk="8"],
+        html[data-trip-chunk="9"] #trips-list .trip-chunk[data-chunk="9"],
+        html[data-trip-chunk="10"] #trips-list .trip-chunk[data-chunk="10"],
+        html[data-trip-chunk="11"] #trips-list .trip-chunk[data-chunk="11"] {
+            display: block;
+        }
+
+        .trip-chunk-nav .trip-chunk-bar-set {
+            display: none;
+        }
+
+        html:not([data-trip-chunk]) .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="0"],
+        html[data-trip-chunk="0"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="0"] {
+            display: block;
+        }
+
+        html[data-trip-chunk="1"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="1"],
+        html[data-trip-chunk="2"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="2"],
+        html[data-trip-chunk="3"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="3"],
+        html[data-trip-chunk="4"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="4"],
+        html[data-trip-chunk="5"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="5"],
+        html[data-trip-chunk="6"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="6"],
+        html[data-trip-chunk="7"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="7"],
+        html[data-trip-chunk="8"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="8"],
+        html[data-trip-chunk="9"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="9"],
+        html[data-trip-chunk="10"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="10"],
+        html[data-trip-chunk="11"] .trip-chunk-nav .trip-chunk-bar-set[data-chunk-nav="11"] {
+            display: block;
+        }
+
+        .nature-disclaimer {
+            margin: 10px 0 0;
+            line-height: 1.5;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .trip-jump {
+            position: fixed;
+            top: 44px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: min(720px, calc(100% - 100px));
+            z-index: 40;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            border-bottom: 1px solid #e5e5e5;
+            box-sizing: border-box;
+        }
+
+        @media print,
+        screen and (max-width: 480px) {
+            .trip-jump {
+                width: min(720px, calc(100% - 30px));
+            }
+        }
+
+        .trip-jump[hidden] {
+            display: none !important;
+        }
+
+        .trip-jump-bar {
+            display: flex;
+            align-items: center;
+            gap: 0;
+            min-height: 28px;
+        }
+
+        .trip-jump-toggle,
+        .trip-jump-top {
+            appearance: none;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-size: 14px;
+            color: #888;
+            cursor: pointer;
+            padding: 2px 0;
+            text-align: left;
+        }
+
+        .trip-jump-toggle {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 400;
+            color: #666;
+        }
+
+        .trip-jump-toggle::after {
+            content: "";
+            width: 5px;
+            height: 5px;
+            border-right: 1.5px solid #999;
+            border-bottom: 1.5px solid #999;
+            transform: rotate(45deg);
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+            margin-top: -1px;
+        }
+
+        .trip-jump.is-open .trip-jump-toggle::after {
+            transform: rotate(-135deg);
+            margin-top: 1px;
+        }
+
+        .trip-jump-top {
+            flex-shrink: 0;
+            padding-left: 12px;
+            color: #d97706;
+            font-weight: 500;
+        }
+
+        .trip-jump-toggle:hover,
+        .trip-jump-top:hover,
+        .trip-jump-toggle:focus-visible,
+        .trip-jump-top:focus-visible {
+            color: #222;
+            outline: none;
+        }
+
+        .trip-jump-top:hover,
+        .trip-jump-top:focus-visible {
+            color: #b45309;
+        }
+
+        .trip-jump-panel {
+            border-top: 1px solid #f0f0f0;
+            max-height: min(40vh, 260px);
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 1px 0 4px;
+        }
+
+        .trip-jump-panel[hidden] {
+            display: none !important;
+        }
+
+        .trip-jump-months {
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            max-width: 100%;
+        }
+
+        .trip-jump-month {
+            appearance: none;
+            display: block;
+            width: 100%;
+            max-width: 100%;
+            box-sizing: border-box;
+            border: 0;
+            background: transparent;
+            font: inherit;
+            font-size: 14px;
+            color: #666;
+            cursor: pointer;
+            padding: 3px 0;
+            text-align: left;
+            line-height: 1.25;
+        }
+
+        .trip-jump-month:hover,
+        .trip-jump-month:focus-visible {
+            color: #222;
+            outline: none;
+        }
+
+        .trip-jump-older {
+            display: block;
+            padding: 3px 0 0;
+            font-size: 14px;
+            color: #39c;
+            text-decoration: none;
+        }
+
+        .trip-jump-older:hover {
+            color: #069;
+        }
+
+        .trip-chunk-nav {
+            margin: 28px 0 8px;
+        }
+
+        .trip-chunk-nav[hidden] {
+            display: none !important;
+        }
+
+        .trip-chunk-bar {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 12px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .trip-chunk-label {
+            flex: 1;
+            text-align: center;
+            color: #666;
+            min-width: 0;
+        }
+
+        .trip-chunk-link {
+            flex-shrink: 0;
+            color: #39c;
+            text-decoration: none;
+        }
+
+        .trip-chunk-link:hover {
+            color: #069;
+            font-weight: 500;
+        }
+
+        .trip-chunk-link.is-disabled {
+            color: #ccc;
+            pointer-events: none;
+        }
+
+        .trip-entry {
+            margin-bottom: 40px;
+            padding-bottom: 4px;
+            scroll-margin-top: 88px;
+        }
+
+        .trip-entry>.trip-title {
+            display: block;
+            margin: 0 0 6px;
+            font-size: 17px;
+            font-weight: 500;
+            color: #4a4a4a;
+        }
+
+        .trip-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 6px 12px;
+            margin: 0 0 24px;
+        }
+
+        .trip-meta-left {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 8px;
+            min-width: 0;
+        }
+
+        .trip-meta .trip-tags {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin: 0;
+            align-items: center;
+        }
+
+        .trip-meta .trip-tags:empty {
+            display: none;
+        }
+
+        .trip-date {
+            margin: 0;
+            font-size: 14px;
+            font-weight: 400;
+            line-height: 1.3;
+        }
+
+        .trip-date-month {
+            color: #222;
+            font-weight: 500;
+        }
+
+        .trip-date-rest {
+            color: #888;
+        }
+
+        .trip-map-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin: 0 0 0 auto;
+            padding: 0;
+            border: 0;
+            background: none;
+            color: #d97706;
+            font: inherit;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .trip-map-btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transform-origin: 50% 90%;
+            animation: trip-map-pin 2.8s ease-in-out infinite;
+            transition: transform 0.25s ease;
+        }
+
+        .trip-map-btn .trip-map-btn-label {
+            border-bottom: 1px solid rgba(217, 119, 6, 0.4);
+        }
+
+        .trip-map-btn .trip-map-btn-arrow {
+            display: inline-block;
+            transition: transform 0.25s ease;
+        }
+
+        .trip-map-btn:hover,
+        .trip-map-btn:focus-visible {
+            color: #b45309;
+            outline: none;
+        }
+
+        .trip-map-btn:hover svg,
+        .trip-map-btn:focus-visible svg {
+            animation: none;
+            transform: translateY(-3px);
+        }
+
+        .trip-map-btn:hover .trip-map-btn-label,
+        .trip-map-btn:focus-visible .trip-map-btn-label {
+            border-bottom-color: rgba(180, 83, 9, 0.65);
+        }
+
+        .trip-map-btn:hover .trip-map-btn-arrow,
+        .trip-map-btn:focus-visible .trip-map-btn-arrow {
+            transform: translateX(4px);
+        }
+
+        @keyframes trip-map-pin {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-2px);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .trip-map-btn svg {
+                animation: none;
+            }
+
+            .trip-map-btn:hover svg,
+            .trip-map-btn:focus-visible svg,
+            .trip-map-btn:hover .trip-map-btn-arrow,
+            .trip-map-btn:focus-visible .trip-map-btn-arrow {
+                transform: none;
+            }
+        }
+
+        .trip-report {
+            margin: 0 0 12px;
+            line-height: 1.55;
+            color: #686868;
+            overflow-wrap: anywhere;
+            word-break: break-word;
+        }
+
+        .trip-report p {
+            margin: 0 0 0.65em;
+        }
+
+        .trip-report p:last-child {
+            margin-bottom: 0;
+        }
+
+        .trip-report ul {
+            margin: 0 0 0.65em;
+            padding-left: 1.2em;
+        }
+
+        .trip-report ul:last-child {
+            margin-bottom: 0;
+        }
+
+        .trip-report li {
+            margin: 0.15em 0;
+        }
+
+        .trip-report a {
+            color: #4a6fa5;
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .trip-report strong {
+            color: #555;
+            font-weight: 600;
+        }
+
+        .trip-report em {
+            font-style: italic;
+        }
+
+        .trip-report:empty {
+            display: none;
+        }
+
+        .trip-entry>.trip-tags:not(:empty) {
+            display: inline-flex;
+            flex-wrap: wrap;
+            gap: 2px;
+            margin: 0;
+            vertical-align: middle;
+            align-items: center;
+        }
+
+        .trip-entry>.trip-tags:empty {
+            display: none;
+        }
+
+        .trip-tag {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            flex-shrink: 0;
+            background: center / contain no-repeat var(--tag-icon);
+        }
+
+        .trip-tag[data-tip] {
+            position: relative;
+            cursor: default;
+        }
+
+        .trip-tag[data-tip]::after {
+            content: attr(data-tip);
+            position: absolute;
+            bottom: calc(100% + 5px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            padding: 3px 8px;
+            font-size: 11px;
+            line-height: 1.3;
+            color: #444;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            border-radius: 3px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+            white-space: normal;
+            max-width: min(180px, 70vw);
+            text-align: center;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition:
+                opacity 0.55s ease,
+                transform 0.55s ease,
+                visibility 0s linear 0.55s;
+            z-index: 20;
+        }
+
+        .trip-tag[data-tip]:hover::after,
+        .trip-tag[data-tip]:focus-visible::after {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0);
+            transition:
+                opacity 0.5s ease,
+                transform 0.5s ease,
+                visibility 0s linear 0s;
+        }
+
+        .trip-tag.casual {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='5' r='2'/%3E%3Cpath d='M12 7v6M9 21l3-8 3 8M8 11h8'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.hiking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='4.5' r='2'/%3E%3Cpath d='M12 6.5v5.5M9.5 21l2.5-9 2.5 9M8 11h8'/%3E%3Cpath d='M8 7L6.5 21M16 7l1.5 14'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.cycling {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='5.5' cy='17' r='4'/%3E%3Ccircle cx='18.5' cy='17' r='4'/%3E%3Cpath d='M5.5 17L10 8h4l4.5 9M10 8h4'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.camping {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 19L10 5l5 14H3z'/%3E%3Cpath d='M10 5l9 4v10H15'/%3E%3Cpath d='M8 19v-5h3v5'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.backpacking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='10' cy='5' r='2'/%3E%3Cpath d='M10 7v7M8 21l2-7 2 7M8 12h4'/%3E%3Cpath d='M14 5.5h3a1 1 0 011 1V16a1 1 0 01-1 1h-3'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.scrambling {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 20l5.5-11 2.5 5 3.5-8L22 20H2z'/%3E%3Cpath d='M13 20l2-5'/%3E%3C/svg%3E");
+        }
+
+        .trip-tag.kayaking {
+            --tag-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f5a560' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M2 15c5-2.5 15-2.5 20 0-2 2.5-5.5 4-10 4s-8-1.5-10-4z'/%3E%3Cpath d='M6 9l12 7'/%3E%3Ccircle cx='12' cy='8' r='2'/%3E%3C/svg%3E");
+        }
+
+        .nature-content {
+            margin-top: 28px;
+        }
+
+        .activity-key {
+            margin: 0 0 20px;
+            padding: 0 0 16px;
+            border-bottom: 1px solid #e5e5e5;
+        }
+
+        .activity-key-title {
+            margin: 0 0 6px;
+            padding: 0;
+            font-weight: 500;
+            font-size: 15px;
+            color: #999;
+        }
+
+        .activity-key-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 14px;
+        }
+
+        .activity-key-list li {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin: 0;
+        }
+
+        .activity-key-list .trip-tag {
+            flex-shrink: 0;
+            width: 18px;
+            height: 18px;
+        }
+
+        .activity-key-list strong {
+            color: #888;
+            font-weight: 400;
+            font-size: 14px;
+        }
+
+        .trip-gallery {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            max-width: 100%;
+        }
+
+        .trip-gallery-col {
+            flex: 1 1 0;
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Hidden until photo sizes are known, so photos appear already in place */
+        .trip-gallery.is-measuring {
+            visibility: hidden;
+            height: 0;
+            overflow: hidden;
+        }
+
+        .trip-gallery img {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 0 10px;
+            border: 0;
+            background: #f3f3f3;
+        }
+
+        @media print,
+        screen and (max-width: 720px) {
+            .trip-entry>.trip-tags:not(:empty) {
+                margin-bottom: 0;
+            }
+
+            .trip-report {
+                margin-bottom: 8px;
+            }
+
+            /* Single column: left column then right column is already upload order */
+            .trip-gallery {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .trip-gallery-col {
+                display: contents;
+            }
+
+            .trip-entry {
+                scroll-margin-top: 84px;
+            }
+        }
+
+        body.trip-map-open {
+            overflow: hidden;
+        }
+
+        .trip-map-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 2000;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            padding: 12px;
+            background: rgba(20, 20, 20, 0.55);
+            box-sizing: border-box;
+        }
+
+        .trip-map-modal.hidden {
+            display: none;
+        }
+
+        .trip-map-dialog {
+            display: flex;
+            flex-direction: column;
+            width: min(960px, 100%);
+            height: min(860px, 100%);
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+        }
+
+        .trip-map-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 14px;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .trip-map-header h2 {
+            flex: 1;
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+            color: #222;
+            line-height: 1.3;
+        }
+
+        .trip-map-close {
+            border: 0;
+            background: transparent;
+            font-size: 24px;
+            line-height: 1;
+            color: #666;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+
+        .trip-map-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            padding: 8px 14px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .trip-map-toolbar button {
+            border: 1px solid #d5d5d5;
+            background: #fff;
+            border-radius: 4px;
+            padding: 4px 10px;
+            font: inherit;
+            font-size: 13px;
+            cursor: pointer;
+            color: #444;
+        }
+
+        .trip-map-toolbar button.active {
+            border-color: #666;
+            background: #f3f3f3;
+            color: #111;
+        }
+
+        .trip-map-year-row {
+            display: flex;
+            align-items: center;
+            flex: 1 1 220px;
+            min-width: 180px;
+        }
+
+        .trip-map-year-row.hidden {
+            display: none;
+        }
+
+        .trip-map-year-copy {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .trip-map-year-hint {
+            font-size: 12px;
+            color: #888;
+            font-style: italic;
+        }
+
+        .trip-map-year-controls {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .trip-map-year-current {
+            font-size: 13px;
+            font-weight: 700;
+            color: #f5a560;
+            white-space: nowrap;
+            min-width: 3.2em;
+        }
+
+        .trip-map-year-end {
+            font-size: 11px;
+            color: #999;
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        #trip-map-year {
+            flex: 1;
+            min-width: 70px;
+            accent-color: #c07a3a;
+        }
+
+        #trip-map-status {
+            margin-left: auto;
+            font-size: 12px;
+            color: #888;
+        }
+
+        #trip-map-canvas {
+            flex: 1;
+            min-height: 280px;
+            height: 100%;
+            background: #ddd;
+        }
+
+        /* Soften OpenTopoMap's loud palette while keeping glacier / contour detail */
+        #trip-map-canvas .trip-map-terrain-tiles {
+            filter: saturate(0.62) contrast(0.94) brightness(1.04);
+        }
+
+        .trip-map-stage {
+            position: relative;
+            flex: 1;
+            min-height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .trip-map-loading {
+            position: absolute;
+            inset: 0;
+            z-index: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(255, 255, 255, 0.72);
+            backdrop-filter: blur(2px);
+            box-sizing: border-box;
+        }
+
+        .trip-map-loading.hidden {
+            display: none;
+        }
+
+        .trip-map-loading-card {
+            max-width: 280px;
+            text-align: center;
+            padding: 22px 20px;
+            border-radius: 10px;
+            background: #fff;
+            border: 1px solid #e8e8e8;
+            box-shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+        }
+
+        .trip-map-loading-spinner {
+            width: 28px;
+            height: 28px;
+            margin: 0 auto 14px;
+            border: 2.5px solid #e6e6e6;
+            border-top-color: #f5a560;
+            border-radius: 50%;
+            animation: trip-map-spin 0.8s linear infinite;
+        }
+
+        @keyframes trip-map-spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #trip-map-loading-text {
+            margin: 0;
+            font-size: 16px;
+            line-height: 1.45;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .trip-map-strip {
+            display: flex;
+            gap: 8px;
+            padding: 10px 12px;
+            overflow-x: auto;
+            border-top: 1px solid #eee;
+            background: #fafafa;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .trip-map-strip.hidden {
+            display: none;
+        }
+
+        .trip-map-strip-item {
+            position: relative;
+            flex: 0 0 auto;
+            width: 56px;
+            height: 56px;
+            padding: 0;
+            border: 1px solid #e2e2e2;
+            border-radius: 5px;
+            overflow: hidden;
+            background: #fff;
+            cursor: pointer;
+        }
+
+        .trip-map-strip-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .trip-map-strip-item span {
+            position: absolute;
+            left: 4px;
+            bottom: 4px;
+            min-width: 16px;
+            height: 16px;
+            padding: 0 4px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.55);
+            color: #fff;
+            font-size: 10px;
+            line-height: 16px;
+            text-align: center;
+        }
+
+        .trip-map-photo-marker {
+            background: transparent;
+            border: 0;
+        }
+
+        .trip-map-thumb {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 5px;
+            overflow: hidden;
+            border: 2px solid #fff;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.35);
+            background: #333;
+        }
+
+        .trip-map-thumb-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+            /* Keep decoded thumbs alive through Leaflet transform / zoom */
+            content-visibility: visible;
+        }
+
+        .trip-map-thumb-fallback {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            color: #fff;
+            font-size: 12px;
+        }
+
+        .trip-map-thumb-num {
+            position: absolute;
+            right: 2px;
+            bottom: 2px;
+            min-width: 14px;
+            height: 14px;
+            padding: 0 3px;
+            border-radius: 7px;
+            background: rgba(0, 0, 0, 0.6);
+            color: #fff;
+            font-size: 9px;
+            line-height: 14px;
+            text-align: center;
+        }
+
+        .trip-map-popup img {
+            display: block;
+            width: 180px;
+            height: 120px;
+            object-fit: cover;
+            margin: 0 0 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar"><div class="nav-content"><a href="./index.html">home</a><a href="./misc.html">misc</a><a href="./trip.html">trip archive</a></div></nav>
+    <main class="fun-wrapper">
+        <nav class="trip-jump" id="trip-jump" aria-label="Jump to trip dates">
+            <div class="trip-jump-bar">
+                <button type="button" class="trip-jump-toggle" id="trip-jump-toggle" aria-expanded="false"
+                    aria-controls="trip-jump-panel">Jump to date</button>
+                <button type="button" class="trip-jump-top" id="trip-jump-top">Latest</button>
+            </div>
+            <div class="trip-jump-panel" id="trip-jump-panel" hidden></div>
+        </nav>
+
+        <h1>Trip Archive</h1>
+
+        <p class="trip-lede">I started this page in May 2026 to share my trips outdoors: hikes, backpacking, long
+            wilderness days, and sightseeing trips that do not need to be physically hard at all. I have loved scenic
+            views
+            since I was
+            young, but I did not really spend time in the wilderness until I moved to Seattle for my PhD. Growing up
+            in Beijing, I “climbed” the usual paved <a href="https://en.wikipedia.org/wiki/Mount_Miaofeng"
+                target="_blank" rel="noopener noreferrer">hills</a>
+            and did the usual tourist trips in China; looking
+            back, they were closer to walking stairs in a well-kept park. Here I started with trails
+            around the
+            city and suburbs, then, once I had a car, the state parks and forests farther out. Lakes, forests, and
+            the coast all pulled me in, but mountains took hold of me the most.</p>
+        <p class="trip-lede">The summer after I finished my Master’s degree, I went to Yunnan and stood below
+            <a href="https://en.wikipedia.org/wiki/Jade_Dragon_Snow_Mountain" target="_blank"
+                rel="noopener noreferrer">Yulong Xueshan</a> (玉龙雪山). It was
+            another tourist trip,
+            but we were
+            at 4600m and it felt so real. The weather was rough: heavy cloud, a whiteout, almost no view from the
+            high places. Still, the granite walls and the shapes the glaciers had cut left me speechless. Since then I
+            have wanted to see more mountains up close, and maybe stand on top of a few, especially ones with snow
+            and ice. And yes, crazy as it sounds, I also dream of an eight-thousander someday, if money, body, and luck
+            allow.
+        </p>
+        <figure class="trip-lede-photo">
+            <img src="./images/jade-dragon-snow-mountain.jpg" width="1024" height="768"
+                alt="Jade Dragon Snow Mountain peaks breaking through cloud under a clear blue sky, Yunnan, 2025"
+                loading="lazy" decoding="async">
+            <figcaption>玉龙雪山 — a brief clear window above the cloud, Yunnan, China, July 2025.</figcaption>
+        </figure>
+        <p class="trip-lede">In Washington I loved green hills like Mount Si, but over time I found myself wanting to
+            go higher. Looking at alpine peaks, I wanted to be on top, not only on the trails around them. In the
+            North Cascades
+            there are 2000m glaciated peaks you can reach without altitude sickness; from the road and from the
+            plane, snow-capped volcanoes like Mt. Rainier and Mt. Baker keep showing up. Looking at them, I keep
+            imagining a ridge underfoot and how small a person would look against those flanks. That scale is hard to
+            shake.</p>
+        <p class="trip-lede">I asked around for summits that were
+            not too technical, preferably with snow and glaciers. On a hitchhike back down from Hidden Lake Lookout, a
+            former local mountaineer told me Ruth Mountain might be a good start, with no crevasses to worry about
+            (actually there
+            are); later I checked with <a href="https://galenweld.com/blog" target="_blank"
+                rel="noopener noreferrer">Galen</a>, a true mountain
+            person who never tires of my endless beginner
+            questions. It took me two attempts (early season is honest about how unready you can feel). When I finally
+            stood up there, I realized I could stand where I had once only stared. If I could summit
+            Ruth with average fitness and almost no skills, nothing could hold me back, especially since I can always
+            learn from failing. After that I planned, failed, and summited more alpine peaks in this state that season,
+            each with its own memory and its own kind of challenge. I do not know whether I will ever go very technical,
+            and
+            I have little interest in being super fast. What keeps me going is moving through the scenery under my
+            own power, hardship included, and actually feeling the beauty of the landscape along the
+            way.</p>
+        <p class="trip-lede">I believe many things are destined to be, like what brought me to Washington and back to my
+            love for the outdoors. Do I have a bucket list? Not really. If
+            it’s
+            meant to be, it will be. Lately I am more drawn to places where <a
+                href="https://glaciers.nichols.edu/foss-glacier/" target="_blank" rel="noopener noreferrer">glaciers are
+                dying or recently gone</a>, places with interesting geologic features, and Washington’s fire lookouts.
+            All of
+            them feel like pieces of history.
+        </p>
+
+        <p class="trip-lede">For the most part, I think of myself as a hiker who loves mountains and challenging
+            adventures,
+            but you will also find easy walks, scenic drives, and trips that are just about seeing somewhere
+            beautiful. Some of these trips
+            also live on my <a href="https://www.wta.org/@@backpacks/scrnm-rdxu" target="_blank"
+                rel="noopener noreferrer">WTA
+                page</a>. I log my summits on <a href="https://www.peakbagger.com/climber/climber.aspx?cid=59163"
+                target="_blank" rel="noopener noreferrer">Peakbagger</a>.</p>
+
+        <figure class="peak-map">
+            <iframe title="Cascade peak list on CalTopo" src="https://caltopo.com/m/ET2KGAF" loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </figure>
+
+        <div class="nature-content">
+            <div class="activity-key" aria-label="Activity types">
+                <p class="activity-key-title">Activity types</p>
+                <ul class="activity-key-list">
+                    <li><span class="trip-tag casual" aria-hidden="true"></span><strong>casual</strong></li>
+                    <li><span class="trip-tag hiking" aria-hidden="true"></span><strong>hiking</strong></li>
+                    <li><span class="trip-tag cycling" aria-hidden="true"></span><strong>cycling</strong></li>
+                    <li><span class="trip-tag camping" aria-hidden="true"></span><strong>camping</strong></li>
+                    <li><span class="trip-tag backpacking" aria-hidden="true"></span><strong>backpacking</strong></li>
+                    <li><span class="trip-tag scrambling" aria-hidden="true"></span><strong>scrambling</strong></li>
+                    <li><span class="trip-tag kayaking" aria-hidden="true"></span><strong>kayaking</strong></li>
+                </ul>
+                <p class="nature-disclaimer"><strong>Disclaimer:</strong> Some of these activities can be inherently
+                    dangerous. Always do your own research.</p>
+            </div>
+
+            <div id="trips-list" data-trips-hash="cad2e393">
+                <!-- static-trips:start -->
+<div class="trip-chunk" data-chunk="0"><article class="trip-entry" id="trip-2026-10" data-trip-chunk-start><div class="trip-title">Black Peak</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">October</span> <span class="trip-date-rest">18, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-10-black-peak-1793061867175" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Central North Cascades - Goode-Logan-Black Area</strong></p><p>Day hiked at Black Peak, one of my bucket-list peaks in the North Cascades. A little late considering the season but I still decided to give it a shot. We arrived at the parking lot a little before 7am; the lot was about 80% filled, kinda unexpected since larch season was over and it had just rained/snowed yesterday. But it’s understandable as this was a most sunny Sunday.</p><p>We started in the dark with our headlamps on for about 20 minutes, cruising on the trail. Many hikers were already out, but none were aiming for the peak.</p><p>The trail up to the boulder fields is straightforward and cruising. Then the trail is covered by big boulders, and morning frost (a sign the dry scramble season is about to end) makes it a little bit tedious. We were just picking our own lines on the way in. On the way out, we found that about 60% of the boulder-hopping section can be totally avoided by staying on climber’s right for a dirt trail; the rest is still find-your-own-line, but staying climber’s right is still less annoying.</p><p>Very beautiful views, especially the lakes and the eastern peaks under morning light, along the way to Wing Lake. There were still some gold larches left, mostly smaller trees—better than my last week’s trip to Pasayten.</p><p>We filled some water in the stream above Wing Lake; the lake itself is also quite accessible to reach.</p><p>Scree slope to the saddle:<br>Probably the least enjoyable part. The enjoyable parts on the way up are the crossing of the dead glacier remnant (pretty icy with snow crust, but the slope is really gentle) and the view of Wing Lake below. The scree slopes get worse near the top; be cautious when downclimbing. On the way down, I found that staying on climber’s left lets you use some detour and little switchbacks that help lower the steepness a little.</p><p>South ridge climb to the summit block:<br>Very uneventful, mostly class 2 and felt very safe. Little to no slick scree slopes. The views behind are jaw-dropping—the greatest part of this hike!</p><p>Summit block:<br>It’s more sketchy than I expected. After reading some trip reports, I thought it was just yet another class 3 block if I used the most resistant J-hook route by circling around the summit and climbing up to the east. But the technicality of the climbing moves is still more demanding since I have no climbing background. The crux is actually the very first move I encountered, either left to a huge slab with poor footholds, or right to some more blocky pieces but requiring clear spotting of the exact moves. I used the slab up and the right route down. Otherwise, I find this part not as exposed as they said, just technically tricky/demanding.</p><p>Spectacular views once we were on the saddle, notably a sea of crevassed North Cascade glaciers and the very prominent Goode Mountain. The summit is a more airy version of this, but you can get 70% of the joy just standing on the saddle. There was a very thin layer of icy snow crust on a few of the summit block rocks—not a big deal for my moves, but I felt somewhat sketchy. The sun may thaw them out in the next few sunny days. I wouldn’t do the summit block anyway if there is more snow—definitely a no-go.</p><p>We encountered about 10 groups around the peak; some parties had just finished their climb the day before.</p><p>Wild animals:<br>A few wild ducks spotted on Lewis Lake; pikas are crazily active in the afternoon!</p><p>Gears:<br>We brought microspikes since we were unsure about the frost/fresh snow conditions, but never thought about putting them on. You don’t need them for crossing the gentle snowfield (dead glacier remains).</p><p>We finished in 11.5 hours, with about 5,500 ft gain and 13.5 miles logged. A challenging hike, but worth it.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak2.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak3.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak4.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak5.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak6.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak7.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak8.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak9.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872165.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872166.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872167.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872168.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872169.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872170.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872171.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872172.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872173.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872174.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872175.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061872176.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061881621.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061881622.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061881623.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/black-peak1793061881624.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Afternoon Burke-Gilman Ride</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag cycling" title="cycling"></span></div><div class="trip-date"><span class="trip-date-month">October</span> <span class="trip-date-rest">16, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-10-afternoon-burke-gilman-ride-1792263731471" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Xumeng just picked up his new Marin Nicasio+ and we took the good old Burke-Gilman Trail for a quick afternoon cruise (his first bike ride!). He was clearly enjoying the joy of cycling—as you can tell from his smile. Clearly more biking trips are being actively planned. I’m sure to take my Marin 4C next time :)</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/afternoon-burke-gilman-ride1.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/afternoon-burke-gilman-ride2.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">The Two Craggies (and a Late Larch Viewing Trip)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag camping" title="camping"></span><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">October</span> <span class="trip-date-rest">11–12, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-10-the-craggies-larch-trip-1792183186397" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Okanogan Range - Central Pasayten Area<br></strong></p><p>I day hiked Big Craggy Peak and West Craggy and was the only party on the mountain. Originally I planned to hike Star and Courtney for larches, but my buddy was not available this weekend, so I opted for this other pair of eastern Cascade peaks instead.</p><p>The drive from Seattle is truly long—nearly 5 hours one way, since my sedan was not able to drive fast on the unpaved section, which is also very long, like 7–8 miles. As daylight gets shorter these days, I decided to car camp in the lower developed campground along NF5130 the night before. Late fall night was freezing cold, around 28.</p><p>NF5130 is passable by any car but is washboarded for about half of the unpaved section. There is one giant pothole, like a pond, close to the trailhead; it can be easily maneuvered around.</p><p>I downloaded three GPX files for this trip. All of them leave the Copper Glance Trail and go directly up the relatively gentle ridge of Big Craggy. I didn’t see any obvious boot pack for Big Craggy, but this route needs minimal navigation. The upper rock section has some steep, slippery scree, so be prepared—I didn’t know at the time that this trip is full of such steep, slippery scree/talus slopes. The summit block is easy-peasy, with minimal scramble moves. It’s worth noting that Big Craggy seems to have two similar-height peaks; the USGS one is the east one.</p><p>My three GPX tracks also agree on most of the traversing section. The so-called crux of the trip is a gully that is quite obvious; the scrambling is low Class 3 at best, and it is blessed with blocky rock. In my opinion, it’s far better than the scree slopes. At this season, there was a dusting of snow, 1–2 inches, mostly on the west side. Fortunately, the dusting did not affect the gully scramble, so I carried on to West Craggy.</p><p>Once on the ridge of West Craggy, I noticed the talus slopes were all dusted with snow. Considering the slope is gentle and it’s talus, not scree, I walked up to the summit. West Craggy is even more of a walk-up compared to its bigger brother. The register can be found under two talus rocks on the west side of the summit platform.</p><p>The only unenjoyable part, however, was getting down from West Craggy to the trail—oh, sweet home. Here is where the three GPX tracks disagree. I also saw a fourth GPX option that goes directly down a chossy gully without needing to downclimb the Class 3 gully crux, but it’s also the steepest! I opted for the yellow one. It has less chossy talus slopes, which I think is the most resistant one, but it also needs the most sidehilling back before going down.</p><p>I ran all the way down since the Copper Glance Trail is very well graded and has zero obstacles.</p><p>No water is available once you pass the very first creek, which is only 20 minutes of hiking from the trailhead. The tarn is pretty dirty, and a better running stream can be found before that, in the valley.</p><p>It took me 11.5 hours to do this solo. I’m terrible at downhill steep scree, and I also took some time shooting photos, having lunch at West Craggy, and dinner at the tarn. You may want to use microspikes in later October, but currently careful footwork works. Anyhow, I wouldn’t do this in early winter since the steep downhill from West Craggy is sketchy considering the snow covered slick scree and talus.</p><p>The larches appear to have already passed their peak, and the needles are dropping fast. Some are still holding on around Copper Glance Lake and in the valley.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip2.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip3.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip4.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip5.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip6.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip7.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip8.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip9.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip10.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip11.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191304.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191305.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191306.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191307.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191308.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191309.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191310.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191311.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191312.jpeg" alt="" decoding="async"><img src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/the-craggies-larch-trip1792183191313.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article></div><div class="trip-chunk" data-chunk="1"><article class="trip-entry" id="trip-2026-10-1" data-trip-chunk-start><div class="trip-title">Gilbert Peak Overnight and Stargazing</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">October</span> <span class="trip-date-rest">3–4, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-10-gilbert-peak-overnight-and-stargazing-1792179368909" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Goat Rocks (Highest Point)</strong></p><p>We did a weekend overnight at Warm Lake and scrambled up Gilbert Peak the second day. Gilbert Peak is the high point of the Goat Rocks and the tallest nonvolcanic peak in the South Cascades. It combines the region’s unique views, terrain, and landscape, and it appears on both Smoot’s list and Goldman’s scramble list (both versions). The approach from Conrad Meadows is the scenic option and you can choose either a lower camp at Surprise Lake or a high camp at Warm Lake. Scramble routes can either be ridge walking on the Klickton divide or using the Meade glacier (early season).</p><p>We were the only backpackers/hikers there, and we had the entire mountain and the trail to Warm Lake to ourselves for the whole weekend (probably others are out for larches, which is not available here). How rare!</p><p>Road to the TH is okay for sedans, few big potholes but not hard to maneuver. Drive all the way on NF1200 (paved FR, wow!) and only turn into NF1000 once you see an intersection. Do not follow the navigation which may leads you on NF750 or some rough roads.</p><p>The trail to Warm Lake is in supreme condition—possibly the best trail I have ever used to be honest. Very few downed trees, well-graded slopes, and good switchbacks. In general, it is suitable for everyone, albeit very, very long. The biggest highlight is Conrad Meadows, stunning, open with a few fall colors. It would be great if it replaced the long hike through the forest, but it lasts only for the first 2 miles. There are several junctions on route to Warm Lake: one major junction for South Fork Tieton and another later one that I assume splits toward Surprise Lake. It is fairly easy to navigate if you follow a GPX.</p><p>The Warm Lake campsite is gorgeous, but the lake itself is no larger than a tarn. The lake is clear and shining blue-green in the sunshine, with striking reflections and shadows of Gilbert Peak and the sharp ridge. There are about six campsites on the other side of the lake, opposite the main trail. The campsite can be very windy, too. Chipmunks are very prevalent there, so bring a bear canister or hang your food. They even jumped on our backpacks while we were busy with our tents nearby.</p><p>There are plenty of water sources in the first several miles of the hike, but none until Warm Lake.</p><p>From camp, the scramble up the peak still has a pretty clear trail to follow all the way near the summit block. The climbers’ beaten path is fairly easy to spot. If you are on it, it is no more than Class 2. Some times it leads us to the right of the ridge and sometimes to the left. There are some slightly exposed catwalk sections, which is expected since it is a ridge. The alpine plateau on the ridge is wide open and very special.</p><p>The summit block is indeed Class 3. Some steep scree ramps could be the hardest part. The scramble is not crazy, though there is a bit of exposure. Aim for the true block on your climber’s left instead of the false one which you come across at first, as there is no nontechnical way to connect them. The summit is cramped and a bit exposed (the sheer drop off of the east face), and the wind is super strong, but once you are up you can admire Rainier, Adams, St. Helens, and the other Goat Rocks peaks. A summit register is available.</p><p>There was some new snow, but most had melted. You can see the fresh snow filled up some glacier crevasses and cracks. Meade Glacier is dying, and you can only see it once on the last part of the ridge as its size is probably less than 1/3 of what on the USGS map. Conrad Glacier, on the north face, is in even worse condition. Its decline has been dramatic, with the detachment from Cold Lake and the disappearance of its lower section.</p><p>On our way out, we came across a group of hunters on horses.</p><p>25 miles, 5,100 ft gain.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing3.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing4.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing5.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing6.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing7.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing8.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing9.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing10.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing11.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing12.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing13.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374315.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374316.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374317.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374318.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374319.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374320.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374321.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374322.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374323.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374324.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374325.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/October/gilbert-peak-overnight-and-stargazing1792179374326.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-09"><div class="trip-title">Mount Washington (Olympic)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">September</span> <span class="trip-date-rest">27, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-09-mount-washington-olympic-1790706890218" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Eastern Olympic Mountains - Hamma Hamma-Cushman Group (Highest Point)<br></strong></p><p>This is my first time hiking the Olympic mountains. Rare clear day on a very prominent peak --- the summit of Mt Washington is usually in fog as it sits just above Lake Cushman and Hood Canal. Direct and steep from the start, with class 2–3 scrambling starts about halfway up. Leave the trail, and it gets spicier, we ended up scrambling a dry waterfall only to find out we went slightly sideways left of our gpx track. Stay on the beaten line unless that’s what you want. Muddy and wet rocks in places, but nothing too bad. There is one very long scree ramp that is pretty challenging on the way down. The summit block can be solved in different ways, and we opted for the higher traverse on the climber’s right side, which seems borderline class 4. Other hikers told us that there is a lower route also circling to the right that is basically walking, probably class 2-3. Summit rock is not great; test holds if you go looking for harder moves, or just stay on the normal route (look for those beaten scree ramps). For comparison: my buddy found the summit blocks more exposed than Kaleetan, a bit more technical than Del Campo. Overall steepness felt similar to Snoqualmie mtn, or a little less.</p><p>As one of Smoot's list peaks, the views are spectacular, especially on this clear day. Three volcanoes (Rainier, Adams, and MSH) can be seen on your back, and nearly all the Olympic Range shows up when you are at the summit. The range looks pretty snow-free/glacierless compared to the Cascades, exposing brown/red-ish rocks, except for Olympus and Anderson --- still a shock how fast those glaciers and icefields are going!</p><p>Summit register available at the top. Easy to find.</p><p>Almost no water source along the trail. Very weak stream near 47.52083, -123.24401. No running stream found on the upper mountain.</p><p>Low to moderate crowd. We came across 7 parties on a sunny autumn Sunday.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic3.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic4.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic5.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic6.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic7.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790707736389.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic8.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic9.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic10.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790706896720.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790706896721.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790707736390.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790706896722.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790715397191.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790706896723.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790706896724.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/mount-washington-olympic1790706896725.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Hood Canal Kayaking</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag kayaking" title="kayaking"></span></div><div class="trip-date"><span class="trip-date-month">September</span> <span class="trip-date-rest">26, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-09-hood-canal-kayaking-1790706351885" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>A leisure afternoon hangout at the scenic hood canal. Mt Washington, our target for tomorrow’s vacation, hides its upper half in clouds.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/hood-canal-kayaking1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/hood-canal-kayaking2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/hood-canal-kayaking3.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/hood-canal-kayaking4.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article></div><div class="trip-chunk" data-chunk="2"><article class="trip-entry" id="trip-2026-09-1" data-trip-chunk-start><div class="trip-title">Snowking Mountain Scenic Backpacking</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">September</span> <span class="trip-date-rest">18–20, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-09-snowking-mountain-scenic-touring-1790007887760" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Central North Cascades - Buckindy-Snowking Area</strong></p><p>I did a splendid 3-day backpacking trip (Sep 18 to 20) in the Snowking Mountain area and camped at the gorgeous Cyclone Lake. Originally, I planned for an overnight, but the peaceful lake simply wasn’t enough for the short stay.</p><p>Snowking Mountain is one of the very few actively glaciated alpine summits in the central North Cascades region (Ruth Mtn, Tomyhoi, and Prophet are north of SR20, so they don’t count) that don’t require mountaineering skills or advanced scrambling. Maybe the only other peak is Colonial Peak, but that involves some mandatory Class 4, steep snow, and more exposure. Its huge north face is covered with snow, with three spiky peaks; it just looked like a crown from a distance if you viewed it from the north.</p><p>The mountain is getting more popular now. I hiked up on a Friday, started around 10 a.m. from my car, and arrived at the campsite a little before 5, at a leisurely pace. I came across at least six parties that day. The campsites are a bit limited, so you wouldn’t want to come very late, especially on a sunny weekend. The road to the trailhead is mostly decent, but I could not drive my RWD sedan with 5 inches of clearance through one dry creek remnant, so I walked an additional 3.2 mi round trip to where the climber's trail starts (not so great), mostly flat. I saw a Subaru Impreza parked at the Cascade River bridge that I think 4WD vehicles could make it over if driven carefully (P.S.: on my way out to my car, I saw a Lexus RX slightly scrape the front when passing that one…). After that, the road became rougher, but still far better than the FR to Hidden Lake Lookout.</p><p>Hike to camp:<br>On the route up to the campsite, you follow a climber’s trail marked with blue/white and orange stripes along the way. The trail is pretty well defined and better than those climbers' trails for rock climbing. The slope is pretty steep, though; you can imagine it as the Mailbox Peak old trail. There are about three “knobs” you need to get past along the way, so tons of ups and downs. As other reports suggest, there is no water at all along the way in the late season, but the good news is the trail is shaded. I thought there were several locations where one should be cautious. Be sure to turn climber's right when you intersect with the old logging road (if you encounter too many overgrown trees and shrubs, then you must be going the wrong way); there are some sections that are less defined just before ascending Found Peak, the biggest knob; and turn climber's left so you don’t accidentally walk on the Found Lake Trail. Also, there is some gentle bushwhacking along the way, so wear pants if you mind. I would say the rough trail actually makes the hike in the old growth more enjoyable, and once you reach Found Peak and later on Kindy Ridge, the view just opens up magically—on your right is the shiny Snowking Mountain; on your left and behind you, wow, Eldorado, Forbidden, Boston, Jburg, Formidable, and the Ptarmigan traverse peaks-all the Crown Jewels of the core North Cascades are just showing up like a dream :)</p><p>Campsite:<br>Campsites are all located near the lower tarn and Cyclone Lake. I picked one place that turned out to be the closest to the lake. Use this gpx if you want: 48.41763, -121.25532. Water in the tarns didn’t look fresh, so I opted for the lake. The access was not very easy; you need a bit of scrambling down to get there. Slippers are probably not a good choice. Cyclone Lake is unbelievably clear, and you can see the bedrock clearly. Small fish, frogs, and other wildlife can be spotted there. The water temperature is a bit chilly but not freezing cold; one can try swimming there, while some brave dude cliff-jumped into the lake. I spent one of the most enjoyable sunset moments by the lake. For food storage, I carried a BearVault with me, but this place seems to have no bears at all (no berries along the way), and lots of pine trees made hanging your food possible.</p><p>Scramble Snowking:<br>The mountain itself is a straightforward ridge scramble all the way to the top. Interestingly, there is a rather clear trail you can follow from the camp to halfway up the climb. The boulders along the way are very solid and seldom shift. There are some very huge boulders, and you can just walk on them because the slope is rather gentle. I did encounter two or three sections that require some downclimbing or borderline Class 4 moves, but these can always be done with more resistant moves if you spend time on route finding. Don’t risk it if you are not comfortable. The summit block is not scary. The rock quality is less solid than the ridge but not bad. I carried a helmet with me but never put on or felt it was needed—most of the parties I came across never brought one. Once on the summit, you will find a flat place near a beautiful cairn that can host a small party. Looking to your left, you can appreciate the huge Snowking Glacier on the north face, with the Middle and East Peaks standing out. In general, in terms of scrambling, I find this peak more demanding than Mt. Daniel and a little bit more than Dragontail. There is a rather flat snowfield (stay on your left; avoid moving too far away, or you won’t be on the glacier) that you can use to save your legs from continuous scrambling. No gear at all is required for crossing the snowfield. You can summit the peak 100% dry if you want.</p><p>Hike out:<br>Be careful about the steep dirt and muddy sections; they can be treacherous. The descent is long, but with all the good memories, you won’t be too sucked.</p><p>Be sure to take some photos of the remaining North Cascades classic peaks once you are in the alpine zone!</p><p>30 miles, 9700 ft elevation gain</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring3.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring4.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring5.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring6.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring7.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring8.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring9.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring10.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring11.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring12.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900705.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900706.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900707.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900708.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900709.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900710.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900711.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900712.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900713.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900714.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900715.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007900716.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936989.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936990.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936991.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936992.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936993.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936994.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936995.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936996.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936997.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936998.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007936999.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007937000.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007937001.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007937002.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007937003.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007937004.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007949872.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007949873.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/snowking-mountain-scenic-touring1790007949874.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-08"><div class="trip-title">Little Devil of Cascade River😈</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">August</span> <span class="trip-date-rest">31, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-08-little-devil-of-cascade-river-1788757409465" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Central North Cascades - Eldorado Massif</strong></p><p><em>&quot;Back again for the third time at Monogram Lake TH. That's the spirit!&quot;</em></p><p>Haven't had a big trip for about a month, so I headed for Little Devil Peak in the Teebone ridge area (got its name for looking like a T-bone steak I suppose) on a relatively clear and sunny day. Teebone ridge has a series of lesser-known, moderately elevated but glaciated alpine peaks on the western border of central north cascades, also bordering NCNP. Little Devil is the second-highest peak on the ridge and stands out as a central point with Baksit.</p><p>Little Devil is one of the non-technical C2C peaks with everything packed - a strenuous hike to approach, boulder hopping, off-trail road finding through gorgeous subalpine meadows, glacier crossing, many scramble opportunities, and scenic views along the way of the North cascades once you are on the Teebone ridge. </p><p>There are three main climbing trails used to lead you to the summit: (a) head directly to the teebone ridge and traverse to Devil's benchmark, then scramble the &quot;cliff&quot; connecting to Little Devil; (b) stay at the contour below the ridge, sidehilling all the way to the glacier basin, then cross the glacier and scramble to the summit; and (c) follow the Monogram lake trail all the way to the lake, then sidehilling from the other side and join route (b) once arrive at the glacier basin. This time I chose route (b) for it avoiding some necessary and highly exposed class 4 moves required by (a) and also being more direct than (c) if you are not camping by the lake. It turns out the prolonged sidehilling is no joke either. You have to consistently traverse 40-45 heather and shrub slopes (no trees, fortunately). A slip is normal, especially in the morning; the dew makes them rather slippery. Moreover, the route is not that straightforward; you have to go up and down consistently, depending on the exact drop-offs and steep areas - tons of route-finding involved! </p><p>Finally, after crossing some boulders (also steep slopes!), you will find yourself immersed in a totally different alpine zone with granite and a small glacier, which is the highlight of the trip. You have to literally &quot;drop&quot; yourself to the glacier because it has lost its height through the years, which exposes cliff bands (not shown on caltopo). For dropping yourself down, there are two ways: go down a steep permanent snowfield connecting the flat glacier, or scramble/down climb some boulders. I opted for the second and put on my crampons when I arrived at relative flat glacier basin. Be sure to wear your helmet because the rock falling from the cliff created by the disappearing glacier is a real thing, and stay away from sloped glacier borders asap!!</p><p>Glacier: it is a rather benign dead glacier, but not a snowfield. There are some small crevasses, and some moulins can swallow you for sure. So going here when it's still covered in winter snow is perhaps not 100% safe. I would say it's riskier than some other dead glacier like the Colchuck glacier. I stayed slightly to the east as recommended in other reports.</p><p>Summit block: the actual summit scramble feels secure and moderately exposed. Boulders are very high quality, just like Enchantments area rocks. The harder part, actually, is the short section where you leave the very north edge part of the glacier (the moat is manageable, but it's quick-melting; be sure not to step on the snow; always use solid ice) and scramble a steep ramp of scree. A slip wouldn't be pleasant here, of course! It's more resistant to stay on the east side, where there are relatively larger rocks to break if you slip.</p><p>Wildlife: I spotted 3 bears (2 black and 1 brownish) during my trip, all during the Teebone ridge slope traversing. The brownish bear made eye contact with me for a while and ran off quickly and vigilantly. </p><p>Other trip highlight: Lots of Vaccinium ovalifolium (ovalleaf blueberry/huckleberry) once you are crossing the subalpine meadow, they grow just along the trails (lower altitude), along with Vaccinium deliciosum (Cascade dwarf blueberry) all the way up to the ridge. I actually find the former tastier since it reaches a perfect balance of acidity and sweetness (&quot;Zesty&quot;) and is far more juicy on your palate. Highly recommend! I picked some in the lower trail section because higher up the ridge is bear territory - be sure to share the treat with them. </p><p>Water sources (late season):</p><p>1. One big creek just before the intersection of lookout mountain lookout and monogram lake trail. This is the most reliable water source so be sure to fill up;</p><p>2. Some water while traversing the ridge, would not trust them in late summer/autumn;</p><p>3. Snowmelt streams available once you leave the glacier and start scrambling up.</p><p>Gears:</p><ul><li>(Used) Trail runners, 10-point walking crampons w/ flexible center links, poles, helmet (a must if you opt for crossing the glacier), and ice axe</li></ul><ul><li>(Not used) N/A</li></ul><ul><li>Comment: Microspikes could work, but I would not rely on them. An ice axe is perhaps not required for a late-season trip like mine.</li></ul><p>15 miles, 7200 ft elevation gain</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river3.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river4.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river5.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river6.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river7.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river8.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river9.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river10.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river11.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/little-devil-of-cascade-river12.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article></div><div class="trip-chunk" data-chunk="3"><article class="trip-entry" id="trip-2026-08-1" data-trip-chunk-start><div class="trip-title">Cannon Mountain</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">August</span> <span class="trip-date-rest">3, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-08-cannon-mountain-1788756772595" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Wenatchee Mountains - Stuart Range</strong></p><p>My first real bushwhacking experience with some unrelated and unplanned drama :)</p><p>Routes:</p><p>Route up (NW &quot;bushwacking&quot; ridge climb, similar to this: https://www.peakbagger.com/climber/ascent.aspx?aid=3239936): I started from Stuart Lake TH and hiked 1.4mi then turned off-trail and went SE direction, directly up the ridge line after crossed the lower forest, a wide boulder field and some bushwacking. The final SE ridgeline is unforested and of high quality boulders with 3 challenging blocks that can either be solved creatively with class 2-3 solutions or more technical ways.</p><p>Route down (https://www.mountaineers.org/activities/routes-places/cannon-mountain-southeast-approach): Down climbed the summit pyrimid. Descended SE on the plateau and went down a relatively steep and choss albeit short gully down the ridgeline connecting Enchantments Peak HP. Then descended further SE across two shallow ponds, gained some elevation to Prusik Pass, and went down following the thru-hiking trail.</p><p>Comparison of routes: Route up is steeper (4700ft in 2.4miles once you are off trail) and more bushwhacking, came with a longer scramble section for 1/3 of the route, and only about 3.9mi from Stuart Lake TH to the summit block; route down is more scenic and easy technically but much much longer (~10mi from Stuart Lake TH and ~12mi from Snow Lake TH) from either of the two trailheads (That means its very tiring if you use this route both ascent and descent). For climbing the summit pyrimid, starting from the North and traverse south on the short exposed ridgeline or direcly climb up from the south if you started from the plateau.</p><p>Fun and moderately exposed scramble on the cost of bushwhacking. Some parts of the climb are definitely more than class 2+ from some sources. The upside is that rocks are solid even among those in the Enchantment. The view of the mountain itself is a little bit underwhelming—particularly due to its being rather forested till the top, lack of jaw-dropping granite walls/spires, and lack of snow coverage early on.</p><p>Won’t do it again and can only recommend Cannon's bushwhacking route to those who enjoy pure wilderness exploration and collecting Bulger peaks.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain3.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain4.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain5.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain6.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain7.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/August/cannon-mountain8.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-07"><div class="trip-title">Ptarmigan Ridge Overnighter</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span></div><div class="trip-date"><span class="trip-date-month">July</span> <span class="trip-date-rest">22–23, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-07-ptarmigan-ridge-overnighter-1788756429017" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Had a lovely overnight at the Ptarmigan Trail with my friend Galen. Epic views of Mt Shuksan and Baker, the Skagit range and more. The trail is mostly flat and very well maintained. Several short snow crossings but hiking boots should be totally fine. The wildflowers are literally booming along the trail. Streams are abundant for filling up. The only thing that is kind of an annoyance is the mosquitoes.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter3.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter4.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter5.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter6.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter7.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/ptarmigan-ridge-overnighter8.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Putrid Pete's Peak and Mount Defiance Traverse</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">July</span> <span class="trip-date-rest">19, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-07-putrid-pete-s-peak-and-mount-defiance-traverse-1788755777519" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Alpine Lakes Area - Snoqualmie Pass North</strong></p><p>Went a light day for traversing Putrid Pete’s Peak (P3) and Mt Defiance in the nearby I-90 area. 10 miles, 4800ft gain for 7.5 hours (4.5 hours moving), pretty good work out and light scrambing+fun route finding.</p><p>We followed the route from AllTrails and it is mostly accurate. Putrid Pete’s peak is mostly just steep trails, with one necessary boulder cross and a final class 2 summit pyramid finish—the very top is probably with 1 or 2 class 3 moves.</p><p>Then the fun part of today was traversing on the ridge. There’s definitely some route finding required although you can nearly always spot multiple faint climber trails. Stay on the very top of the ridge as much as you can and sometimes faint climber trails will lead you temporarily on the north of the ridge that’s okay. Most of the hard part are in the first 1/3 of the traversing.</p><p>Mt Defiance is a very easy dirt trail. Lots of flies, bees, beetles and butterflies on top of the peak! Good place for a summit panorama. Lots of wildflowers along the way to the summit. Be careful to hike with caution when going down some of the steep dirt sections.</p><p>On a sunny sunday, the Ira Springs parking lot filled up before 9. But very few people on this route. We came across 3 parties on P3, and we are the only party on the ridge traverse.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/putrid-pete-s-peak-and-mount-defiance-traverse1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/putrid-pete-s-peak-and-mount-defiance-traverse1788755884413.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/putrid-pete-s-peak-and-mount-defiance-traverse1788755884414.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/putrid-pete-s-peak-and-mount-defiance-traverse1788755884415.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Franklin Falls (Lab Hike)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">July</span> <span class="trip-date-rest">16, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-07-franklin-falls-lab-hike-1788756209357" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/franklin-falls-lab-hike1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/franklin-falls-lab-hike2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/franklin-falls-lab-hike3.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Dragontail and Colchuck Peak Traverse via Pandora's Box</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">July</span> <span class="trip-date-rest">12, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-09-dragontail-colchuck-peak-traverse-via-pandora-s-box-1788755525011" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Wenatchee Mountains - Stuart Range</strong></p><p>Climbed Dragontail via Aasgard Pass with Joseph, then traversed Pandora’s box attempt to climb Colchuck peak. Cancelled due to an accidental slide on slushy snow and hit my self on the boulder of the Colchuck side of the couloir under Pandora’s box. Descended down the Colchuck glacier.</p><p>The condition on the dragontail side is uneventful and enjoyable, with one possible crux being the steep traversing around 45-50 degrees max.</p><p>The Colchuck side of the Pandora’s box as well as the slab slope beneath the Colchuck glacier are definately not great. All those tiny rocks and dirt, super loose and hard to grip. Not worth it besides early season.</p><p>For Colchuck glaciers. It’s actually deceiving compared to a real snowfield since it’s icy inside. Definitely some features of a glacier. Very easy to slip. Experienced climbers can go down very fast by plunging steps real hard and boot skiiing. </p><p>The worst part is the lower 1/3 of the Colchuck glacier couloir. The snow melted out near completely, exposing a chute of sliding dirt and shifting boulders. The boulders there are FAR less stable than that in the Asgard pass and frequently shift, collaps and move on your leg while you are on them. It a total misery at best — needless to say that tons of mosquitoes are desperate to attack you once you attempt to take a short rest. In short, I would recommend avoid step on Colchuck glacier apart from early season unless you enjoy unpredictability.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box2.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/dragontail-and-colchuck-peak-traverse-via-pandora-s-box1788756063343.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/dragontail-and-colchuck-peak-traverse-via-pandora-s-box1788756063344.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box5.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box6.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box7.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box8.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/dragontail-and-colchuck-peak-traverse-via-pandora-s-box1788756063345.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/dragontail-and-colchuck-peak-traverse-via-pandora-s-box1788756063346.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box11.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/September/dragontail-colchuck-peak-traverse-via-pandora-s-box12.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Sunrise at Anza-Borrego Desert State Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">July</span> <span class="trip-date-rest">7, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-07-anza-borrego-desert-state-park-1788755277971" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Last day in San Diego, drove 100 miles in the dark to arrive at the desert for a sunrise, hiked before the temp got above 105, and drove back just before noon to meet with my friend. Flew back to Seattle in the afternoon :)</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841989.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841990.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841991.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841992.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841993.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841994.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841995.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841996.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/anza-borrego-desert-state-park1788757841997.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article></div><div class="trip-chunk" data-chunk="4"><article class="trip-entry" id="trip-2026-07-1" data-trip-chunk-start><div class="trip-title">A Different West Coast Vibe - A Trip to San Diego with Luke</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">July</span> <span class="trip-date-rest">3–7, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-07-a-different-west-coast-vibe-a-trip-to-san-diego-with-luke-1788754986085" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>It’s been a long time since we last saw each other. Originally, we planned to meet up during Luke’s visit to Oakland earlier this year. Plane tickets were booked, but I had to cancel the trip at the last minute due to a serious, unforeseen health condition. Yes, things like this truly happened. But here, finally, we made it—during his first ACL conference in San Diego (yay! a nicer place than Oakland, for sure).</p><p>I arrived in the early afternoon. The first thing after landing was waiting in an insanely long line to pick up our rental vehicle—a shiny blue metallic Chevy Blazer. After picking up Luke at the fancy hotel he booked, we headed directly to Ocean Beach for a seafood dinner. We had some wonderful boiled clams there. The Blazer’s backup camera refused to work properly after this dinner, so we rushed to the airport to change to another vehicle. I chose the “grumpy” and cute Kia Soul for the fantastic experience it gave me on the drive to Mt. Adams, in bright red—quite a vacation vibe, isn’t it? Later that night, we took a brief beach walk at Coronado Beach for some refreshing ocean breeze.</p><p>Undecided about what to do the next day, we drove ourselves to the old town of Julian, somewhere in the mountainous terrain between the eastern badlands and the beach, after Luke kindly got us some delicious seafood (again) at a local fish market. The historical tour in Julian was not really flattering, but I did enjoy the apple pie; never hurts to have something sweet! We then took a short tour of one of the gold mines the town was originally known for before it got too boring after finishing the treats. After the historical tour, on our way back, we went to Cuyamaca State Park for a short loop hike, before driving our Kia quite spiritedly along the mountainous road back. That night, we wandered aimlessly around the city, including parking in the middle of the road to admire some Fourth of July fireworks (yes, everyone else did this!), and then drove to some hidden districts for a quick Mexican snack in our car to wrap up the day.</p><p>On the fifth, we finally went to the conference during the day before it got too far for Luke, so as not to mess with his main mission. We headed to Del Mar Dog Beach, a quiet, lesser-visited local beach, for a relaxed daytime beach walk later that day, and I had some swordfish tacos for dinner—can’t beat that to end a casual day!</p><p>The touristy events finally came on the fourth (the second-to-last day here, sadly), while we did accidentally manage to beat the Fourth of July crowd, right? We went to La Jolla Beach for a short walk, then to La Jolla Cove to see some seals. After spending some random time at Torrey Pines, we drove ourselves to Sunset Cliffs half an hour before sunset, joined the crowd, and wrapped up this packed day. No wait! We had some great Mexican food in Old Town after this.</p><p>For our last day in the city, I made a spontaneous move to drive 100 miles east to the Anza-Borrego Desert for a sunrise and some short hiking and sightseeing while Luke spent some more time he deserved at the conference. Never skipping natural scenery during a trip is my top rule. I hurried back to the city around noon and had a quick taco lunch with Luke and my other friend Michael from the Allen School. Before I needed to return our rental car and fly back, I finally got my chance, as a burger person, to tick the box of having an In-N-Out burger animal style. Definitely worth it—and it beats Dick’s by any means, to be frank. We said farewell to each other after that.</p><p>This truly was a fun trip, and I wish we could see each other soon.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263360.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263361.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263362.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263363.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263364.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263365.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263366.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263367.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263368.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263369.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263370.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263371.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263372.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263373.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263374.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263375.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263376.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/July/a-different-west-coast-vibe-a-trip-to-san-diego-with-luke1788758263377.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-06"><div class="trip-title">Mount Daniel East</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">June</span> <span class="trip-date-rest">21, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-06-mount-daniel-east-peak" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Alpine Lakes Area - Mount Daniel Area</strong></p><p><em>&quot;We finally headed for a peak that was on my wishlist for a long time (for unknown reasons). A mountain that is so complex, with its 5 jagged summits and all the beautiful alpine lakes around it. Early season snow makes it even more unique.&quot;</em></p><p>Had a wonderful but strenuous Sunday on Mt Daniel before the snow melts. Views are spectacular as the peak is complex (5 summits if I am correct), jagged and surrounded by beautiful dark turquoise alpine lakes. Definitely worth a visit in early season if you enjoy a snowy alpine view as I do.</p><p>Basically a 90% walk up and 10% climbing (class 2 to 3 with nothing too airy or feel uncomfortable) and tons of fun on the ridge. Be mindful some of the talus field is a bit slippery.</p><p>We opted for the snowfield traversing halfway instead of going all the way up on the ridge. Snow condition is great, soft enough for traveling using simple trail runners without spikes or crampons, and no serious postholing happened. We also saw parties glissading in some of the section, the runout seems controlled and safer than it seems to be when I tried.</p><p>Mosquitoes are quite annoying all the way till you are half way on the mountain.</p><p>Since the snow is active melting, you can actually wait till you are on the ridge near the snow line to refill water instead of hiking to Peggy’s pond.</p><p>The road is not that bad but i don’t think my sedan will do it consider the stream crossing and one big bump. We drove a crosstrek and it went uneventful.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel3.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/mount-daniel-east-peak1788752498561.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel4.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel5.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel6.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel7.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel8.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/mount-daniel-east-peak11.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel9.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Daniel10.JPG" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Mount Adams</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">June</span> <span class="trip-date-rest">17, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-06-mount-adams" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Mount Adams Area (Highest Point)</strong></p><p><em>&quot;Big mountain feel... but a little bit too big and boring though.&quot;</em></p><p>South climb route. Spent 19 hours here yesterday as it is far away from Seattle downtown so better enjoy as much as possible before we leave. Snow are icy form in the morning that shouts of using your crampons. Passing noon, it softened a bit more to be borderline glissadable.</p><p>We enjoyed stunning views of mt hood (pic was taken at dusk) and msh (pic taken at dawn around 9:30). Everything was majestic and the most boring part could be climbing the endless snow slope itself which is purely an endurance workout I would say.</p><p>I spent extra time meandering the lava boulder field and it was also worth a try if you want an extended day :)</p><p>Tips: bring a hard shell and it will be very helpful as the gust can be max at 50mph no joking!</p><p>Take the alternative trail instead of the south climb trail to avoid downclimb the cliff if the snow is already too soft, though some route finding required but nothing too heavy.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams3.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams4.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams5.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams6.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams7.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Mt%20Adams8.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Ruth Mountain</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">June</span> <span class="trip-date-rest">11, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-06-ruth-mountain" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Skagit Range - Baker-Shuksan Massif</strong></p><p><em>&quot;With the fresh snow and sunny skies, Ruth Mountain simply delivered the best alpine views I have ever seen. A totally unforgettable experience in the white!&quot;</em></p><p>I headed here on a sunny day with great weather. Very stunning view of the surrounding mountains once you pass point 5930 on a clear day.</p><p>Highlights:</p><p>A manageable, fully-packed real alpine traveling experience with top notch views.</p><p>Conditions:</p><p>The snow is very soft once you are on the Ruth arm. Snowpacks are actively collapsing thank to the heat and sunshine — multiple fresh wet slides noticed (and an agile marmot was spotted!). The most sketchy part I would say is the traversing point 5930 since the slope is steep and a slide would be somewhat consequential — I moved extremely slow to prevent side slide when I’m back at noon, be prepared to self arrest and keep alerted. The snow is continued to be in such shape with only a bit being slightly better. Postholing to low to mid thigh even in the morning and a bit more when back.</p><p>The other sketchy part in this season is the steep (max 38 degree according to caltopo) ridge climb to point 5930, snow is fine in the morning but it gets really annoying in the afternoon since it’s slushy outside and firm inside (mashed potatoes) makes plunge steps awkward, French techniques impossible and down climb unnecessary. I spent like years coming down and decided just to glissaded down after taking off the crampons and lock into a runway.</p><p>It was surprising I only met two other parties on Ruth on such a beautiful day, with the solo climber we ascended together and it was a great experience. The other party are bc skiers, seems we all made to the top with no troubles.</p><p>Prediction and before you go:</p><p>Giving the weather condition, the snowpack on the arm is sure to continue worsen and even now maybe it’s on the tipping point. One should access their snow traveling skills and risk tolerance especially on potential slides and crevasse falls due to the unstable snow and expect it to continue melt in the following weeks. Be ready to turn back anywhere on the steep ridge climb, on the 5930 traversing, or before the hidden glacier beneath. Come again in late summer if you are not willing to take the risk but you will lose all the alpine, solitude feel at the cost. No open crevasses spotted during my trip and I didn’t even notice the glacier toe due to the thick snow coat. </p><p>Tools I used</p><p>Normal mountaineering equipment including a walking axe, rigid boots, crampons (needed for the morning ice ridge climb, optional for the arm to summit part), helmet for extra protection if falling. </p><p>Bring plenty of water from the hannegan camp as postholing all the way under the sun is killing you. I used up my 2.5 liters on the mountain and would wish I actually brought 4.</p><p>Given all the evidence spotted, wet slides, postholing… although the snow is there, but it behaves like late summer condition due to the warm winter. This is not a normal early season experience you should expected (no freeze-thaw cycles at all despite mountain weather report one…). Soloing now is highly risky and not advisable as the snow is losing their structural force.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain2.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/ruth-mountain1788753288975.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain3.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain4.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain5.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/ruth-mountain1788753288976.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain6.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain7.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Ruth%20Mountain8.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Monogram Lake Misty Tour (Teebone Ridge Attempt)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">June</span> <span class="trip-date-rest">4, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-06-monogram-lake-teebone-ridge-attempt" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Central North Cascades - Eldorado Massif</strong></p><p>I had a free day, but the forecast wasn’t on my side. I’d originally planned another try at Ruth Mountain, but a second attempt didn’t feel worth it with no views up high. Probably save this for another day! So I set the navigation to the Monogram Lake TH instead — shorter drive, a clearer daytime forecast (which turned out to be untrue), and I wanted redemption badly after my last backpacking setback there - at least to see the place in daylight.</p><p>I started shortly after 4, delayed a bit by the unexpected Marblemount bridge closure. It turned out this area also had morning showers; I had to wear my hardshell all morning, sweaty and wet. And it stayed cloudy after the sun came up. I made it uneventfully up to the subalpine meadow where I camped last time. It was quite beautiful — so different from the grim, foreboding night view last time. With more snow melted, it was very green, all shades of green, closer to what I’d imagined the American Alps looking like. I took lots of pictures here. </p><p>The clouds gave the mountains a mystical feel. When I hiked to the lakes, my feet were totally soaked — my Ultra Raptors held up for a while, but not through that much wet brush, which was fair enough. I did the log crossing at the south of the lake and tried to follow the south-side route toward Monogram Glacier basin, but visibility was poor, and it still needed some navigation through the trees. I decided today wasn’t the day for that kind of exploration and turned around.</p><p>I was a little tempted by the Teebone Ridge route — I’d already come this far, so why not try? I headed straight up following some faint (but clear enough) climber trail. Near the top of just the first, easternmost, and most mellow part of the ridge, it got steeper than I’d expected when I was actually there. The damp heather, shrub, mud, and rocky slope made even that scramble feel more intimidating, snow-free or not. I suddenly remembered a saying: you should feel solid reversing every move you make while scrambling. After a few attempts, I realized I wasn’t prepared for even that first scrambling bit in today’s conditions — and then a fierce burst of hail and rain, driven by strong wind, hit me full in the face. I quickly pulled my hood up and headed down without hesitation.</p><p>On the way down, with the weather easing, I tagged the Lookout Mountain Lookout hike — I still hadn’t had enough time outside.</p><p>Will give it another shot later season!</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Monogram%20Lake1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Monogram%20Lake2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Monogram%20Lake3.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Monogram%20Lake4.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Monogram%20Lake5.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Monogram%20Lake6.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Lookout Mountain</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">June</span> <span class="trip-date-rest">4, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-06-lookout-mountain" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Central North Cascades - Eldorado Massif</strong></p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Lookout%20Mountain1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/June/Lookout%20Mountain2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-05"><div class="trip-title">Wild Goose Trail (Artist Point Attempt)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">30, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-wild-goose-trail-artist-point-attempt" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Snowshoes are useless at best for all winter trips so far!</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Artist%20Point.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article></div><div class="trip-chunk" data-chunk="5"><article class="trip-entry" id="trip-2026-05-1" data-trip-chunk-start><div class="trip-title">Ruth Mountain Attempt</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">30, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-ruth-mountain-attempt" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Skagit Range - Baker-Shuksan Massif</strong></p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/ruth-mountain-attempt1788943522354.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/ruth-mountain-attempt1788943522355.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/ruth-mountain-attempt1788943522356.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Ruth%20Mountain3.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Hidden Lake Lookout/Peaks (Winter Climber's Trail) Attempt</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-hidden-lake-lookout-attempt" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Central North Cascades - Eldorado Massif</strong></p><p>Unexpected, tough adventure for my buddy's birthday. We started driving around 3 from the Newhalem campground, where we arrived the day before for this weekend. My buddy is currently not prepared for such an early-season, off-trail hike, so he actually bought a brand-new ice axe for this outing (turns out he loves the tool very much, more than trekking poles!). My Lexus could not make it up once leaving the Cascade River Road. The forest road is infamous for being the most &quot;backcountry&quot; road in this region, according to someone who worked here. We parked and had to walk the extra miles. It turned out that not only my car, but also my buddy's Mazda SUV would not likely make it either due to the crazy &quot;wheel trails&quot; carved along the dirt road.</p><p>This was just the first challenge. We knew in advance that the forest road was washed out due to winter storms, so there might be some extra challenges. Soon we had to cross an icy cold, rather turbulent creek. My buddy was adventurous and went across quickly. I, always being a bit more cautious, decided to wade through barefoot first - also to protect my thick socks inside the mountaineering boots (a stupid choice since I originally wanted to use the &quot;hike&quot; to break them in, but what turns out to be next is rather painful for my feet). But the water is so cold that soon I noticed it wouldn't be an option. I put my socks on and booted up again, stabilizing myself using my poles, and managed to cross it nervously, as my mountaineering boots are not flexible and have about zero grip on wet stones, not to mention that those are submerged in the turbulent creek. I wasted at least 15 minutes here.</p><p>A bigger challenge ahead is the notoriously steep and wild winter &quot;trail&quot;-it's not actually a trail, as the route is not well defined, and we encountered multiple bushwhacking sections at hip height. Fortunately, the terrain is mostly soft, rotten root/vegetarian systems, so far better than moving up a 35-degree muddy slope. Also, we were not super good at route-finding, so sometimes we were not at the ridge and needed to regain it.</p><p>We finally broke through the forest and saw snow for the first time. We tried to avoid them as much as possible, as my buddy only wore a pair of normal hiking boots - not ideal for kicking steps in those moderate snow slopes. Soon we found ourselves facing a mixture of huge boulders and iffy snow covering them. There seemed to be no detour to this boulder field. We originally planned on going a little higher up to be closer to a more alpine, snowy view, if we made it to the top. As I tested one of the very first snow bridges while we attempted to move higher, it collapsed. That was the time I knew we probably should call it a day - as I still have another trip planned (turns out to be a mild disaster), and it was way below our schedule. We had some delicious sandwiches and took some pictures before heading down.</p><p>On the way down, it sucked. Sometimes we dropped too far sideways and missed the ridge, so we had to reclimb. It wasn't enjoyable for my buddy, and he talked less and less when we were moving down. We had to take more frequent rests. At one of the stops, we heard something suspicious - looking up, we found ourselves encountering a widowmaker: a tree was swaying in the wind and at risk of falling down on top of us. We ran away as quickly as possible, me barely grabbing my stuff. </p><p>It was unlucky that my buddy got his big toe hurt quite badly during the brutal hike down. I was really proud of him for still making it down and even hiked for a while once we were back on the forest road (that was REAL hope!). We finally hitchhiked a lovely family's &quot;adventure van&quot; down to my sedan. They planned to check this hike out but turned back due to the creek crossing (the water runs even harder in the afternoon). The driver maneuvered his van quite masterfully, and I learned that he used to do lots of mountaineering stuff when he was younger, with his brother. He has long since quit the hobby, while his brother continued. I also learned that Ruth Mountain is a very good peak for glacier climbing, as it's &quot;not crevassed,&quot; so often used as a training ground for aspiring climbers. We chatted about outdoor stuff soon before we were brought to my car.</p><p>We had no rest before I rushed to drive my buddy to the campsite, and decided to drive back again for the planned Monogram Lake overnight, though it would be dark soon. What a bold move that turned out to be too ambitious for a tired body (I was hesitant when I put on the quite heavy overnight backpack on my shoulder, even thought about turning back when I started the first few hundred feet of the hike to the lake, but something inside me pushed me up).</p><p>Overall, quite an adventurous and tough day for both of us!</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/hidden-lake-lookout-attempt1788938761981.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/hidden-lake-lookout-attempt1788938761982.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">An Ugly Monogram Lake Overnighter</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23–24, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-monogram-lake-overnight-attempt" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><em>”Can't make more mistakes if you leave at 8PM and end up camping in a super damp subalpine meadow at midnight.”</em></p><p>(Part II, after my Hidden Lake WORKout, I quickly packed my overnight gear and got myself on the Monogram Lake trail feverishly)</p><p>LEARN THE HARD LESSON! </p><p>This is a very unsuccessful and miserable overnight experience with several severe mistakes. </p><ul><li>I departed late around 8PM, pre-funked on the heavy hidden lake hike earlier this day, so in very poor physical condition, sore feet due to the B3 boots' long approach on dry trail (Yeah, I originally planned for some mountaineering here at little devil peak, now I felt like a total dumb!). </li></ul><ul><li>I had a heavy pack, lacking proper light packing practices.</li></ul><ul><li>I had multiple off-trail incidents in dense shrubs, partially because hiking in total darkness, largely because I was exhausted, sleepy, and had poor cognitive capacity due to sleep deprivation.</li></ul><ul><li>I didn't reach the designated backcountry camp due to hard to navigate the snow -covered high meadows at night. I couldn't find an available location near the trail, or I would just stop as soon as possible. So I just forced my body to keep hiking up until I ended up in a rather open subalpine meadow. I knew it's a bit unethical to camp on vegetation, but I was too exhausted and had no choice. </li></ul><ul><li>I selected a problematic camping location with sloped ground, which made my inner tent lean on one side. It was a wet, windy subalpine meadow with some intermittent snowfield. Nearly took away all my body heat, as tiny running streams of snowmelt water ran under the footprint. It was just miserable, cold, and mentally really fatiguing, worrying my tent would flip any moment, and I would slip down the slope - I knew it wouldn't be very dangerous, but it would be bothersome, and I was way too tired to even try to solve this. </li></ul><ul><li>I didn’t bring another dry set of camp clothes. Sweat-soaked outfit and socks, and the lack of insulation at night (I brought an improper summer quilt for weight saving and I even did not learn how to use it correctly, so I was using it in the wrong direction) made it impossible for me to sleep. </li></ul><p>At one moment I knew staying here couldn't work, and it was only 3AM, not worth the suffering to the sunrise either. I made a quick decision to just pack again (I arrived around 12 and set my tent up 12:30PM) and hike out.</p><p>My only thought when hiking out: I'm such an overconfident dumbhead who did not turn around when I started so late and was so tired!</p><p>I was too tired to even take pictures for this trip. Oh, I remembered I was here from 8pm to 5am so I have nearly no view other than pitch dark!</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Mount Walker</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">10, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-mount-walker-1788883675545" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Eastern Olympic Mountains - Northeast Olympic Foothills (Highest Point)</strong></p><p>My friends drove us up there as they were not feeling well enough to hike.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/mount-walker1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/mount-walker2.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Green Mountain (Kitsap Peninsula)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">10, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-green-mountain-kitsap-peninsula" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Kitsap Peninsula</strong></p><p>A casual hike with the view of the city of Seattle across the water. A pretty rainbow after a short shower showed up before sunset.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/green-mountain-kitsap-peninsula1788943297219.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Dosewallips State Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag camping" title="camping"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">9–10, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-dosewallips-state-park" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>We missed the oyster and shellfish harvest season :(</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/dosewallips-state-park1788943223466.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park3.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/dosewallips-state-park1788943223467.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Fort Flagler State Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag camping" title="camping"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">8–9, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-fort-flagler-state-park" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Fort%20Flagler%20State%20Park.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-04"><div class="trip-title">Snow Lake Winter Route</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag scrambling" title="scrambling"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">26, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-snow-lake" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Some very enjoyable winter hiking on a moderate snow slope using microspikes and an axe. The lake is still frozen, and I had some enjoyable strolls on it.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/snow-lake1788943154570.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snow%20Lake3.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Granite Mountain (I-90)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">26, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-granite-mountain-i-90" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Alpine Lakes Area - Snoqualmie Pass North</strong></p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Granite%20Mountain1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Granite%20Mountain2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Orcas Island Car Camping Trip</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag camping" title="camping"></span><span class="trip-tag kayaking" title="kayaking"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">18–19, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-orcas-island-car-camping-trip" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>San Juan Islands (Highest Point)</strong></p><p>Had a lovely camping trip by the lake and a short forest stroll on the first day. We drove to the summit of San Juan Islands (Mount Constitution), where a historic tower was located. Had a relaxing kayaking trip along the north bay. I'm convinced that ocean kayaking is the best way to explore the islands and I will definitely try it again in the future!</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island1.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island3.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island4.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Orcas%20Island5.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Mount Si</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">16, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-mount-si" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Alpine Lakes Area - North-Middle Forks Snoqualmie</strong></p><p>Met two very cute pups on my way up. Fresh snow in the morning and absolutely no view at all near the summit.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/mount-si1788943095419.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/mount-si1788943095420.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mount%20Si1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mount%20Si2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Mailbox Peak</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">16, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-mailbox-peak" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><strong>Alpine Lakes Area - Snoqualmie Pass North</strong></p><p>A second hike on the same day after Mount Si. Started after 2pm and finished around sunset. Views on the summit are way better, as the sky is clear in the afternoon.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Mailbox%20Peak3.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/mailbox-peak1788943041263.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/mailbox-peak1788943041264.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Talapus Lake</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">12, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-talapus-lake" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Talapus%20Lake.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Source Lake</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">12, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-source-lake" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Source%20Lake1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Source%20Lake2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Snoqualmie Falls</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">12, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-snoqualmie-falls" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>The Twin Peaks iconic scenery.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Snoqualmie%20Fall.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Deception Pass &amp; Whidbey Island Scenic Trip (Ebey's Landing, Fort Ebey, Fort Casey)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag camping" title="camping"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">4–5, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-deception-pass-whidbey-island-car-camping-trip-ebey-s-landing-fort-ebey-fort-casey" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>A well-packed weekend trip to Whidbey Island. It would be very nice to road cycle here someday.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip1.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip3.JPG" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip4.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip5.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip6.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip7.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Decption%20Pass%20-%20Whidbey%20Island%20Trip8.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Lincoln Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">3, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-lincoln-park" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lincoln%20Park1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lincoln%20Park2.JPG" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article></div><div class="trip-chunk" data-chunk="6"><article class="trip-entry" id="trip-2026-04-1" data-trip-chunk-start><div class="trip-title">Lake Serene Sunrise Hike</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">3, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-lake-serene" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Went for a sunrise hike (some avalanches spotted). I started near 4 and the sun is almost out when I arrived at the lake. Microspikes are desirable for navigating the last section; snowshoes are not necessary but you may want to bring them instead of postholing the trail :)</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/lake-serene-sunrise-hike1788942948804.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lake%20Serene1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/Lake%20Serene2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/lake-serene-sunrise-hike1788942948805.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-03"><div class="trip-title">South Lake Washington Loop</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag cycling" title="cycling"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">30, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-04-south-lake-washington-loop" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/South%20Lake%20Washington%20Loop1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/South%20Lake%20Washington%20Loop2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/March/south-lake-washington-loop1788885008917.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Wallace Falls State Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">28, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-wallace-falls-state-park" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>We came down to the waterfall on the way back to add a little off-trail element to this casual hike.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Wallace%20Falls%20State%20Park1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/March/wallace-falls-state-park1788942864274.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Wallace%20Falls%20State%20Park2.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/March/wallace-falls-state-park1788942864275.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Alki Beach</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">27, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-alki-beach" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Alki%20Beach.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Seward Park (on a sunny day)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">26, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-seward-park-on-a-sunny-day" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20sunny%20day1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20sunny%20day2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Seward Park (on a cloudy day)</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag cycling" title="cycling"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">23, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-seward-park-on-a-cloudy-day" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Rode my bike here along the coastal road. Great view of Mt Rainier.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Seward%20on%20a%20cloudy%20day.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Carkeek Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">22, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-carkeek-park-1788754284019" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/March/carkeek-park1.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/March/carkeek-park2.jpeg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Magnuson Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag cycling" title="cycling"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">21, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-magnuson-park" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Magnuson%20Park1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Magnuson%20Park2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Golden Gardens Beach</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">21, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-golden-gardens-beach" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>...in its absolute golden hour.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/March/golden-gardens-beach1788942715742.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Golden%20Gardens%20Beach1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Golden%20Gardens%20Beach2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Burke-Gilman Trail - Sammamish River Trail - Redmond Bike Tour</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag cycling" title="cycling"></span></div><div class="trip-date"><span class="trip-date-month">March</span> <span class="trip-date-rest">1, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-03-burke-gilman-trail-sammamish-river-trail-redmond" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>First time I rode to the east on a lovely sunny afternoon. Very enjoyable!</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/March/burke-gilman-trail-sammamish-river-trail-redmond-bike-tour1788942666409.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Burke-Gilman%20Trail%20-%20Sammamish%20River%20Trail%20-%20Redmond1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Mar/Burke-Gilman%20Trail%20-%20Sammamish%20River%20Trail%20-%20Redmond2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2026-02"><div class="trip-title">First Bike (Ride): Burke-Gilman Trail</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag cycling" title="cycling"></span></div><div class="trip-date"><span class="trip-date-month">February</span> <span class="trip-date-rest">21, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-02-burke-gilman-trail" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Well worth the post as I picked up my fresh Marin 4C this afternoon and went for a night ride along the Burke-Gilman (East part).</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Burke-Gilman%20Trail1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Burke-Gilman%20Trail2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Discovery Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag hiking" title="hiking"></span></div><div class="trip-date"><span class="trip-date-month">February</span> <span class="trip-date-rest">15, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-02-discovery-park" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>A little bit of off-trail exploration down to the shore is the best part of the day.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Discovery%20Park1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/February/discovery-park1788942614556.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/February/discovery-park1788942614557.jpeg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Discovery%20Park2.JPG" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry"><div class="trip-title">Arboretum Waterfront Trail</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">February</span> <span class="trip-date-rest">8, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-02-arboretum-waterfront-trail" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p>Nice little walk just south of the campus.</p></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Arboretum%20Waterfront%20Trail1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/Feb/Arboretum%20Waterfront%20Trail2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article><article class="trip-entry" id="trip-2025-12"><div class="trip-title">Bridle Trails State Park</div><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div><div class="trip-date"><span class="trip-date-month">December</span> <span class="trip-date-rest">25, 2025</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2025-12-bridle-trails-state-park" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-gallery is-measuring"><div class="trip-gallery-col"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2025/Dec/Bridle%20Trails%20State%20Park1.jpg" alt="" decoding="async"><img data-src="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2025/Dec/Bridle%20Trails%20State%20Park2.jpg" alt="" decoding="async"></div><div class="trip-gallery-col"></div></div></article></div>
+                <!-- static-trips:end -->
+            </div>
+
+            <nav class="trip-chunk-nav" data-trip-chunk-nav aria-label="Trip archive pages"><!-- static-chunk-nav:start --><div class="trip-chunk-bar-set" data-chunk-nav="0"><div class="trip-chunk-bar"><span class="trip-chunk-link is-disabled">Newer</span><span class="trip-chunk-label">Oct 2026</span><a class="trip-chunk-link" href="/trip.html?chunk=1#trip-chunk-start">Older</a></div></div><div class="trip-chunk-bar-set" data-chunk-nav="1"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="/trip.html#trip-chunk-start">Newer</a><span class="trip-chunk-label">Oct 2026 – Sep 2026</span><a class="trip-chunk-link" href="/trip.html?chunk=2#trip-chunk-start">Older</a></div></div><div class="trip-chunk-bar-set" data-chunk-nav="2"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="/trip.html?chunk=1#trip-chunk-start">Newer</a><span class="trip-chunk-label">Sep 2026 – Aug 2026</span><a class="trip-chunk-link" href="/trip.html?chunk=3#trip-chunk-start">Older</a></div></div><div class="trip-chunk-bar-set" data-chunk-nav="3"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="/trip.html?chunk=2#trip-chunk-start">Newer</a><span class="trip-chunk-label">Aug 2026 – Jul 2026</span><a class="trip-chunk-link" href="/trip.html?chunk=4#trip-chunk-start">Older</a></div></div><div class="trip-chunk-bar-set" data-chunk-nav="4"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="/trip.html?chunk=3#trip-chunk-start">Newer</a><span class="trip-chunk-label">Jul 2026 – May 2026</span><a class="trip-chunk-link" href="/trip.html?chunk=5#trip-chunk-start">Older</a></div></div><div class="trip-chunk-bar-set" data-chunk-nav="5"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="/trip.html?chunk=4#trip-chunk-start">Newer</a><span class="trip-chunk-label">May 2026 – Apr 2026</span><a class="trip-chunk-link" href="/trip.html?chunk=6#trip-chunk-start">Older</a></div></div><div class="trip-chunk-bar-set" data-chunk-nav="6"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="/trip.html?chunk=5#trip-chunk-start">Newer</a><span class="trip-chunk-label">Apr 2026 – Dec 2025</span><span class="trip-chunk-link is-disabled">Older</span></div></div><!-- static-chunk-nav:end --></nav>
+        </div>
+
+        <footer class="site-footer"></footer>
+    </main>
+
+    <div id="trip-map-modal" class="trip-map-modal hidden" aria-hidden="true">
+        <div class="trip-map-dialog" role="dialog" aria-modal="true" aria-labelledby="trip-map-title">
+            <div class="trip-map-header">
+                <h2 id="trip-map-title">Trip map</h2>
+                <button type="button" class="trip-map-close" id="trip-map-close" aria-label="Close map">×</button>
+            </div>
+            <div class="trip-map-toolbar">
+                <button type="button" data-basemap="satellite" class="active">Satellite</button>
+                <button type="button" data-basemap="terrain">Terrain</button>
+                <div id="trip-map-year-row" class="trip-map-year-row">
+                    <div class="trip-map-year-copy">
+                        <span class="trip-map-year-hint">Try viewing through the years</span>
+                        <div class="trip-map-year-controls">
+                            <span class="trip-map-year-end" id="trip-map-year-min">2014</span>
+                            <input id="trip-map-year" type="range" min="0" max="0" value="0" step="1"
+                                aria-label="Satellite imagery year">
+                            <span class="trip-map-year-end" id="trip-map-year-max">now</span>
+                            <span id="trip-map-year-label" class="trip-map-year-current"></span>
+                        </div>
+                    </div>
+                </div>
+                <span id="trip-map-status"></span>
+            </div>
+            <div class="trip-map-stage">
+                <div id="trip-map-canvas"></div>
+                <div id="trip-map-loading" class="trip-map-loading hidden" aria-live="polite">
+                    <div class="trip-map-loading-card">
+                        <div class="trip-map-loading-spinner" aria-hidden="true"></div>
+                        <p id="trip-map-loading-text">Loading GPS...</p>
+                    </div>
+                </div>
+            </div>
+            <div id="trip-map-strip" class="trip-map-strip hidden" aria-label="Photos on map"></div>
+        </div>
+    </div>
+
+    <script src="./javascripts/nature-config.js"></script>
+    <script src="./javascripts/nature-map.js?v=terrain-retry"></script>
+    <script src="./javascripts/nature-trips.js?v=indexed-html"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Tooltips for static activity-key icons
+            var types = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'kayaking'];
+            var labels = {};
+            document.querySelectorAll('.activity-key .trip-tag').forEach(function (el) {
+                var fromClass = types.find(function (t) { return el.classList.contains(t); });
+                var label = labels[fromClass] || fromClass;
+                if (!label) return;
+                el.dataset.tip = label;
+                el.setAttribute('aria-label', label);
+            });
+            window.renderNatureTrips('#trips-list');
+        });
+    </script>
+</body>
+
+</html>

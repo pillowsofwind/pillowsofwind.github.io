@@ -1,0 +1,1264 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light only">
+  <title>Manage Trips | Trip Archive</title>
+  <link rel="icon" href="/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+  <script src="./javascripts/load_navbar.js?v=copyright-once"></script>
+  <style>
+    :root {
+      --bg: #f7f6f3;
+      --card: #fff;
+      --ink: #222;
+      --muted: #666;
+      --line: #e6e4df;
+      --accent: #f5a560;
+      --accent-ink: #7a3f0e;
+      --ok: #2f6b3a;
+      --err: #9b2c2c;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      color: var(--ink);
+      background: radial-gradient(circle at top left, #fff7ee 0, transparent 40%), var(--bg);
+      min-height: 100vh;
+      padding: 24px 16px 64px;
+    }
+
+    .wrap { max-width: 720px; margin: 0 auto; }
+
+    h1 { margin: 0 0 6px; font-size: 28px; font-weight: 600; }
+
+    .sub { margin: 0 0 18px; color: var(--muted); font-size: 14px; }
+    .sub a { color: #39c; }
+
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .tabs button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font: inherit;
+      cursor: pointer;
+      color: var(--muted);
+    }
+
+    .tabs button.active {
+      background: #fff4ea;
+      border-color: var(--accent);
+      color: var(--accent-ink);
+      font-weight: 600;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+    }
+
+    .card h2 { margin: 0 0 14px; font-size: 15px; font-weight: 600; }
+
+    label { display: block; margin: 0 0 6px; font-size: 13px; color: var(--muted); }
+    .field { margin-bottom: 14px; }
+    .field:last-child { margin-bottom: 0; }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="number"],
+    input[type="date"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font: inherit;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    textarea { min-height: 140px; resize: vertical; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      cursor: pointer;
+      user-select: none;
+      font-size: 13px;
+      background: #fff;
+    }
+    .tag input { accent-color: var(--accent); }
+    .tag:has(input:checked) {
+      border-color: var(--accent);
+      background: #fff4ea;
+      color: var(--accent-ink);
+    }
+
+    .drop {
+      border: 1.5px dashed #d2cdc4;
+      border-radius: 10px;
+      padding: 22px 14px;
+      text-align: center;
+      color: var(--muted);
+      background: #fafaf8;
+      cursor: pointer;
+    }
+    .drop.dragover { border-color: var(--accent); background: #fff4ea; }
+    .drop strong { color: var(--ink); }
+    .drop input { display: none; }
+
+    .previews {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 8px;
+      margin-top: 4px;
+      min-height: 8px;
+    }
+
+    .previews figure {
+      margin: 0;
+      position: relative;
+      aspect-ratio: 1;
+      border-radius: 8px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      background: #eee;
+      cursor: grab;
+      touch-action: none;
+    }
+
+    .previews figure.dragging {
+      opacity: 0.45;
+      cursor: grabbing;
+    }
+
+    .previews figure.drag-over {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .previews img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+
+    .previews button {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      border: 0;
+      border-radius: 999px;
+      width: 22px;
+      height: 22px;
+      background: rgba(0, 0, 0, 0.55);
+      color: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      line-height: 1;
+      z-index: 2;
+    }
+
+    .fmt-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .fmt-bar button {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 6px;
+      padding: 5px 10px;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    .fmt-bar button:hover { border-color: #cfcfcf; background: #fafafa; }
+
+    textarea#report {
+      min-height: 160px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 8px; }
+
+    button.primary, button.secondary, button.danger, a.secondary {
+      border-radius: 999px;
+      padding: 11px 16px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    button.primary {
+      border: 0;
+      background: var(--accent);
+      color: #3d2208;
+    }
+
+    button.secondary, a.secondary {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: var(--ink);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      box-sizing: border-box;
+    }
+
+    button.danger {
+      border: 1px solid #f0c4c4;
+      background: #fff5f5;
+      color: var(--err);
+    }
+
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .status { font-size: 13px; color: var(--muted); }
+    .status.ok { color: var(--ok); }
+    .status.err { color: var(--err); }
+    .hint { margin-top: 8px; font-size: 12px; color: #888; }
+
+    details.setup summary { cursor: pointer; color: var(--muted); font-size: 13px; }
+
+    .trip-list { display: grid; gap: 8px; }
+    .trip-item {
+      display: grid;
+      grid-template-columns: 64px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #fff;
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      font: inherit;
+    }
+    .trip-item:hover { border-color: var(--accent); }
+    .trip-item.just-saved {
+      border-color: var(--accent);
+      background: #fff4ea;
+    }
+    .trip-item img {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border-radius: 8px;
+      background: #eee;
+    }
+    .trip-item .meta { color: var(--muted); font-size: 12px; }
+    .trip-item .title { font-weight: 600; }
+
+    .hidden { display: none !important; }
+
+    .search { margin-bottom: 12px; }
+
+    @media (max-width: 560px) {
+      .row { grid-template-columns: 1fr; }
+      .trip-item { grid-template-columns: 52px 1fr; }
+      .trip-item .go { grid-column: 2; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <h1>Manage trips</h1>
+    <p class="sub">Add, edit, or delete trips. Photos sync to R2 — no Git commit.
+      <a href="./trip.html">View site</a>
+    </p>
+
+    <div class="tabs">
+      <button type="button" class="active" data-tab="add" id="tab-add">Add trip</button>
+      <button type="button" data-tab="manage" id="tab-manage">Edit / delete</button>
+    </div>
+
+    <!-- ADD -->
+    <section id="panel-add">
+      <form id="trip-form">
+        <div class="card">
+          <h2>Trip details</h2>
+          <input type="hidden" id="editId" value="">
+          <div class="field">
+            <label for="title">Title</label>
+            <input id="title" name="title" type="text" required placeholder="Lake Serene">
+          </div>
+          <div class="row">
+            <div class="field">
+              <label for="date">Start date</label>
+              <input id="date" name="date" type="date" required>
+            </div>
+            <div class="field">
+              <label for="endDate">End date</label>
+              <input id="endDate" name="endDate" type="date" required>
+            </div>
+          </div>
+          <p class="hint" style="margin-top:-4px;margin-bottom:12px">End date follows start until you change it (day trips stay same-day).</p>
+          <div class="field">
+            <label>Tags</label>
+            <div class="tags" id="tags"></div>
+          </div>
+          <div class="field">
+            <label for="report">Trip report</label>
+            <div class="fmt-bar" id="fmt-bar">
+              <button type="button" data-fmt="bold" title="Bold">Bold</button>
+              <button type="button" data-fmt="italic" title="Italic">Italic</button>
+              <button type="button" data-fmt="link" title="Link">Link</button>
+              <button type="button" data-fmt="ul" title="Bullet list">List</button>
+            </div>
+            <textarea id="report" name="report" placeholder="What happened, conditions, notes…&#10;&#10;Formatting: **bold**, *italic*, [text](https://…), blank line = new paragraph"></textarea>
+            <span class="hint">Supports simple Markdown: **bold**, *italic*, links, and lists.</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Photos</h2>
+          <p class="hint" style="margin-top:0">Drag tiles to reorder. Removing a saved photo deletes it from R2 when you save.</p>
+          <div class="previews" id="photo-list"></div>
+          <div class="drop" id="drop" style="margin-top:12px">
+            <strong>Drop photos here</strong>, paste, or tap to choose<br>
+            <span class="hint">Originals upload in batches (no resize) · HEIC→JPEG only when needed · ⌘/Ctrl+Enter to publish</span>
+            <input id="photos" type="file" accept="image/*,.heic,.HEIC,.heif,.HEIF" multiple>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Publish</h2>
+          <details class="setup field">
+            <summary>Advanced: Worker URL &amp; password</summary>
+            <div class="field" style="margin-top:10px">
+              <label for="workerUrl">Cloudflare Worker URL</label>
+              <input id="workerUrl" type="text" placeholder="https://nature-trip-uploader.YOUR_SUBDOMAIN.workers.dev">
+            </div>
+            <div class="field">
+              <label for="password">Admin password (saved in this browser)</label>
+              <input id="password" name="password" type="password" autocomplete="current-password" placeholder="Set once, then publish without retyping">
+              <span class="hint">Stored locally — publish / save / delete use it automatically.</span>
+            </div>
+          </details>
+          <div class="actions">
+            <button class="primary" id="submit" type="submit">Upload trip</button>
+            <button class="secondary hidden" id="cancel-edit" type="button">Cancel edit</button>
+            <a class="secondary" href="./trip.html" target="_blank" rel="noopener">View site</a>
+            <span class="status" id="status"></span>
+          </div>
+        </div>
+      </form>
+    </section>
+
+    <!-- MANAGE -->
+    <section id="panel-manage" class="hidden">
+      <div class="card">
+        <h2>Your trips</h2>
+        <div class="actions" style="margin-bottom:12px">
+          <button class="primary" type="button" id="load-trips">Load trips</button>
+          <span class="status" id="manage-status"></span>
+        </div>
+        <input class="search" id="search" type="text" placeholder="Search by title…">
+        <div class="trip-list" id="trip-list"></div>
+      </div>
+    </section>
+  </div>
+
+  <script src="./javascripts/nature-config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
+  <script>
+    (function () {
+      var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'kayaking'];
+      // HEIC must become JPEG for browsers; keep quality high. Other formats upload unchanged.
+      var HEIC_JPEG_QUALITY = 0.95;
+      var MAX_BATCH_BYTES = 70 * 1024 * 1024; // under Cloudflare ~100MB request limit
+      // Unified ordered list: { type:'existing', url } | { type:'new', file, previewUrl }
+      var photoItems = [];
+      var allTrips = [];
+      var editingId = null;
+      var pendingScrollTripId = null;
+      var converting = false;
+      var dragFrom = null;
+      var endDateManual = false;
+
+      function todayISO() {
+        var now = new Date();
+        var y = now.getFullYear();
+        var m = String(now.getMonth() + 1).padStart(2, '0');
+        var d = String(now.getDate()).padStart(2, '0');
+        return y + '-' + m + '-' + d;
+      }
+
+      function dateFromTrip(trip) {
+        if (trip && trip.date && /^\d{4}-\d{2}-\d{2}$/.test(trip.date)) return trip.date;
+        var months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        var mi = months.findIndex(function (m) {
+          return m.toLowerCase() === String(trip && trip.month || '').toLowerCase();
+        });
+        if (trip && trip.year && mi >= 0) {
+          return trip.year + '-' + String(mi + 1).padStart(2, '0') + '-01';
+        }
+        return todayISO();
+      }
+
+      function endDateFromTrip(trip) {
+        if (trip && trip.endDate && /^\d{4}-\d{2}-\d{2}$/.test(trip.endDate)) return trip.endDate;
+        return dateFromTrip(trip);
+      }
+
+      function formatRangeMeta(start, end) {
+        if (!start) return '';
+        if (!end || end === start) return start;
+        return start + ' → ' + end;
+      }
+
+      document.getElementById('date').value = todayISO();
+      document.getElementById('endDate').value = todayISO();
+
+      var dateInput = document.getElementById('date');
+      var endDateInput = document.getElementById('endDate');
+
+      function syncEndDateFromStart() {
+        if (endDateManual) {
+          if (endDateInput.value && endDateInput.value < dateInput.value) {
+            endDateInput.value = dateInput.value;
+          }
+        } else {
+          endDateInput.value = dateInput.value;
+        }
+        endDateInput.min = dateInput.value;
+      }
+
+      dateInput.addEventListener('change', syncEndDateFromStart);
+      dateInput.addEventListener('input', syncEndDateFromStart);
+      endDateInput.addEventListener('change', function () {
+        endDateManual = true;
+        if (endDateInput.value && endDateInput.value < dateInput.value) {
+          endDateInput.value = dateInput.value;
+        }
+      });
+      endDateInput.addEventListener('input', function () {
+        endDateManual = true;
+      });
+      endDateInput.min = dateInput.value;
+
+      var tagsEl = document.getElementById('tags');
+      TAGS.forEach(function (tag) {
+        var label = document.createElement('label');
+        label.className = 'tag';
+        label.innerHTML = '<input type="checkbox" name="tag" value="' + tag + '"> ' + tag;
+        tagsEl.appendChild(label);
+      });
+
+      function rememberTags(tags) {
+        try {
+          localStorage.setItem('natureLastTags', JSON.stringify(tags || []));
+        } catch (e) {}
+      }
+
+      function lastTags() {
+        try {
+          var raw = JSON.parse(localStorage.getItem('natureLastTags') || '[]');
+          return Array.isArray(raw) ? raw.filter(function (t) { return TAGS.indexOf(t) >= 0; }) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      var workerInput = document.getElementById('workerUrl');
+      var passwordInput = document.getElementById('password');
+      workerInput.value = localStorage.getItem('natureWorkerUrl') || (window.NATURE_CONFIG && window.NATURE_CONFIG.workerUrl) || '';
+      passwordInput.value = localStorage.getItem('natureAdminPassword') || '';
+      workerInput.addEventListener('change', function () {
+        localStorage.setItem('natureWorkerUrl', workerInput.value.trim());
+      });
+      passwordInput.addEventListener('change', function () {
+        localStorage.setItem('natureAdminPassword', passwordInput.value);
+      });
+      passwordInput.addEventListener('input', function () {
+        localStorage.setItem('natureAdminPassword', passwordInput.value);
+      });
+
+      function workerUrl() {
+        return (workerInput.value || '').trim().replace(/\/$/, '');
+      }
+
+      function adminPassword() {
+        var p = (passwordInput.value || localStorage.getItem('natureAdminPassword') || '').trim();
+        if (p) localStorage.setItem('natureAdminPassword', p);
+        return p;
+      }
+
+      function setStatus(el, type, msg) {
+        el.className = 'status' + (type ? ' ' + type : '');
+        el.textContent = msg || '';
+      }
+
+      function selectedTags() {
+        return Array.from(document.querySelectorAll('input[name="tag"]:checked')).map(function (el) { return el.value; });
+      }
+
+      function setSelectedTags(tags) {
+        document.querySelectorAll('input[name="tag"]').forEach(function (el) {
+          el.checked = (tags || []).indexOf(el.value) >= 0;
+        });
+      }
+
+      // Prefill last-used tags for a new trip
+      setSelectedTags(lastTags());
+
+      // Tabs
+      function showManageTab() {
+        document.querySelectorAll('.tabs button').forEach(function (b) {
+          b.classList.toggle('active', b.getAttribute('data-tab') === 'manage');
+        });
+        document.getElementById('panel-add').classList.add('hidden');
+        document.getElementById('panel-manage').classList.remove('hidden');
+      }
+
+      function showManageAndScrollTo(tripId, msg) {
+        pendingScrollTripId = tripId;
+        showManageTab();
+        renderTripList(document.getElementById('search').value || '');
+        setStatus(document.getElementById('manage-status'), 'ok', msg || 'Saved!');
+        loadTrips({ quiet: true, preserveScrollId: tripId });
+      }
+
+      document.querySelectorAll('.tabs button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          document.querySelectorAll('.tabs button').forEach(function (b) { b.classList.remove('active'); });
+          btn.classList.add('active');
+          var tab = btn.getAttribute('data-tab');
+          document.getElementById('panel-add').classList.toggle('hidden', tab !== 'add');
+          document.getElementById('panel-manage').classList.toggle('hidden', tab !== 'manage');
+          if (tab === 'manage') loadTripsQuiet();
+        });
+      });
+
+      // Report formatting toolbar
+      var reportEl = document.getElementById('report');
+
+      // Keep textarea selection when tapping Bold/Italic/etc (Safari clears it on mousedown).
+      document.getElementById('fmt-bar').addEventListener('mousedown', function (e) {
+        if (e.target.closest('button[data-fmt]')) e.preventDefault();
+      });
+
+      // Rich paste from Notes/Word/web → plain text only (this box is Markdown, not HTML).
+      // Avoids Safari leaving the field hard to select after an HTML clipboard paste.
+      reportEl.addEventListener('paste', function (e) {
+        var cd = e.clipboardData;
+        if (!cd) return;
+        var text = cd.getData('text/plain');
+        if (!text) {
+          var html = cd.getData('text/html');
+          if (!html) return;
+          var tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          text = tmp.textContent || tmp.innerText || '';
+        }
+        if (text == null) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var start = reportEl.selectionStart;
+        var end = reportEl.selectionEnd;
+        var val = reportEl.value;
+        var normalized = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+        reportEl.value = val.slice(0, start) + normalized + val.slice(end);
+        var caret = start + normalized.length;
+        reportEl.setSelectionRange(caret, caret);
+      });
+
+      function wrapSelection(before, after, placeholder) {
+        var start = reportEl.selectionStart;
+        var end = reportEl.selectionEnd;
+        var val = reportEl.value;
+        var selected = val.slice(start, end) || (placeholder || '');
+        reportEl.value = val.slice(0, start) + before + selected + after + val.slice(end);
+        reportEl.focus();
+        reportEl.selectionStart = start + before.length;
+        reportEl.selectionEnd = start + before.length + selected.length;
+      }
+      document.getElementById('fmt-bar').addEventListener('click', function (e) {
+        var btn = e.target.closest('button[data-fmt]');
+        if (!btn) return;
+        var fmt = btn.getAttribute('data-fmt');
+        if (fmt === 'bold') wrapSelection('**', '**', 'bold');
+        else if (fmt === 'italic') wrapSelection('*', '*', 'italic');
+        else if (fmt === 'link') wrapSelection('[', '](https://)', 'text');
+        else if (fmt === 'ul') {
+          var start = reportEl.selectionStart;
+          var end = reportEl.selectionEnd;
+          var val = reportEl.value;
+          var selected = val.slice(start, end) || 'item';
+          var lines = selected.split(/\n/).map(function (line) {
+            return line.replace(/^\s*[-*]\s+/, '').trim()
+              ? '- ' + line.replace(/^\s*[-*]\s+/, '').trim()
+              : '- ';
+          }).join('\n');
+          reportEl.value = val.slice(0, start) + lines + val.slice(end);
+          reportEl.focus();
+        }
+      });
+
+      // Photos UI — unified list with drag reorder
+      var drop = document.getElementById('drop');
+      var input = document.getElementById('photos');
+      var photoList = document.getElementById('photo-list');
+
+      function revokePreviews() {
+        photoItems.forEach(function (item) {
+          if (item.previewUrl) {
+            try { URL.revokeObjectURL(item.previewUrl); } catch (e) {}
+            item.previewUrl = null;
+          }
+        });
+      }
+
+      function clearPhotos() {
+        revokePreviews();
+        photoItems = [];
+        renderPhotoList();
+      }
+
+      function renderPhotoList() {
+        photoList.innerHTML = '';
+        photoItems.forEach(function (item, idx) {
+          var fig = document.createElement('figure');
+          fig.draggable = true;
+          fig.dataset.index = String(idx);
+          var img = document.createElement('img');
+          if (item.type === 'existing') {
+            img.src = item.url;
+            img.alt = '';
+          } else {
+            if (!item.previewUrl) item.previewUrl = URL.createObjectURL(item.file);
+            img.src = item.previewUrl;
+            img.alt = item.file.name || 'new photo';
+          }
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.textContent = '×';
+          btn.title = item.type === 'existing' ? 'Remove (deletes from R2 on save)' : 'Remove';
+          btn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (item.previewUrl) {
+              try { URL.revokeObjectURL(item.previewUrl); } catch (err) {}
+            }
+            photoItems.splice(idx, 1);
+            renderPhotoList();
+          });
+          fig.appendChild(img);
+          fig.appendChild(btn);
+
+          fig.addEventListener('dragstart', function (e) {
+            dragFrom = idx;
+            fig.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            try { e.dataTransfer.setData('text/plain', String(idx)); } catch (err) {}
+          });
+          fig.addEventListener('dragend', function () {
+            dragFrom = null;
+            fig.classList.remove('dragging');
+            photoList.querySelectorAll('.drag-over').forEach(function (el) {
+              el.classList.remove('drag-over');
+            });
+          });
+          fig.addEventListener('dragover', function (e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            fig.classList.add('drag-over');
+          });
+          fig.addEventListener('dragleave', function () {
+            fig.classList.remove('drag-over');
+          });
+          fig.addEventListener('drop', function (e) {
+            e.preventDefault();
+            fig.classList.remove('drag-over');
+            var from = dragFrom;
+            if (from == null) {
+              try { from = Number(e.dataTransfer.getData('text/plain')); } catch (err) { from = null; }
+            }
+            var to = idx;
+            if (from == null || from === to || from < 0 || from >= photoItems.length) return;
+            var moved = photoItems.splice(from, 1)[0];
+            photoItems.splice(to, 0, moved);
+            renderPhotoList();
+          });
+
+          photoList.appendChild(fig);
+        });
+      }
+
+      function isHeicLike(file) {
+        var type = (file.type || '').toLowerCase();
+        var name = file.name || '';
+        return type === 'image/heic' || type === 'image/heif' || /\.hei[cf]$/i.test(name);
+      }
+
+      function baseName(name) {
+        return String(name || 'photo').replace(/\.[^.]+$/, '') || 'photo';
+      }
+
+      async function toJpegFile(file) {
+        if (!window.heic2any) throw new Error('HEIC converter failed to load');
+        var result = await window.heic2any({
+          blob: file,
+          toType: 'image/jpeg',
+          quality: HEIC_JPEG_QUALITY,
+        });
+        var blob = Array.isArray(result) ? result[0] : result;
+        return new File([blob], baseName(file.name) + '.jpg', { type: 'image/jpeg' });
+      }
+
+      // Keep originals as-is. Only HEIC/HEIF needs conversion so browsers can display them.
+      async function normalizeFile(file) {
+        if (isHeicLike(file)) return toJpegFile(file);
+        return file;
+      }
+
+      async function addFiles(list) {
+        var status = document.getElementById('status');
+        var candidates = Array.from(list || []).filter(function (f) {
+          return f.type.startsWith('image/') || /\.hei[cf]$/i.test(f.name);
+        });
+        if (!candidates.length) return;
+
+        converting = true;
+        var heicCount = candidates.filter(isHeicLike).length;
+        try {
+          for (var i = 0; i < candidates.length; i++) {
+            if (heicCount) {
+              setStatus(
+                status,
+                '',
+                'Preparing photo ' + (i + 1) + '/' + candidates.length + '…'
+              );
+            }
+            try {
+              var file = await normalizeFile(candidates[i]);
+              photoItems.push({ type: 'new', file: file, previewUrl: null });
+            } catch (err) {
+              console.error(err);
+              setStatus(status, 'err', 'Could not prepare ' + (candidates[i].name || 'photo') + '. Try exporting as JPEG.');
+              converting = false;
+              renderPhotoList();
+              return;
+            }
+          }
+          if (heicCount) {
+            setStatus(status, 'ok', candidates.length + ' photo' + (candidates.length === 1 ? '' : 's') + ' ready (HEIC converted at high quality)');
+          } else {
+            setStatus(status, 'ok', candidates.length + ' original photo' + (candidates.length === 1 ? '' : 's') + ' ready');
+          }
+          renderPhotoList();
+        } finally {
+          converting = false;
+        }
+      }
+
+      drop.addEventListener('click', function () { input.click(); });
+      input.addEventListener('change', function () {
+        addFiles(input.files);
+        input.value = '';
+      });
+      ['dragenter', 'dragover'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(function (ev) {
+        drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('dragover'); });
+      });
+      drop.addEventListener('drop', function (e) { addFiles(e.dataTransfer.files); });
+
+      // Paste images from clipboard — never steal paste inside text fields (Safari often
+      // attaches an image preview alongside copied text/HTML).
+      document.getElementById('trip-form').addEventListener('paste', function (e) {
+        var t = e.target;
+        if (t && (t.tagName === 'TEXTAREA' || t.tagName === 'INPUT' || t.isContentEditable)) {
+          return;
+        }
+        var items = e.clipboardData && e.clipboardData.items;
+        if (!items) return;
+        var files = [];
+        for (var i = 0; i < items.length; i++) {
+          if (items[i].type && items[i].type.indexOf('image/') === 0) {
+            var f = items[i].getAsFile();
+            if (f) files.push(f);
+          }
+        }
+        if (!files.length) return;
+        e.preventDefault();
+        addFiles(files);
+      });
+
+      // ⌘/Ctrl+Enter publishes from anywhere in the form
+      document.getElementById('trip-form').addEventListener('keydown', function (e) {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
+          e.preventDefault();
+          document.getElementById('submit').click();
+        }
+      });
+
+      function resetForm() {
+        editingId = null;
+        endDateManual = false;
+        document.getElementById('editId').value = '';
+        document.getElementById('title').value = '';
+        document.getElementById('report').value = '';
+        document.getElementById('date').value = todayISO();
+        document.getElementById('endDate').value = todayISO();
+        document.getElementById('endDate').min = todayISO();
+        setSelectedTags(lastTags());
+        clearPhotos();
+        document.getElementById('submit').textContent = 'Upload trip';
+        document.getElementById('cancel-edit').classList.add('hidden');
+        setStatus(document.getElementById('status'), '', '');
+        setTimeout(function () {
+          document.getElementById('title').focus();
+        }, 0);
+      }
+
+      document.getElementById('cancel-edit').addEventListener('click', function () {
+        resetForm();
+        document.getElementById('tab-manage').click();
+      });
+
+      function fillForm(trip) {
+        editingId = trip.id;
+        var start = dateFromTrip(trip);
+        var end = endDateFromTrip(trip);
+        endDateManual = !!(end && start && end !== start);
+        document.getElementById('editId').value = trip.id;
+        document.getElementById('title').value = trip.title || '';
+        document.getElementById('date').value = start;
+        document.getElementById('endDate').value = end;
+        document.getElementById('endDate').min = start;
+        document.getElementById('report').value = trip.report || '';
+        setSelectedTags(trip.tags || []);
+        clearPhotos();
+        photoItems = (trip.photos || []).map(function (url) {
+          return { type: 'existing', url: url };
+        });
+        renderPhotoList();
+        document.getElementById('submit').textContent = 'Save changes';
+        document.getElementById('cancel-edit').classList.remove('hidden');
+        document.getElementById('tab-add').click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(function () {
+          document.getElementById('title').focus();
+        }, 0);
+      }
+
+      // Submit create / update
+      document.getElementById('trip-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var status = document.getElementById('status');
+        var submit = document.getElementById('submit');
+        var base = workerUrl();
+        if (!base) {
+          setStatus(status, 'err', 'Set your Worker URL in Advanced first.');
+          return;
+        }
+        localStorage.setItem('natureWorkerUrl', base);
+
+        if (converting) {
+          setStatus(status, 'err', 'Still preparing photos — wait a moment.');
+          return;
+        }
+
+        var start = document.getElementById('date').value;
+        var end = document.getElementById('endDate').value;
+        if (!start || !end) {
+          setStatus(status, 'err', 'Start and end dates are required.');
+          return;
+        }
+        if (end < start) {
+          setStatus(status, 'err', 'End date must be on or after start date.');
+          return;
+        }
+
+        if (!photoItems.length) {
+          setStatus(status, 'err', 'Keep or add at least one photo.');
+          return;
+        }
+
+        var password = adminPassword();
+        if (!password) {
+          setStatus(status, 'err', 'Set admin password once under Advanced.');
+          return;
+        }
+
+        function appendMeta(fd) {
+          fd.append('password', password);
+          fd.append('title', document.getElementById('title').value.trim());
+          fd.append('date', document.getElementById('date').value);
+          fd.append('endDate', document.getElementById('endDate').value);
+          fd.append('report', document.getElementById('report').value.trim());
+          fd.append('tags', JSON.stringify(selectedTags()));
+        }
+
+        async function sendTrip(method, url, fd, label) {
+          setStatus(status, '', label || (method === 'PUT' ? 'Saving…' : 'Uploading…'));
+          var res = await fetch(url, { method: method, body: fd });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) {
+            if (res.status === 413) {
+              throw new Error(
+                'Upload too large for one request (Cloudflare ~100MB limit). Retry — originals are uploaded in smaller batches automatically.'
+              );
+            }
+            throw new Error(data.error || ('Request failed (' + res.status + ')'));
+          }
+          return data;
+        }
+
+        function chunkBySize(items, maxBytes) {
+          var out = [];
+          var current = [];
+          var bytes = 0;
+          items.forEach(function (item) {
+            var size = (item.file && item.file.size) || 0;
+            if (current.length && bytes + size > maxBytes) {
+              out.push(current);
+              current = [];
+              bytes = 0;
+            }
+            current.push(item);
+            bytes += size;
+            if (bytes > maxBytes && current.length === 1) {
+              out.push(current);
+              current = [];
+              bytes = 0;
+            }
+          });
+          if (current.length) out.push(current);
+          return out;
+        }
+
+        submit.disabled = true;
+
+        try {
+          var existingItems = photoItems.filter(function (item) { return item.type === 'existing'; });
+          var newItems = photoItems.filter(function (item) { return item.type === 'new'; });
+          var keepUrls = existingItems.map(function (item) { return item.url; });
+          var wasEdit = !!editingId;
+          var editedId = editingId;
+          var data;
+          var msg;
+          var batches = chunkBySize(newItems, MAX_BATCH_BYTES);
+          var useBatches = batches.length > 1;
+
+          // Upload originals in size-capped batches (no resize) so large albums fit under ~100MB/request
+          if (useBatches) {
+            var currentKeep = keepUrls.slice();
+            var tripId = editingId;
+            var uploadedCount = 0;
+
+            for (var b = 0; b < batches.length; b++) {
+              var batch = batches[b];
+              var fd = new FormData();
+              appendMeta(fd);
+              uploadedCount += batch.length;
+              var label =
+                'Uploading originals ' +
+                (uploadedCount - batch.length + 1) +
+                '–' +
+                uploadedCount +
+                ' of ' +
+                newItems.length +
+                '…';
+
+              if (!tripId) {
+                batch.forEach(function (item) {
+                  fd.append('photos', item.file, item.file.name);
+                });
+                data = await sendTrip('POST', base + '/api/trips', fd, label);
+                tripId = data.trip && data.trip.id;
+                currentKeep = (data.trip && data.trip.photos) || [];
+                if (!tripId) throw new Error('Upload succeeded but no trip id returned');
+              } else {
+                fd.append('keepPhotos', JSON.stringify(currentKeep));
+                batch.forEach(function (item) {
+                  fd.append('photos', item.file, item.file.name);
+                });
+                data = await sendTrip(
+                  'PUT',
+                  base + '/api/trips/' + encodeURIComponent(tripId),
+                  fd,
+                  label
+                );
+                currentKeep = (data.trip && data.trip.photos) || currentKeep;
+              }
+            }
+
+            var finalOrder = [];
+            var newUrlQueue = currentKeep.filter(function (url) {
+              return keepUrls.indexOf(url) < 0;
+            });
+            var newPtr = 0;
+            photoItems.forEach(function (item) {
+              if (item.type === 'existing') finalOrder.push(item.url);
+              else if (newPtr < newUrlQueue.length) finalOrder.push(newUrlQueue[newPtr++]);
+            });
+            if (finalOrder.length === currentKeep.length && finalOrder.join('\0') !== currentKeep.join('\0')) {
+              var orderFd = new FormData();
+              appendMeta(orderFd);
+              orderFd.append('keepPhotos', JSON.stringify(finalOrder));
+              orderFd.append('photoOrder', JSON.stringify(finalOrder));
+              data = await sendTrip(
+                'PUT',
+                base + '/api/trips/' + encodeURIComponent(tripId),
+                orderFd,
+                'Finalizing photo order…'
+              );
+            }
+
+            editedId = tripId;
+            msg = wasEdit ? 'Saved!' : 'Published!';
+          } else {
+            var fd = new FormData();
+            appendMeta(fd);
+            var order = [];
+            var newIdx = 0;
+            photoItems.forEach(function (item) {
+              if (item.type === 'existing') {
+                order.push(item.url);
+              } else {
+                fd.append('photos', item.file, item.file.name);
+                order.push('__new__:' + newIdx);
+                newIdx += 1;
+              }
+            });
+            if (editingId) {
+              fd.append('keepPhotos', JSON.stringify(keepUrls));
+              fd.append('photoOrder', JSON.stringify(order));
+            } else if (!newItems.length) {
+              throw new Error('At least one photo is required.');
+            }
+
+            var endpoint = editingId
+              ? base + '/api/trips/' + encodeURIComponent(editingId)
+              : base + '/api/trips';
+            data = await sendTrip(editingId ? 'PUT' : 'POST', endpoint, fd);
+            msg = wasEdit ? 'Saved!' : 'Published!';
+            if (wasEdit && data.deletedPhotos) {
+              msg = 'Saved — deleted ' + data.deletedPhotos + ' photo' + (data.deletedPhotos === 1 ? '' : 's') + ' from storage';
+            }
+            if (data.trip && data.trip.id) editedId = data.trip.id;
+          }
+
+          rememberTags(selectedTags());
+          if (data.trip) {
+            if (wasEdit) {
+              allTrips = allTrips.map(function (t) {
+                return t.id === data.trip.id ? data.trip : t;
+              });
+            } else {
+              allTrips = [data.trip].concat(allTrips.filter(function (t) { return t.id !== data.trip.id; }));
+            }
+          }
+          resetForm();
+          submit.disabled = false;
+          if (wasEdit && editedId) {
+            showManageAndScrollTo(editedId, msg);
+          } else if (!wasEdit && editedId) {
+            // New trip with batches: still stay on add form with success
+            setStatus(status, 'ok', msg + ' Stay here to add another, or open View site.');
+          } else {
+            setStatus(status, 'ok', msg + ' Stay here to add another, or open View site.');
+          }
+        } catch (err) {
+          setStatus(status, 'err', err.message || 'Failed');
+          submit.disabled = false;
+        }
+      });
+
+      // Manage list
+      function scrollToTripInList(id) {
+        if (!id) return false;
+        var el = null;
+        if (window.CSS && CSS.escape) {
+          el = document.querySelector('.trip-item[data-trip-id="' + CSS.escape(id) + '"]');
+        } else {
+          var nodes = document.querySelectorAll('.trip-item[data-trip-id]');
+          for (var i = 0; i < nodes.length; i++) {
+            if (nodes[i].getAttribute('data-trip-id') === id) {
+              el = nodes[i];
+              break;
+            }
+          }
+        }
+        if (!el) return false;
+        el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        el.classList.add('just-saved');
+        setTimeout(function () {
+          el.classList.remove('just-saved');
+        }, 1800);
+        return true;
+      }
+
+      function renderTripList(filter) {
+        var list = document.getElementById('trip-list');
+        var q = (filter || '').toLowerCase();
+        var trips = allTrips.filter(function (t) {
+          return !q || String(t.title || '').toLowerCase().indexOf(q) >= 0;
+        });
+        if (!trips.length) {
+          list.innerHTML = '<p class="hint">No trips found.</p>';
+          return;
+        }
+        list.innerHTML = '';
+        trips.forEach(function (trip) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'trip-item';
+          if (trip.id) btn.setAttribute('data-trip-id', trip.id);
+          var thumb = (trip.photos && trip.photos[0]) || '';
+          btn.innerHTML =
+            (thumb ? '<img src="' + thumb.replace(/"/g, '&quot;') + '" alt="">' : '<div></div>') +
+            '<div><div class="title"></div><div class="meta"></div></div>' +
+            '<div class="go"><button type="button" class="secondary edit-btn">Edit</button> <button type="button" class="danger del-btn">Delete</button></div>';
+          btn.querySelector('.title').textContent = trip.title;
+          btn.querySelector('.meta').textContent = formatRangeMeta(dateFromTrip(trip), endDateFromTrip(trip)) + (trip.tags && trip.tags.length ? ' · ' + trip.tags.join(', ') : '');
+          btn.querySelector('.edit-btn').addEventListener('click', function (ev) {
+            ev.stopPropagation();
+            fillForm(trip);
+          });
+          btn.querySelector('.del-btn').addEventListener('click', async function (ev) {
+            ev.stopPropagation();
+            await deleteTrip(trip);
+          });
+          btn.addEventListener('click', function () { fillForm(trip); });
+          list.appendChild(btn);
+        });
+        if (pendingScrollTripId) {
+          var scrollId = pendingScrollTripId;
+          requestAnimationFrame(function () {
+            if (scrollToTripInList(scrollId)) pendingScrollTripId = null;
+          });
+        }
+      }
+
+      async function deleteTrip(trip) {
+        var base = workerUrl();
+        var password = adminPassword();
+        var manageStatus = document.getElementById('manage-status');
+        if (!base) {
+          setStatus(manageStatus, 'err', 'Set Worker URL first.');
+          return;
+        }
+        if (!password) {
+          setStatus(manageStatus, 'err', 'Set admin password under Advanced (Add trip tab).');
+          return;
+        }
+        if (!confirm('Delete “' + trip.title + '”? Photos will be removed from R2.')) return;
+
+        setStatus(manageStatus, '', 'Deleting…');
+        try {
+          var res = await fetch(base + '/api/trips/' + encodeURIComponent(trip.id), {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: password, deleteFiles: true }),
+          });
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok) throw new Error(data.error || 'Delete failed');
+          allTrips = allTrips.filter(function (t) { return t.id !== trip.id; });
+          renderTripList(document.getElementById('search').value);
+          setStatus(manageStatus, 'ok', 'Deleted.');
+        } catch (err) {
+          setStatus(manageStatus, 'err', err.message || 'Delete failed');
+        }
+      }
+
+      var tripsLoading = false;
+      async function loadTrips(opts) {
+        var quiet = opts && opts.quiet;
+        if (opts && opts.preserveScrollId) pendingScrollTripId = opts.preserveScrollId;
+        var base = workerUrl();
+        var manageStatus = document.getElementById('manage-status');
+        if (tripsLoading) return;
+        tripsLoading = true;
+        if (!base) {
+          var config = window.NATURE_CONFIG || {};
+          try {
+            if (!quiet) setStatus(manageStatus, '', 'Loading…');
+            var urls = [config.tripsUrl, config.tripsFallbackUrl].filter(Boolean);
+            var data = null;
+            for (var i = 0; i < urls.length; i++) {
+              try {
+                var r = await fetch(urls[i], { cache: 'no-store' });
+                if (r.ok) { data = await r.json(); break; }
+              } catch (e) {}
+            }
+            if (!data) throw new Error('Could not load trips');
+            allTrips = data.trips || [];
+            renderTripList(document.getElementById('search').value || '');
+            setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
+          } catch (err) {
+            if (!quiet) setStatus(manageStatus, 'err', err.message || 'Load failed');
+          } finally {
+            tripsLoading = false;
+          }
+          return;
+        }
+        try {
+          if (!quiet) setStatus(manageStatus, '', 'Loading…');
+          localStorage.setItem('natureWorkerUrl', base);
+          var res = await fetch(base + '/api/trips', { cache: 'no-store' });
+          var data = await res.json();
+          if (!res.ok) throw new Error(data.error || 'Load failed');
+          allTrips = data.trips || [];
+          renderTripList(document.getElementById('search').value || '');
+          setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
+        } catch (err) {
+          if (!quiet || !allTrips.length) setStatus(manageStatus, 'err', err.message || 'Load failed');
+        } finally {
+          tripsLoading = false;
+        }
+      }
+
+      function loadTripsQuiet() {
+        loadTrips({ quiet: true });
+      }
+
+      document.getElementById('load-trips').addEventListener('click', function () {
+        loadTrips({ quiet: false });
+      });
+
+      document.getElementById('search').addEventListener('input', function (e) {
+        renderTripList(e.target.value);
+      });
+
+      // Ready for typing
+      document.getElementById('title').focus();
+    })();
+  </script>
+</body>
+
+</html>

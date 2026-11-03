@@ -887,8 +887,68 @@
         }
 
         /* Soften OpenTopoMap's loud palette while keeping glacier / contour detail */
-        #trip-map-canvas .trip-map-terrain-tiles {
+        /* Filter the tiles only. A filter on the layer itself paints above the ice. */
+        #trip-map-canvas .trip-map-terrain-tiles img {
             filter: saturate(0.62) contrast(0.94) brightness(1.04);
+        }
+
+        .trip-map-glacier-legend {
+            position: absolute;
+            z-index: 600;
+            left: 10px;
+            bottom: 28px;
+            max-width: 230px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            align-items: flex-start;
+            padding: 7px 9px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.92);
+            border: 1px solid #e4e4e4;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+            font-size: 11px;
+            line-height: 1.35;
+            color: #333;
+            pointer-events: auto;
+        }
+
+        .trip-map-glacier-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .trip-map-glacier-legend.hidden {
+            display: none;
+        }
+
+        .trip-map-glacier-legend a {
+            color: #1d4e89;
+        }
+
+        .trip-map-glacier-swatch {
+            flex: 0 0 auto;
+            width: 12px;
+            height: 12px;
+            border: 1.5px solid #1565C0;
+            border-radius: 2px;
+            background: #5AA9F0;
+        }
+
+        .trip-map-glacier-swatch.snow {
+            background: #C9BFE0;
+            border-color: #7B6B9E;
+        }
+
+        .trip-map-glacier-swatch.buried {
+            background: #A1887F;
+            border-color: #6D4C41;
+        }
+
+        .trip-map-glacier-credit {
+            color: #555;
+            margin-top: 2px;
         }
 
         .trip-map-stage {
@@ -1188,6 +1248,7 @@
             <div class="trip-map-toolbar">
                 <button type="button" data-basemap="satellite" class="active">Satellite</button>
                 <button type="button" data-basemap="terrain">Terrain</button>
+                <button type="button" data-glaciers aria-pressed="true">Glaciers</button>
                 <div id="trip-map-year-row" class="trip-map-year-row">
                     <div class="trip-map-year-copy">
                         <span class="trip-map-year-hint">Try viewing through the years</span>
@@ -1204,6 +1265,15 @@
             </div>
             <div class="trip-map-stage">
                 <div id="trip-map-canvas"></div>
+                <div id="trip-map-glacier-legend" class="trip-map-glacier-legend">
+                    <div class="trip-map-glacier-row"><span class="trip-map-glacier-swatch" aria-hidden="true"></span><span>Active glacier</span></div>
+                    <div class="trip-map-glacier-row"><span class="trip-map-glacier-swatch snow" aria-hidden="true"></span><span>Snowfield, no longer flowing</span></div>
+                    <div class="trip-map-glacier-row"><span class="trip-map-glacier-swatch buried" aria-hidden="true"></span><span>Buried ice</span></div>
+                    <span class="trip-map-glacier-credit">US West inventory, 2013–2020.
+                        <a href="https://doi.org/10.15760/geology-data.03" target="_blank"
+                            rel="noopener noreferrer">Fountain, Glenn &amp; McNeil, public domain</a>
+                    </span>
+                </div>
                 <div id="trip-map-loading" class="trip-map-loading hidden" aria-live="polite">
                     <div class="trip-map-loading-card">
                         <div class="trip-map-loading-spinner" aria-hidden="true"></div>
@@ -1216,7 +1286,8 @@
     </div>
 
     <script src="./javascripts/nature-config.js"></script>
-    <script src="./javascripts/nature-map.js?v=terrain-retry"></script>
+    <script src="./data/glaciers.js?v=3"></script>
+    <script src="./javascripts/nature-map.js?v=glaciers8"></script>
     <script src="./javascripts/nature-trips.js?v=indexed-html"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {

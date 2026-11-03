@@ -11,6 +11,9 @@
   var waybackIndex = -1;
   var preferredWaybackYear = null;
   var satLayer = null;
+  var glacierLayer = null;
+  var glaciersVisible = true;
+  var glaciersPromise = null;
 
   function $(id) {
     return document.getElementById(id);
@@ -285,10 +288,15 @@
     );
     retryStalledTiles(openTopo);
     baseLayers.terrain = openTopo;
+    map.createPane("glacierPane");
+    var glacierPane = map.getPane("glacierPane");
+    glacierPane.style.zIndex = 450;
+    glacierPane.style.pointerEvents = "auto";
     satLayer.addTo(map);
     layerGroup = window.L.layerGroup().addTo(map);
     activeBase = "satellite";
     setBasemapButtons();
+    loadGlaciers();
 
     loadWaybackYears().then(function (years) {
       if (!years.length || !map) return;
@@ -320,6 +328,7 @@
     }
     activeBase = name;
     setBasemapButtons();
+    showGlaciers();
     // Let tiles settle without blocking UI
     requestAnimationFrame(function () {
       if (map) map.invalidateSize({ animate: false });
@@ -443,6 +452,96 @@
         return byUrl[url] || gpsCache[url] || null;
       })
       .filter(Boolean);
+  }
+
+  function glacierLabel(props) {
+    var name = props && (props.n || props.name);
+    if (!name) return "Unnamed ice";
+    return name;
+  }
+
+  function glacierClassLabel(props) {
+    var kind = props && (props.c || props["class"]);
+    if (kind === "Glacier") return "Active glacier";
+    if (kind === "Perennial snowfield") return "Snowfield, no longer flowing";
+    if (kind === "Buried ice") return "Buried ice";
+    return kind || "";
+  }
+
+  function glacierStyle(feature) {
+    var kind = feature && feature.properties && (feature.properties.c || feature.properties["class"]);
+    if (kind === "Perennial snowfield") {
+      return { color: "#7B6B9E", weight: 1.5, opacity: 1, fillColor: "#C9BFE0", fillOpacity: 0.72 };
+    }
+    if (kind === "Buried ice") {
+      return { color: "#6D4C41", weight: 1.5, opacity: 1, fillColor: "#A1887F", fillOpacity: 0.75 };
+    }
+    return { color: "#1565C0", weight: 1.5, opacity: 1, fillColor: "#5AA9F0", fillOpacity: 0.72 };
+  }
+
+  function setGlacierButton() {
+    document.querySelectorAll("[data-glaciers]").forEach(function (btn) {
+      btn.classList.toggle("active", glaciersVisible);
+      btn.setAttribute("aria-pressed", glaciersVisible ? "true" : "false");
+    });
+    var legend = $("trip-map-glacier-legend");
+    if (legend) legend.classList.toggle("hidden", !glaciersVisible);
+  }
+
+  function showGlaciers() {
+    if (!map || !glacierLayer || !glaciersVisible) return;
+    if (!map.hasLayer(glacierLayer)) glacierLayer.addTo(map);
+  }
+
+  function loadGlaciers() {
+    if (glaciersPromise) return glaciersPromise;
+    var dataReady = window.NATURE_GLACIERS
+      ? Promise.resolve(window.NATURE_GLACIERS)
+      : loadScript(new URL("data/glaciers.js", window.location.href).href).then(function () {
+          if (!window.NATURE_GLACIERS) throw new Error("Glacier outlines missing");
+          return window.NATURE_GLACIERS;
+        });
+    glaciersPromise = dataReady
+      .then(function (data) {
+        glacierLayer = window.L.geoJSON(data, {
+          pane: "glacierPane",
+          renderer: window.L.svg({ pane: "glacierPane" }),
+          style: glacierStyle,
+          onEachFeature: function (feature, layer) {
+            var props = feature.properties || {};
+            var bits = [];
+            var kind = glacierClassLabel(props);
+            var year = props.y || props.year;
+            var area = typeof props.a === "number" ? props.a : props.km2;
+            if (kind) bits.push(kind);
+            if (year) bits.push(String(year));
+            if (typeof area === "number") {
+              bits.push(area.toFixed(area < 1 ? 2 : 1) + " km²");
+            }
+            layer.bindPopup(
+              '<div class="trip-map-popup"><strong>' +
+                escapeAttr(glacierLabel(props)) +
+                "</strong>" +
+                (bits.length ? "<div>" + bits.join(" · ") + "</div>" : "") +
+                "</div>"
+            );
+          },
+        });
+        showGlaciers();
+      })
+      .catch(function (err) {
+        console.warn(err);
+        if (!glacierLayer) setStatus("Glacier outlines did not load");
+      });
+    return glaciersPromise;
+  }
+
+  function toggleGlaciers() {
+    glaciersVisible = !glaciersVisible;
+    setGlacierButton();
+    if (!map || !glacierLayer) return;
+    if (glaciersVisible) showGlaciers();
+    else map.removeLayer(glacierLayer);
   }
 
   function escapeAttr(str) {
@@ -595,6 +694,7 @@
         if (loadId !== mapLoadId) return;
         map.invalidateSize();
         fitToPhotoGps(points);
+        showGlaciers();
       }, 120);
     } catch (err) {
       if (loadId !== mapLoadId) return;
@@ -621,6 +721,10 @@
         switchBasemap(btn.getAttribute("data-basemap"));
       });
     });
+    document.querySelectorAll("[data-glaciers]").forEach(function (btn) {
+      btn.addEventListener("click", toggleGlaciers);
+    });
+    setGlacierButton();
     var yearSlider = $("trip-map-year");
     if (yearSlider) {
       yearSlider.addEventListener("input", function () {

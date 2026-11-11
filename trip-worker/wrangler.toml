@@ -1,6 +1,7 @@
 name = "nature-trip-uploader"
 main = "src/index.js"
 compatibility_date = "2024-11-01"
+workers_dev = true
 
 # Bind your existing R2 bucket (change name if different)
 [[r2_buckets]]

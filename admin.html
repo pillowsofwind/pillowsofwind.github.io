@@ -359,7 +359,7 @@
             <summary>Advanced: Worker URL &amp; password</summary>
             <div class="field" style="margin-top:10px">
               <label for="workerUrl">Cloudflare Worker URL</label>
-              <input id="workerUrl" type="text" placeholder="https://nature-trip-uploader.YOUR_SUBDOMAIN.workers.dev">
+              <input id="workerUrl" type="text" placeholder="https://photos.rongwuxu.com">
             </div>
             <div class="field">
               <label for="password">Admin password (saved in this browser)</label>
@@ -391,7 +391,7 @@
     </section>
   </div>
 
-  <script src="./javascripts/nature-config.js"></script>
+  <script src="./javascripts/nature-config.js?v=img-cdn5"></script>
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script>
     (function () {
@@ -494,7 +494,17 @@
 
       var workerInput = document.getElementById('workerUrl');
       var passwordInput = document.getElementById('password');
-      workerInput.value = localStorage.getItem('natureWorkerUrl') || (window.NATURE_CONFIG && window.NATURE_CONFIG.workerUrl) || '';
+      (function initWorkerUrl() {
+        var stored = (localStorage.getItem('natureWorkerUrl') || '').trim();
+        var fallback =
+          (window.NATURE_CONFIG && window.NATURE_CONFIG.workerUrl) ||
+          'https://photos.rongwuxu.com';
+        if (!stored || /\.workers\.dev$/i.test(stored.replace(/\/$/, ''))) {
+          stored = fallback;
+          localStorage.setItem('natureWorkerUrl', stored);
+        }
+        workerInput.value = stored;
+      })();
       passwordInput.value = localStorage.getItem('natureAdminPassword') || '';
       workerInput.addEventListener('change', function () {
         localStorage.setItem('natureWorkerUrl', workerInput.value.trim());
@@ -548,7 +558,7 @@
         showManageTab();
         renderTripList(document.getElementById('search').value || '');
         setStatus(document.getElementById('manage-status'), 'ok', msg || 'Saved!');
-        loadTrips({ quiet: true, preserveScrollId: tripId });
+        loadTrips({ quiet: true, preserveScrollId: tripId, keepStatus: true });
       }
 
       document.querySelectorAll('.tabs button').forEach(function (btn) {
@@ -926,12 +936,28 @@
 
         async function sendTrip(method, url, fd, label) {
           setStatus(status, '', label || (method === 'PUT' ? 'Saving…' : 'Uploading…'));
-          var res = await fetch(url, { method: method, body: fd });
+          var res;
+          try {
+            res = await fetch(url, { method: method, body: fd });
+          } catch (err) {
+            var m = String((err && err.message) || '');
+            if (!m || m === 'Load failed' || m === 'Failed to fetch' || /NetworkError/i.test(m)) {
+              throw new Error(
+                'Could not reach the photo Worker (Safari shows this as “Load failed”). Wait a few seconds and try Save again.'
+              );
+            }
+            throw err;
+          }
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) {
             if (res.status === 413) {
               throw new Error(
                 'Upload too large for one request (Cloudflare ~100MB limit). Retry — originals are uploaded in smaller batches automatically.'
+              );
+            }
+            if (res.status === 502 || res.status === 503 || res.status === 504) {
+              throw new Error(
+                'Worker timed out while saving. Wait a few seconds and try again.'
               );
             }
             throw new Error(data.error || ('Request failed (' + res.status + ')'));
@@ -1231,15 +1257,48 @@
         }
         try {
           if (!quiet) setStatus(manageStatus, '', 'Loading…');
-          localStorage.setItem('natureWorkerUrl', base);
-          var res = await fetch(base + '/api/trips', { cache: 'no-store' });
-          var data = await res.json();
-          if (!res.ok) throw new Error(data.error || 'Load failed');
+          var cfg = window.NATURE_CONFIG || {};
+          var bases = [base, cfg.workerUrl, cfg.photoCdnUrl, cfg.tripsUrl]
+            .map(function (u) {
+              u = String(u || '').trim().replace(/\/api\/trips\/?$/, '').replace(/\/$/, '');
+              return u;
+            })
+            .filter(function (u, i, arr) {
+              return u && arr.indexOf(u) === i;
+            });
+          var data = null;
+          var used = '';
+          var lastErr = null;
+          for (var i = 0; i < bases.length; i++) {
+            try {
+              var res = await fetch(bases[i] + '/api/trips', { cache: 'no-store' });
+              var parsed = await res.json().catch(function () { return {}; });
+              if (!res.ok) throw new Error(parsed.error || 'Load failed');
+              data = parsed;
+              used = bases[i];
+              break;
+            } catch (e) {
+              lastErr = e;
+            }
+          }
+          if (!data) throw lastErr || new Error('Load failed');
+          if (used) {
+            workerInput.value = used;
+            localStorage.setItem('natureWorkerUrl', used);
+          }
           allTrips = data.trips || [];
           renderTripList(document.getElementById('search').value || '');
           setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
         } catch (err) {
-          if (!quiet || !allTrips.length) setStatus(manageStatus, 'err', err.message || 'Load failed');
+          if (opts && opts.keepStatus) {
+            // Save already succeeded; keep the Saved! message.
+          } else if (!quiet || !allTrips.length) {
+            var m = String((err && err.message) || '');
+            if (!m || m === 'Load failed' || m === 'Failed to fetch' || /NetworkError/i.test(m)) {
+              m = 'Could not reach the photo Worker. Click Load trips again in a few seconds.';
+            }
+            setStatus(manageStatus, 'err', m || 'Load failed');
+          }
         } finally {
           tripsLoading = false;
         }

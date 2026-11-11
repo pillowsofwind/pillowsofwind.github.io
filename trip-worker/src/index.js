@@ -44,6 +44,7 @@ function json(data, status, request) {
     status,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
+      "Cache-Control": "no-store",
       ...corsHeaders(request),
     },
   });
@@ -365,7 +366,9 @@ async function uploadFiles(env, base, year, month, slug, files, startIndex) {
   for (const file of files) {
     const ext = extFromFile(file);
     const key = `${year}/${month}/${slug}${idx}.${ext}`;
-    await env.PHOTOS.put(key, file.stream(), {
+    // Read once: original bytes go to R2 unchanged; EXIF comes from the header.
+    const buf = await file.arrayBuffer();
+    await env.PHOTOS.put(key, buf, {
       httpMetadata: {
         contentType: file.type || "application/octet-stream",
         cacheControl: "public, max-age=31536000, immutable",
@@ -373,11 +376,17 @@ async function uploadFiles(env, base, year, month, slug, files, startIndex) {
     });
     const photoUrl = `${base}/${key.split("/").map(encodeURIComponent).join("/")}`;
     photoUrls.push(photoUrl);
-    const meta = await photoMetaFromR2Key(env, key);
-    if (meta.gps) {
-      locations.push({ url: photoUrl, lat: meta.gps.lat, lng: meta.gps.lng });
+    try {
+      const header = buf.byteLength > 1048576 ? buf.slice(0, 1048576) : buf;
+      const gps = await gpsFromBuffer(header);
+      if (gps) {
+        locations.push({ url: photoUrl, lat: gps.lat, lng: gps.lng });
+      }
+      const dim = await dimensionsFromBuffer(header);
+      if (dim) dimensions[photoUrl] = dim;
+    } catch {
+      // Upload still succeeds if EXIF/dimensions cannot be read.
     }
-    if (meta.dim) dimensions[photoUrl] = meta.dim;
     idx += 1;
   }
   return { photoUrls, locations, dimensions };
@@ -685,8 +694,7 @@ async function persistTripPhotoLocations(env, base, tripId, points) {
   }
 }
 
-export default {
-  async fetch(request, env, ctx) {
+async function handleRequest(request, env, ctx) {
     const url = new URL(request.url);
     const base = publicBase(env);
 
@@ -723,11 +731,21 @@ export default {
 
     // List trips
     if (url.pathname === "/api/trips" && request.method === "GET") {
-      const data = await loadTrips(env, base);
-      if (ctx && typeof ctx.waitUntil === "function") {
-        ctx.waitUntil(backfillPhotoDimensions(env, base));
+      try {
+        const data = await loadTrips(env, base);
+        // Dimensions are already stored. Don't re-scan R2 on every load —
+        // that raced with Save and could 1102 the isolate (Safari: "Load failed").
+        if (
+          ctx &&
+          typeof ctx.waitUntil === "function" &&
+          url.searchParams.get("backfill") === "1"
+        ) {
+          ctx.waitUntil(backfillPhotoDimensions(env, base));
+        }
+        return json(data, 200, request);
+      } catch (err) {
+        return json({ error: err.message || "Load failed" }, 500, request);
       }
-      return json(data, 200, request);
     }
 
     // Create trip
@@ -987,5 +1005,14 @@ export default {
     }
 
     return json({ error: "Not found" }, 404, request);
+}
+
+export default {
+  async fetch(request, env, ctx) {
+    try {
+      return await handleRequest(request, env, ctx);
+    } catch (err) {
+      return json({ error: err.message || "Request failed" }, 500, request);
+    }
   },
 };

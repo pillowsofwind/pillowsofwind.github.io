@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, "..");
 const tripPath = path.join(root, "trip.html");
 const dataPath = path.join(root, "data", "trips.json");
 const workerUrl =
-  "https://nature-trip-uploader.nature-trip-uploader.workers.dev/api/trips";
+  "https://photos.rongwuxu.com/api/trips";
 
 function loadRenderer() {
   const sandbox = {

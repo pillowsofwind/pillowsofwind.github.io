@@ -2,6 +2,10 @@
   var TAG_LABELS = {
     scrambling: "scrambling",
   };
+  var GALLERY_MEASURE_TIMEOUT_MS = 3000;
+  var GALLERY_GAP_RATIO = 0.03;
+  var GALLERY_SIZES = "(max-width: 720px) 100vw, 360px";
+  var GALLERY_EAGER_COUNT = 6;
 
   function escapeHtml(str) {
     return String(str || "")
@@ -293,29 +297,44 @@
         ? '<div class="trip-meta">' + metaLeft + mapBtn + "</div>"
         : "";
     var report = trip.report ? renderReport(trip.report) : "";
-    var photos = (trip.photos || [])
-      .map(function (photo) {
-        var src = photoSrc(photo);
-        if (!src) return "";
-        if (opts.deferSrc) {
-          return (
-            '<img data-src="' +
-            escapeHtml(src) +
-            '" alt="" decoding="async">'
-          );
-        }
-        return '<img src="' + escapeHtml(src) + '" alt="" decoding="async">';
-      })
-      .join("");
-    // Columns are filled once by layoutGalleries() after photo sizes are known
-    var gallery = photos
-      ? '<div class="trip-gallery is-measuring">' +
-        '<div class="trip-gallery-col">' +
-        photos +
-        "</div>" +
-        '<div class="trip-gallery-col"></div>' +
-        "</div>"
-      : "";
+    var eagerLeft = opts.eagerCount || 0;
+    var imgTags = [];
+    var ratios = [];
+    var allDims = (trip.photos || []).length > 0;
+    (trip.photos || []).forEach(function (photo, idx) {
+      var orig = photoSrc(photo);
+      var dims = photoDims(trip, orig);
+      if (!dims) allDims = false;
+      else ratios.push(dims.height / dims.width);
+      var tag = photoImgHtml(trip, photo, {
+        deferSrc: opts.deferSrc,
+        eager: idx < eagerLeft,
+      });
+      if (tag) imgTags.push(tag);
+    });
+    var gallery = "";
+    if (imgTags.length) {
+      if (allDims) {
+        var split = splitIndexForRatios(ratios);
+        gallery =
+          '<div class="trip-gallery">' +
+          '<div class="trip-gallery-col">' +
+          imgTags.slice(0, split).join("") +
+          "</div>" +
+          '<div class="trip-gallery-col">' +
+          imgTags.slice(split).join("") +
+          "</div>" +
+          "</div>";
+      } else {
+        gallery =
+          '<div class="trip-gallery is-measuring">' +
+          '<div class="trip-gallery-col">' +
+          imgTags.join("") +
+          "</div>" +
+          '<div class="trip-gallery-col"></div>' +
+          "</div>";
+      }
+    }
 
     var idAttr = "";
     if (opts.monthId) {
@@ -350,6 +369,92 @@
     if (!photo) return "";
     if (typeof photo === "string") return photo;
     return photo.src || photo.url || "";
+  }
+
+  function normalizePhotoUrl(src) {
+    try {
+      var u = new URL(src);
+      return u.origin + u.pathname;
+    } catch (err) {
+      return src;
+    }
+  }
+
+  function photoDims(trip, src) {
+    if (!trip || !src) return null;
+    var map = trip.photoDimensions || {};
+    var d = map[src] || map[normalizePhotoUrl(src)];
+    if (d && d.width && d.height) {
+      return { width: Number(d.width), height: Number(d.height) };
+    }
+    return null;
+  }
+
+  function photoDisplaySrc(photo, width) {
+    var src = photoSrc(photo);
+    var fn =
+      (typeof window !== "undefined" &&
+        window.NATURE_CONFIG &&
+        window.NATURE_CONFIG.displayPhotoUrl) ||
+      null;
+    return fn ? fn(src, width || 800) : src;
+  }
+
+  function splitIndexForRatios(ratios) {
+    var heights = ratios.map(function (r) {
+      return r + GALLERY_GAP_RATIO;
+    });
+    var total = heights.reduce(function (a, b) {
+      return a + b;
+    }, 0);
+    var bestK = ratios.length;
+    var bestTallest = Infinity;
+    for (var k = ratios.length; k >= 0; k--) {
+      var prefix = 0;
+      for (var i = 0; i < k; i++) prefix += heights[i];
+      var tallest = Math.max(prefix, total - prefix);
+      if (tallest < bestTallest - 1e-9) {
+        bestTallest = tallest;
+        bestK = k;
+      }
+    }
+    return bestK;
+  }
+
+  function photoImgHtml(trip, photo, opts) {
+    opts = opts || {};
+    var orig = photoSrc(photo);
+    var src = photoDisplaySrc(photo, 800);
+    if (!src) return "";
+    var dims = photoDims(trip, orig);
+    var cfg =
+      (typeof window !== "undefined" && window.NATURE_CONFIG) || {};
+    var attrs = ['alt=""', 'decoding="async"'];
+    if (orig) attrs.push('data-full="' + escapeHtml(orig) + '"');
+    if (dims) {
+      attrs.push('width="' + dims.width + '"');
+      attrs.push('height="' + dims.height + '"');
+    }
+    if (cfg.displayPhotoSrcset && orig) {
+      attrs.push(
+        'srcset="' + escapeHtml(cfg.displayPhotoSrcset(orig)) + '"'
+      );
+      attrs.push('sizes="' + GALLERY_SIZES + '"');
+    }
+    if (opts.eager) attrs.push('fetchpriority="high"');
+    else attrs.push('loading="lazy"');
+    if (opts.deferSrc) {
+      return (
+        "<img data-src=\"" +
+        escapeHtml(src) +
+        '" ' +
+        attrs.join(" ") +
+        ">"
+      );
+    }
+    return (
+      '<img src="' + escapeHtml(src) + '" ' + attrs.join(" ") + ">"
+    );
   }
 
   function chunkTripsByPhotos(sorted, budget) {
@@ -439,6 +544,7 @@
     var currentMonth = null;
     var toc = [];
     var isChunkStart = true;
+    var eagerLeft = lazyImages ? 0 : GALLERY_EAGER_COUNT;
 
     sorted.forEach(function (trip) {
       var monthId = "";
@@ -473,7 +579,9 @@
         isChunkStart: isChunkStart,
         monthId: monthId || "",
         deferSrc: !!lazyImages,
+        eagerCount: lazyImages ? 0 : eagerLeft,
       });
+      eagerLeft = Math.max(0, eagerLeft - tripPhotoCount(trip));
       isChunkStart = false;
     });
 
@@ -484,10 +592,51 @@
     };
   }
 
+  function applyDisplayAttrs(img, origin) {
+    var cfg = window.NATURE_CONFIG || {};
+    var full = img.getAttribute("data-full");
+    if (!full || !cfg.displayPhotoUrl) return;
+    var src = cfg.displayPhotoUrl(full, 800, origin);
+    if (cfg.displayPhotoSrcset) {
+      img.setAttribute("srcset", cfg.displayPhotoSrcset(full, origin));
+      img.setAttribute("sizes", GALLERY_SIZES);
+    }
+    if (img.hasAttribute("data-src")) img.setAttribute("data-src", src);
+    if (!img.getAttribute("src") || origin) img.src = src;
+  }
+
+  function bindPhotoFallback(img) {
+    if (img.dataset.fallbackBound) return;
+    img.dataset.fallbackBound = "1";
+    img.addEventListener("error", function () {
+      var cfg = window.NATURE_CONFIG || {};
+      var full = img.getAttribute("data-full");
+      var stage = img.dataset.cdnStage || "cdn";
+      var cdn = cfg.photoCdnOrigin ? cfg.photoCdnOrigin() : "";
+      var worker = cfg.workerOrigin ? cfg.workerOrigin() : "";
+      if (stage === "cdn" && cdn && worker && cdn !== worker) {
+        img.dataset.cdnStage = "worker";
+        applyDisplayAttrs(img, worker);
+        return;
+      }
+      if (full && img.getAttribute("src") !== full) {
+        img.dataset.cdnStage = "full";
+        img.removeAttribute("srcset");
+        img.src = full;
+        return;
+      }
+      img.dataset.failed = "1";
+    });
+  }
+
   function activateImages(root) {
     if (!root) return;
-    root.querySelectorAll("img[data-src]").forEach(function (img) {
-      if (!img.getAttribute("src")) img.src = img.getAttribute("data-src");
+    root.querySelectorAll(".trip-gallery img").forEach(function (img) {
+      bindPhotoFallback(img);
+      if (img.hasAttribute("data-src") && !img.getAttribute("src")) {
+        applyDisplayAttrs(img);
+        img.src = img.getAttribute("data-src");
+      }
     });
   }
 
@@ -712,32 +861,24 @@
   }
 
   // CSS column-count re-balances every time a photo loads, reshuffling photos
-  // between columns mid-scroll. Instead, wait until every photo's aspect ratio is
-  // known (naturalWidth arrives with the image header, before the full download),
-  // then split top-to-bottom into two balanced columns exactly once.
-  var GALLERY_MEASURE_TIMEOUT_MS = 3000;
-  var GALLERY_GAP_RATIO = 0.03;
+  // between columns mid-scroll. Prefer stored width/height; otherwise wait until
+  // naturalWidth is known, then split top-to-bottom into two columns once.
+  function imgRatio(img) {
+    var w = Number(img.getAttribute("width")) || img.naturalWidth;
+    var h = Number(img.getAttribute("height")) || img.naturalHeight;
+    if (w && h) return h / w;
+    return 1;
+  }
+
+  function imgHasRatio(img) {
+    if (Number(img.getAttribute("width")) && Number(img.getAttribute("height"))) {
+      return true;
+    }
+    return img.naturalWidth > 0 || img.dataset.failed === "1";
+  }
 
   function placeGallery(gallery, imgs) {
-    var heights = imgs.map(function (img) {
-      var r = img.naturalWidth ? img.naturalHeight / img.naturalWidth : 1;
-      return r + GALLERY_GAP_RATIO;
-    });
-    var total = heights.reduce(function (a, b) {
-      return a + b;
-    }, 0);
-    var bestK = imgs.length;
-    var bestTallest = Infinity;
-    var prefix = 0;
-    for (var k = imgs.length; k >= 0; k--) {
-      prefix = 0;
-      for (var i = 0; i < k; i++) prefix += heights[i];
-      var tallest = Math.max(prefix, total - prefix);
-      if (tallest < bestTallest - 1e-9) {
-        bestTallest = tallest;
-        bestK = k;
-      }
-    }
+    var bestK = splitIndexForRatios(imgs.map(imgRatio));
     var cols = gallery.querySelectorAll(".trip-gallery-col");
     imgs.forEach(function (img, idx) {
       cols[idx < bestK ? 0 : 1].appendChild(img);
@@ -753,24 +894,14 @@
     var start = Date.now();
     var pending = galleries.map(function (gallery) {
       var imgs = Array.prototype.slice.call(gallery.querySelectorAll("img"));
-      imgs.forEach(function (img) {
-        img.addEventListener(
-          "error",
-          function () {
-            img.dataset.failed = "1";
-          },
-          { once: true }
-        );
-      });
+      imgs.forEach(bindPhotoFallback);
       return { gallery: gallery, imgs: imgs };
     });
 
     function tick() {
       var timedOut = Date.now() - start > GALLERY_MEASURE_TIMEOUT_MS;
       pending = pending.filter(function (item) {
-        var ready = item.imgs.every(function (img) {
-          return img.naturalWidth > 0 || img.dataset.failed === "1";
-        });
+        var ready = item.imgs.every(imgHasRatio);
         if (ready || timedOut) {
           placeGallery(item.gallery, item.imgs);
           return false;

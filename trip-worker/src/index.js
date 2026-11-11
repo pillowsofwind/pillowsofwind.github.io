@@ -128,6 +128,116 @@ function publicBase(env) {
   return (env.PUBLIC_BASE_URL || DEFAULT_PUBLIC_BASE).replace(/\/$/, "");
 }
 
+const IMG_MAX_INPUT_BYTES = 20 * 1024 * 1024;
+const IMG_ALLOWED_WIDTHS = [400, 800, 1280];
+const IMG_DEFAULT_WIDTH = 1280;
+const IMG_CACHE_CONTROL = "public, max-age=31536000, immutable";
+
+function imgKeyFromPath(pathname) {
+  if (!pathname.startsWith("/img/")) return null;
+  const raw = pathname.slice("/img/".length);
+  if (!raw) return null;
+  let key;
+  try {
+    key = raw.split("/").map(decodeURIComponent).join("/");
+  } catch {
+    return null;
+  }
+  if (!key || key === "trips.json" || key.includes("..") || key.startsWith("/")) {
+    return null;
+  }
+  return key;
+}
+
+function imgWidthFromUrl(url) {
+  const n = Number(url.searchParams.get("w"));
+  return IMG_ALLOWED_WIDTHS.includes(n) ? n : IMG_DEFAULT_WIDTH;
+}
+
+function imgFormatFromAccept(accept) {
+  const a = String(accept || "");
+  if (a.includes("image/avif")) return "image/avif";
+  if (a.includes("image/webp")) return "image/webp";
+  return "image/jpeg";
+}
+
+function imgHeaders(contentType, extra) {
+  return {
+    "Content-Type": contentType,
+    "Cache-Control": IMG_CACHE_CONTROL,
+    "Vary": "Accept",
+    "Access-Control-Allow-Origin": "*",
+    ...(extra || {}),
+  };
+}
+
+function imgCacheRequest(key, width, format) {
+  return new Request(
+    "https://img-cache.internal/" +
+      encodeURIComponent(key) +
+      "?w=" +
+      width +
+      "&f=" +
+      encodeURIComponent(format),
+    { method: "GET" }
+  );
+}
+
+async function streamOriginalPhoto(env, key, extraHeaders) {
+  const obj = await env.PHOTOS.get(key);
+  if (!obj) return new Response("Not found", { status: 404 });
+  return new Response(obj.body, {
+    headers: imgHeaders(
+      obj.httpMetadata?.contentType || "application/octet-stream",
+      extraHeaders
+    ),
+  });
+}
+
+async function serveResizedPhoto(request, env, ctx) {
+  const url = new URL(request.url);
+  const key = imgKeyFromPath(url.pathname);
+  if (!key) return new Response("Not found", { status: 404 });
+
+  const width = imgWidthFromUrl(url);
+  const format = imgFormatFromAccept(request.headers.get("Accept"));
+  const cacheKey = imgCacheRequest(key, width, format);
+
+  try {
+    const hit = await caches.default.match(cacheKey);
+    if (hit) return hit;
+  } catch {
+    // cache is best-effort
+  }
+
+  const obj = await env.PHOTOS.get(key);
+  if (!obj) return new Response("Not found", { status: 404 });
+
+  const tooLarge = typeof obj.size === "number" && obj.size > IMG_MAX_INPUT_BYTES;
+  if (tooLarge || !env.IMAGES || !obj.body) {
+    return new Response(obj.body, {
+      headers: imgHeaders(
+        obj.httpMetadata?.contentType || "application/octet-stream"
+      ),
+    });
+  }
+
+  try {
+    const result = await env.IMAGES.input(obj.body)
+      .transform({ width, fit: "scale-down" })
+      .output({ format, quality: 80 });
+    const response = result.response({
+      headers: imgHeaders(format),
+    });
+    if (ctx && typeof ctx.waitUntil === "function") {
+      ctx.waitUntil(caches.default.put(cacheKey, response.clone()));
+    }
+    return response;
+  } catch {
+    return streamOriginalPhoto(env, key);
+  }
+}
+
 function normalizePhotoUrl(photoUrl) {
   try {
     const u = new URL(String(photoUrl));
@@ -250,6 +360,7 @@ function validateTripFields({ title, date, endDate }) {
 async function uploadFiles(env, base, year, month, slug, files, startIndex) {
   const photoUrls = [];
   const locations = [];
+  const dimensions = {};
   let idx = startIndex;
   for (const file of files) {
     const ext = extFromFile(file);
@@ -262,11 +373,14 @@ async function uploadFiles(env, base, year, month, slug, files, startIndex) {
     });
     const photoUrl = `${base}/${key.split("/").map(encodeURIComponent).join("/")}`;
     photoUrls.push(photoUrl);
-    const gps = await gpsFromR2Key(env, key);
-    if (gps) locations.push({ url: photoUrl, lat: gps.lat, lng: gps.lng });
+    const meta = await photoMetaFromR2Key(env, key);
+    if (meta.gps) {
+      locations.push({ url: photoUrl, lat: meta.gps.lat, lng: meta.gps.lng });
+    }
+    if (meta.dim) dimensions[photoUrl] = meta.dim;
     idx += 1;
   }
-  return { photoUrls, locations };
+  return { photoUrls, locations, dimensions };
 }
 
 function tripIdFromPath(pathname) {
@@ -323,6 +437,158 @@ async function gpsFromBuffer(buf) {
     // ignore parse errors
   }
   return null;
+}
+
+function jpegDimensions(buf) {
+  const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  if (u8.length < 4 || u8[0] !== 0xff || u8[1] !== 0xd8) return null;
+  let i = 2;
+  while (i + 8 < u8.length) {
+    if (u8[i] !== 0xff) {
+      i += 1;
+      continue;
+    }
+    const marker = u8[i + 1];
+    if (marker === 0xd8) {
+      i += 2;
+      continue;
+    }
+    if (marker === 0xd9 || marker === 0xda) break;
+    if (
+      (marker >= 0xc0 && marker <= 0xc3) ||
+      (marker >= 0xc5 && marker <= 0xc7) ||
+      (marker >= 0xc9 && marker <= 0xcb) ||
+      (marker >= 0xcd && marker <= 0xcf)
+    ) {
+      const height = (u8[i + 5] << 8) | u8[i + 6];
+      const width = (u8[i + 7] << 8) | u8[i + 8];
+      if (width > 0 && height > 0) return { width, height };
+      return null;
+    }
+    const len = (u8[i + 2] << 8) | u8[i + 3];
+    if (len < 2) break;
+    i += 2 + len;
+  }
+  return null;
+}
+
+function pngDimensions(buf) {
+  const u8 = buf instanceof Uint8Array ? buf : new Uint8Array(buf);
+  if (u8.length < 24) return null;
+  if (!(u8[0] === 0x89 && u8[1] === 0x50 && u8[2] === 0x4e && u8[3] === 0x47)) {
+    return null;
+  }
+  const width = (u8[16] << 24) | (u8[17] << 16) | (u8[18] << 8) | u8[19];
+  const height = (u8[20] << 24) | (u8[21] << 16) | (u8[22] << 8) | u8[23];
+  if (width > 0 && height > 0) return { width, height };
+  return null;
+}
+
+function applyOrientation(dim, orientation) {
+  if (!dim) return null;
+  const o = Number(orientation);
+  if (o >= 5 && o <= 8) return { width: dim.height, height: dim.width };
+  return { width: dim.width, height: dim.height };
+}
+
+async function dimensionsFromBuffer(buf) {
+  if (!buf || !buf.byteLength) return null;
+  const slice = buf.byteLength > 1048576 ? buf.slice(0, 1048576) : buf;
+  let dim = jpegDimensions(slice) || pngDimensions(slice);
+  let orientation = 1;
+  try {
+    const exif = await exifr.parse(slice, {
+      pick: [
+        "Orientation",
+        "ImageWidth",
+        "ImageHeight",
+        "ExifImageWidth",
+        "ExifImageHeight",
+        "PixelXDimension",
+        "PixelYDimension",
+      ],
+    });
+    if (exif) {
+      orientation = exif.Orientation || 1;
+      if (!dim) {
+        const w =
+          exif.ImageWidth || exif.ExifImageWidth || exif.PixelXDimension;
+        const h =
+          exif.ImageHeight || exif.ExifImageHeight || exif.PixelYDimension;
+        if (w && h) dim = { width: Number(w), height: Number(h) };
+      }
+    }
+  } catch {
+    // ignore
+  }
+  return applyOrientation(dim, orientation);
+}
+
+async function photoMetaFromR2Key(env, key) {
+  try {
+    const obj = await env.PHOTOS.get(key, {
+      range: { offset: 0, length: 1048576 },
+    });
+    if (!obj) return { gps: null, dim: null };
+    const buf = await obj.arrayBuffer();
+    let gps = await getGpsCache(key);
+    if (gps === undefined) {
+      gps = await gpsFromBuffer(buf);
+      await putGpsCache(key, gps);
+    }
+    const dim = await dimensionsFromBuffer(buf);
+    return { gps, dim };
+  } catch {
+    return { gps: null, dim: null };
+  }
+}
+
+function mergePhotoDimensions(existingMap, uploadedMap, photos) {
+  const next = {};
+  const prev = existingMap || {};
+  const uploaded = uploadedMap || {};
+  (photos || []).forEach((url) => {
+    const key = normalizePhotoUrl(url);
+    const dim = uploaded[key] || uploaded[url] || prev[key] || prev[url];
+    if (dim && dim.width && dim.height) next[key] = dim;
+  });
+  return next;
+}
+
+async function backfillPhotoDimensions(env, base) {
+  const data = await loadTrips(env, base);
+  const jobs = [];
+  (data.trips || []).forEach((trip) => {
+    const dims = trip.photoDimensions || {};
+    (trip.photos || []).forEach((photo) => {
+      const url = normalizePhotoUrl(photo);
+      if (dims[url] && dims[url].width && dims[url].height) return;
+      jobs.push({ trip, url });
+    });
+  });
+  if (!jobs.length) return;
+  const MAX = 80;
+  const slice = jobs.slice(0, MAX);
+  let next = 0;
+  let changed = false;
+
+  async function worker() {
+    while (next < slice.length) {
+      const i = next++;
+      const job = slice[i];
+      const key = keyFromPhotoUrl(job.url, base);
+      if (!key) continue;
+      const meta = await photoMetaFromR2Key(env, key);
+      if (!meta.dim) continue;
+      job.trip.photoDimensions = job.trip.photoDimensions || {};
+      job.trip.photoDimensions[job.url] = meta.dim;
+      changed = true;
+    }
+  }
+
+  const n = Math.min(8, slice.length);
+  await Promise.all(Array.from({ length: n }, () => worker()));
+  if (changed) await saveTrips(env, data);
 }
 
 async function gpsFromR2Key(env, key) {
@@ -432,6 +698,10 @@ export default {
       return json({ ok: true }, 200, request);
     }
 
+    if (request.method === "GET" && url.pathname.startsWith("/img/")) {
+      return serveResizedPhoto(request, env, ctx);
+    }
+
     // Public: extract GPS from trip photos stored in R2
     if (url.pathname === "/api/gps" && request.method === "POST") {
       try {
@@ -454,6 +724,9 @@ export default {
     // List trips
     if (url.pathname === "/api/trips" && request.method === "GET") {
       const data = await loadTrips(env, base);
+      if (ctx && typeof ctx.waitUntil === "function") {
+        ctx.waitUntil(backfillPhotoDimensions(env, base));
+      }
       return json(data, 200, request);
     }
 
@@ -506,6 +779,7 @@ export default {
           report,
           photos: uploaded.photoUrls,
           photoLocations: uploaded.locations,
+          photoDimensions: uploaded.dimensions || {},
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
@@ -649,6 +923,11 @@ export default {
           report,
           photos,
           photoLocations: Object.values(locationByUrl),
+          photoDimensions: mergePhotoDimensions(
+            existing.photoDimensions,
+            uploadedBundle.dimensions,
+            photos
+          ),
           updatedAt: new Date().toISOString(),
         };
 

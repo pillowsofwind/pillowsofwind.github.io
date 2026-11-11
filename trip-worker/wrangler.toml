@@ -7,6 +7,14 @@ compatibility_date = "2024-11-01"
 binding = "PHOTOS"
 bucket_name = "trips"
 
+# Resize originals at request time. Uploads stay untouched.
+[images]
+binding = "IMAGES"
+
+[[routes]]
+pattern = "photos.rongwuxu.com"
+custom_domain = true
+
 # After first deploy, set:
 #   wrangler secret put ADMIN_PASSWORD
 # Optional override for public photo URL base:

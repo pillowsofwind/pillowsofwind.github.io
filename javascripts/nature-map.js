@@ -24,6 +24,12 @@
     return String(cfg.workerUrl || "").replace(/\/$/, "");
   }
 
+  function displayPhoto(src, width) {
+    var fn =
+      window.NATURE_CONFIG && window.NATURE_CONFIG.displayPhotoUrl;
+    return fn ? fn(src, width || 400) : src;
+  }
+
   function loadScript(src) {
     return new Promise(function (resolve, reject) {
       if (document.querySelector('script[src="' + src + '"]')) {
@@ -563,7 +569,7 @@
       var label = String(idx + 1);
       var thumb = pt.url
         ? '<img class="trip-map-thumb-img" src="' +
-          escapeAttr(pt.url) +
+          escapeAttr(displayPhoto(pt.url, 400)) +
           '" alt="Photo ' +
           label +
           '" draggable="false">'
@@ -587,7 +593,7 @@
         '<div class="trip-map-popup">' +
         (pt.url
           ? '<img src="' +
-            escapeAttr(pt.url) +
+            escapeAttr(displayPhoto(pt.url, 800)) +
             '" alt="Photo ' +
             label +
             '" loading="lazy">'
@@ -608,7 +614,7 @@
         btn.className = "trip-map-strip-item";
         btn.innerHTML =
           '<img src="' +
-          escapeAttr(pt.url) +
+          escapeAttr(displayPhoto(pt.url, 400)) +
           '" alt="Photo ' +
           label +
           '" loading="lazy" decoding="async">' +

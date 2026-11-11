@@ -862,7 +862,8 @@
         document.getElementById('report').value = trip.report || '';
         setSelectedTags(trip.tags || []);
         clearPhotos();
-        photoItems = (trip.photos || []).map(function (url) {
+        photoItems = (trip.photos || []).map(function (photo) {
+          var url = typeof photo === 'string' ? photo : (photo && photo.url) || '';
           return { type: 'existing', url: url };
         });
         renderPhotoList();
@@ -1139,7 +1140,8 @@
           btn.type = 'button';
           btn.className = 'trip-item';
           if (trip.id) btn.setAttribute('data-trip-id', trip.id);
-          var thumb = (trip.photos && trip.photos[0]) || '';
+          var thumbRaw = (trip.photos && trip.photos[0]) || '';
+          var thumb = typeof thumbRaw === 'string' ? thumbRaw : (thumbRaw && thumbRaw.url) || '';
           btn.innerHTML =
             (thumb ? '<img src="' + thumb.replace(/"/g, '&quot;') + '" alt="">' : '<div></div>') +
             '<div><div class="title"></div><div class="meta"></div></div>' +

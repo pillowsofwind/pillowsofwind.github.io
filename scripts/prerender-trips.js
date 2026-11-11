@@ -3,6 +3,7 @@
 const fs = require("fs");
 const path = require("path");
 const vm = require("vm");
+const { imageDimensions } = require("./photo-size");
 
 const root = path.resolve(__dirname, "..");
 const tripPath = path.join(root, "trip.html");
@@ -11,10 +12,6 @@ const workerUrl =
   "https://nature-trip-uploader.nature-trip-uploader.workers.dev/api/trips";
 
 function loadRenderer() {
-  const code = fs.readFileSync(
-    path.join(root, "javascripts", "nature-trips.js"),
-    "utf8"
-  );
   const sandbox = {
     console,
     URL,
@@ -24,7 +21,14 @@ function loadRenderer() {
     window: {},
   };
   vm.createContext(sandbox);
-  vm.runInContext(code, sandbox);
+  vm.runInContext(
+    fs.readFileSync(path.join(root, "javascripts", "nature-config.js"), "utf8"),
+    sandbox
+  );
+  vm.runInContext(
+    fs.readFileSync(path.join(root, "javascripts", "nature-trips.js"), "utf8"),
+    sandbox
+  );
   const api = sandbox.window.NatureTripStatic;
   if (!api || typeof api.buildArchiveHtml !== "function") {
     throw new Error("NatureTripStatic.buildArchiveHtml is missing");
@@ -32,7 +36,83 @@ function loadRenderer() {
   return api;
 }
 
+function photoUrl(photo) {
+  if (!photo) return "";
+  if (typeof photo === "string") return photo.split("?")[0];
+  return String(photo.url || photo.src || "").split("?")[0];
+}
+
+let exifr;
+try {
+  exifr = require(path.join(root, "trip-worker/node_modules/exifr"));
+} catch (err) {
+  exifr = null;
+}
+
+async function fetchImageSize(url) {
+  const res = await fetch(url, {
+    headers: {
+      Range: "bytes=0-1048575",
+      "User-Agent": "pillowsofwind-prerender/1.0",
+    },
+  });
+  if (!res.ok && res.status !== 206) return null;
+  const buf = Buffer.from(await res.arrayBuffer());
+  let dim = imageDimensions(buf);
+  if (exifr) {
+    try {
+      const exif = await exifr.parse(buf, { pick: ["Orientation"] });
+      const o = exif && Number(exif.Orientation);
+      if (dim && o >= 5 && o <= 8) {
+        dim = { width: dim.height, height: dim.width };
+      }
+    } catch (err) {
+      // keep SOF size
+    }
+  }
+  return dim;
+}
+
+async function fillPhotoDimensions(data) {
+  const jobs = [];
+  (data.trips || []).forEach(function (trip) {
+    trip.photoDimensions = trip.photoDimensions || {};
+    (trip.photos || []).forEach(function (photo) {
+      const url = photoUrl(photo);
+      if (!url) return;
+      const have = trip.photoDimensions[url];
+      if (have && have.width && have.height) return;
+      jobs.push({ trip: trip, url: url });
+    });
+  });
+  if (!jobs.length) {
+    console.log("photo dimensions already present");
+    return data;
+  }
+  console.log("fetching dimensions for", jobs.length, "photos");
+  let i = 0;
+  let filled = 0;
+  async function worker() {
+    while (i < jobs.length) {
+      const job = jobs[i++];
+      try {
+        const dim = await fetchImageSize(job.url);
+        if (dim) {
+          job.trip.photoDimensions[job.url] = dim;
+          filled += 1;
+        }
+      } catch (err) {
+        // keep going; gallery can still measure at runtime
+      }
+    }
+  }
+  await Promise.all(Array.from({ length: 8 }, function () { return worker(); }));
+  console.log("stored dimensions for", filled, "photos");
+  return data;
+}
+
 async function loadTrips() {
+  let data;
   try {
     const res = await fetch(workerUrl, {
       headers: {
@@ -41,14 +121,34 @@ async function loadTrips() {
       },
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
-    const data = await res.json();
-    fs.writeFileSync(dataPath, JSON.stringify(data, null, 2) + "\n");
-    console.log("saved live trips to data/trips.json");
-    return data;
+    data = await res.json();
+    console.log("loaded live trips from worker");
   } catch (err) {
     console.warn("worker unavailable (" + err.message + "); using data/trips.json");
-    return JSON.parse(fs.readFileSync(dataPath, "utf8"));
+    data = JSON.parse(fs.readFileSync(dataPath, "utf8"));
   }
+  try {
+    const local = JSON.parse(fs.readFileSync(dataPath, "utf8"));
+    const byId = Object.create(null);
+    (local.trips || []).forEach(function (trip) {
+      if (trip && trip.id) byId[trip.id] = trip;
+    });
+    (data.trips || []).forEach(function (trip) {
+      const prev = byId[trip.id];
+      if (!prev || !prev.photoDimensions) return;
+      trip.photoDimensions = Object.assign(
+        {},
+        prev.photoDimensions,
+        trip.photoDimensions || {}
+      );
+    });
+  } catch (err) {
+    // no local cache yet
+  }
+  await fillPhotoDimensions(data);
+  fs.writeFileSync(dataPath, JSON.stringify(data, null, 2) + "\n");
+  console.log("saved trips to data/trips.json");
+  return data;
 }
 
 function replaceMarked(html, start, end, inner) {

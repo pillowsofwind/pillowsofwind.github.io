@@ -248,6 +248,21 @@ function normalizePhotoUrl(photoUrl) {
   }
 }
 
+function resolveCoverPhoto(rawCover, photos, uploaded) {
+  const finalPhotos = Array.isArray(photos) ? photos : [];
+  const newPhotos = Array.isArray(uploaded) ? uploaded : [];
+  let requested = rawCover == null ? "" : String(rawCover).trim();
+  const token = requested.match(/^__new__:(\d+)$/);
+  if (token) {
+    requested = newPhotos[Number(token[1])] || "";
+  }
+  const normalized = normalizePhotoUrl(requested);
+  const match = finalPhotos.find(
+    (photo) => normalized && normalizePhotoUrl(photo) === normalized
+  );
+  return match || finalPhotos[0] || "";
+}
+
 function keyFromPhotoUrl(photoUrl, base) {
   try {
     const u = new URL(String(photoUrl));
@@ -299,11 +314,16 @@ async function loadTrips(env, base) {
           tags.map(normalizeTag).filter((t) => ALLOWED_TAGS.includes(t))
         ),
       ];
-      if (JSON.stringify(next) !== JSON.stringify(tags)) {
-        changed = true;
-        return { ...trip, tags: next };
-      }
-      return trip;
+      const photos = Array.isArray(trip.photos) ? trip.photos : [];
+      const coverPhoto = resolveCoverPhoto(trip.coverPhoto, photos, []);
+      const tagsChanged = JSON.stringify(next) !== JSON.stringify(tags);
+      const coverChanged = trip.coverPhoto !== coverPhoto;
+      if (tagsChanged || coverChanged) changed = true;
+      return {
+        ...trip,
+        tags: next,
+        coverPhoto,
+      };
     });
     if (changed) {
       // Persist rename so stored data matches scrambling
@@ -763,6 +783,7 @@ async function handleRequest(request, env, ctx) {
           parseTripDate(form.get("endDate")) || date;
         const report = String(form.get("report") || "").trim();
         const tags = parseTags(form.get("tags"));
+        const requestedCover = form.get("coverPhoto");
         const err = validateTripFields({ title, date, endDate });
         if (err) return json({ error: err }, 400, request);
 
@@ -796,6 +817,11 @@ async function handleRequest(request, env, ctx) {
           tags,
           report,
           photos: uploaded.photoUrls,
+          coverPhoto: resolveCoverPhoto(
+            requestedCover,
+            uploaded.photoUrls,
+            uploaded.photoUrls
+          ),
           photoLocations: uploaded.locations,
           photoDimensions: uploaded.dimensions || {},
           createdAt: new Date().toISOString(),
@@ -919,6 +945,15 @@ async function handleRequest(request, env, ctx) {
           return json({ error: "At least one photo is required" }, 400, request);
         }
 
+        const requestedCover =
+          form.get("coverPhoto") != null
+            ? form.get("coverPhoto")
+            : existing.coverPhoto;
+        const coverPhoto = resolveCoverPhoto(
+          requestedCover,
+          photos,
+          uploaded
+        );
         const photoSet = new Set(photos.map(normalizePhotoUrl));
         const locationByUrl = Object.create(null);
         (existing.photoLocations || []).forEach((p) => {
@@ -940,6 +975,7 @@ async function handleRequest(request, env, ctx) {
           tags,
           report,
           photos,
+          coverPhoto,
           photoLocations: Object.values(locationByUrl),
           photoDimensions: mergePhotoDimensions(
             existing.photoDimensions,

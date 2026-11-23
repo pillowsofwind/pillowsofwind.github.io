@@ -9,6 +9,8 @@ window.NATURE_CONFIG = {
   // Display host for resized photos.
   photoCdnUrl: "https://photos.rongwuxu.com",
   useCustomPhotoDomain: true,
+  // Compact archive cards per page
+  tripPageSize: 8,
   // Max photos per archive page (trips stay whole; Newer/Older when over)
   photoChunk: 60,
 };

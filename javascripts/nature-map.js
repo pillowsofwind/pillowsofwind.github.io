@@ -14,6 +14,9 @@
   var glacierLayer = null;
   var glaciersVisible = true;
   var glaciersPromise = null;
+  var photoQueue = [];
+  var activePhotoLoads = 0;
+  var MAX_PHOTO_LOADS = 4;
 
   function $(id) {
     return document.getElementById(id);
@@ -24,10 +27,75 @@
     return String(cfg.workerUrl || "").replace(/\/$/, "");
   }
 
-  function displayPhoto(src, width) {
+  function displayPhoto(src, width, origin) {
     var fn =
       window.NATURE_CONFIG && window.NATURE_CONFIG.displayPhotoUrl;
-    return fn ? fn(src, width || 400) : src;
+    return fn ? fn(src, width || 400, origin) : src;
+  }
+
+  function bindPhotoFallback(img) {
+    if (!img || img.dataset.mapFallbackBound) return;
+    img.dataset.mapFallbackBound = "1";
+
+    function fallback() {
+      var cfg = window.NATURE_CONFIG || {};
+      var full = img.getAttribute("data-full");
+      var width = Number(img.getAttribute("data-display-width")) || 400;
+      var stage = img.dataset.cdnStage || "cdn";
+      var cdn = cfg.photoCdnOrigin ? cfg.photoCdnOrigin() : "";
+      var worker = cfg.workerOrigin ? cfg.workerOrigin() : "";
+
+      if (stage === "cdn" && full && cdn && worker && cdn !== worker) {
+        img.dataset.cdnStage = "worker";
+        img.src = displayPhoto(full, width, worker);
+        return;
+      }
+      if (full && img.getAttribute("src") !== full) {
+        img.dataset.cdnStage = "full";
+        img.src = full;
+        return;
+      }
+
+      // Keep the marker number usable instead of showing a broken-image icon.
+      img.hidden = true;
+      img.dataset.failed = "1";
+    }
+
+    img.addEventListener("error", fallback);
+    // A cached failure can finish before Leaflet inserts the marker and we bind.
+    if (img.getAttribute("src") && img.complete && !img.naturalWidth) {
+      setTimeout(fallback, 0);
+    }
+  }
+
+  function pumpPhotoQueue() {
+    while (activePhotoLoads < MAX_PHOTO_LOADS && photoQueue.length) {
+      var next = photoQueue.shift();
+      var img = next.img;
+      if (!img || !img.isConnected) continue;
+      activePhotoLoads += 1;
+
+      (function (queuedImg, src) {
+        var finished = false;
+        function finish() {
+          if (finished) return;
+          finished = true;
+          queuedImg.removeEventListener("load", finish);
+          queuedImg.removeEventListener("error", finish);
+          activePhotoLoads = Math.max(0, activePhotoLoads - 1);
+          pumpPhotoQueue();
+        }
+        queuedImg.addEventListener("load", finish);
+        queuedImg.addEventListener("error", finish);
+        queuedImg.src = src;
+      })(img, next.src);
+    }
+  }
+
+  function queuePhoto(img, src) {
+    if (!img || !src) return;
+    photoQueue.push({ img: img, src: src });
+    pumpPhotoQueue();
   }
 
   function loadScript(src) {
@@ -568,8 +636,11 @@
     points.forEach(function (pt, idx) {
       var label = String(idx + 1);
       var thumb = pt.url
-        ? '<img class="trip-map-thumb-img" src="' +
+        ? '<img class="trip-map-thumb-img" data-src="' +
           escapeAttr(displayPhoto(pt.url, 400)) +
+          '" data-full="' +
+          escapeAttr(pt.url) +
+          '" data-display-width="400' +
           '" alt="Photo ' +
           label +
           '" draggable="false">'
@@ -594,6 +665,9 @@
         (pt.url
           ? '<img src="' +
             escapeAttr(displayPhoto(pt.url, 800)) +
+            '" data-full="' +
+            escapeAttr(pt.url) +
+            '" data-display-width="800' +
             '" alt="Photo ' +
             label +
             '" loading="lazy">'
@@ -607,14 +681,25 @@
         "</div></div>";
       marker.bindPopup(popupHtml, { maxWidth: 240 });
       marker.addTo(layerGroup);
+      var markerImg = marker.getElement() &&
+        marker.getElement().querySelector(".trip-map-thumb-img");
+      bindPhotoFallback(markerImg);
+      queuePhoto(markerImg, markerImg && markerImg.getAttribute("data-src"));
+      marker.on("popupopen", function (e) {
+        var popup = e.popup && e.popup.getElement();
+        bindPhotoFallback(popup && popup.querySelector("img"));
+      });
 
       if (strip && pt.url) {
         var btn = document.createElement("button");
         btn.type = "button";
         btn.className = "trip-map-strip-item";
         btn.innerHTML =
-          '<img src="' +
+          '<img data-src="' +
           escapeAttr(displayPhoto(pt.url, 400)) +
+          '" data-full="' +
+          escapeAttr(pt.url) +
+          '" data-display-width="400' +
           '" alt="Photo ' +
           label +
           '" loading="lazy" decoding="async">' +
@@ -626,6 +711,9 @@
           marker.openPopup();
         });
         strip.appendChild(btn);
+        var stripImg = btn.querySelector("img");
+        bindPhotoFallback(stripImg);
+        queuePhoto(stripImg, stripImg && stripImg.getAttribute("data-src"));
       }
     });
     fitToPhotoGps(points);

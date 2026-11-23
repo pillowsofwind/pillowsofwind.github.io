@@ -270,6 +270,7 @@
 
   function renderTrip(trip, opts) {
     opts = opts || {};
+    var titleTag = opts.detail ? "h1" : "div";
     var tagsHtml = renderTags(trip.tags);
     var dateHtml = formatTripDateRangeHtml(trip.date, trip.endDate);
     var mapBtn =
@@ -351,13 +352,70 @@
       '<article class="trip-entry"' +
       idAttr +
       ">" +
-      '<div class="trip-title">' +
+      "<" +
+      titleTag +
+      ' class="trip-title">' +
       escapeHtml(trip.title) +
-      "</div>" +
+      "</" +
+      titleTag +
+      ">" +
       meta +
       report +
       gallery +
       "</article>"
+    );
+  }
+
+  function tripDetailHref(trip) {
+    return "trip.html?trip=" + encodeURIComponent(trip.id || "");
+  }
+
+  function tripCover(trip) {
+    var photos = (trip && trip.photos) || [];
+    var wanted = photoSrc(trip && trip.coverPhoto);
+    if (wanted) {
+      var normalized = normalizePhotoUrl(wanted);
+      var match = photos.find(function (photo) {
+        return normalizePhotoUrl(photoSrc(photo)) === normalized;
+      });
+      if (match) return match;
+    }
+    return photos[0] || "";
+  }
+
+  function renderTripCard(trip, opts) {
+    opts = opts || {};
+    var cover = tripCover(trip);
+    var coverHtml = cover
+      ? photoImgHtml(trip, cover, {
+          eager: !!opts.eager,
+          deferSrc: !!opts.deferSrc,
+        })
+      : '<span class="trip-card-cover-fallback" aria-hidden="true"></span>';
+    return (
+      '<article class="trip-card"' +
+      (opts.id ? ' id="' + escapeHtml(opts.id) + '"' : "") +
+      (opts.isChunkStart ? " data-trip-chunk-start" : "") +
+      ">" +
+      '<a class="trip-card-link" href="' +
+      escapeHtml(tripDetailHref(trip)) +
+      '">' +
+      '<div class="trip-card-cover">' +
+      coverHtml +
+      "</div>" +
+      '<div class="trip-card-body">' +
+      '<h2 class="trip-card-title">' +
+      escapeHtml(trip.title) +
+      "</h2>" +
+      '<div class="trip-card-meta">' +
+      (formatTripDateRangeHtml(trip.date, trip.endDate)
+        ? '<div class="trip-date">' +
+          formatTripDateRangeHtml(trip.date, trip.endDate) +
+          "</div>"
+        : "") +
+      renderTags(trip.tags) +
+      "</div>" +
+      "</div></a></article>"
     );
   }
 
@@ -459,19 +517,15 @@
 
   function chunkTripsByPhotos(sorted, budget) {
     var chunks = [];
-    var current = [];
-    var count = 0;
-    sorted.forEach(function (trip) {
-      var n = tripPhotoCount(trip);
-      if (current.length && count + n > budget) {
-        chunks.push({ trips: current, photos: count });
-        current = [];
-        count = 0;
-      }
-      current.push(trip);
-      count += n;
-    });
-    if (current.length) chunks.push({ trips: current, photos: count });
+    for (var i = 0; i < sorted.length; i += budget) {
+      var trips = sorted.slice(i, i + budget);
+      chunks.push({
+        trips: trips,
+        photos: trips.reduce(function (sum, trip) {
+          return sum + tripPhotoCount(trip);
+        }, 0),
+      });
+    }
     return chunks;
   }
 
@@ -503,16 +557,21 @@
 
   function chunkHref(index, baseHref) {
     var url = new URL(baseHref || location.href);
-    if (index <= 0) url.searchParams.delete("chunk");
-    else url.searchParams.set("chunk", String(index));
+    url.searchParams.delete("trip");
+    url.searchParams.delete("chunk");
+    if (index <= 0) url.searchParams.delete("page");
+    else url.searchParams.set("page", String(index + 1));
     url.hash = "";
     // Land on the first trip of that chunk, not the page chrome.
     return url.pathname + url.search + "#trip-chunk-start";
   }
 
   function readChunkIndex(chunkCount) {
-    var raw = new URLSearchParams(location.search).get("chunk");
-    var n = parseInt(raw || "0", 10);
+    var params = new URLSearchParams(location.search);
+    var raw = params.get("page");
+    var n = raw == null
+      ? parseInt(params.get("chunk") || "0", 10)
+      : parseInt(raw || "1", 10) - 1;
     if (!isFinite(n) || n < 0) n = 0;
     if (chunkCount > 0 && n >= chunkCount) n = chunkCount - 1;
     return n;
@@ -575,13 +634,13 @@
           id: monthId,
         });
       }
-      html += renderTrip(trip, {
+      html += renderTripCard(trip, {
         isChunkStart: isChunkStart,
-        monthId: monthId || "",
+        id: monthId || "",
         deferSrc: !!lazyImages,
-        eagerCount: lazyImages ? 0 : eagerLeft,
+        eager: eagerLeft > 0,
       });
-      eagerLeft = Math.max(0, eagerLeft - tripPhotoCount(trip));
+      eagerLeft = Math.max(0, eagerLeft - 1);
       isChunkStart = false;
     });
 
@@ -631,7 +690,7 @@
 
   function activateImages(root) {
     if (!root) return;
-    root.querySelectorAll(".trip-gallery img").forEach(function (img) {
+    root.querySelectorAll(".trip-gallery img, .trip-card-cover img").forEach(function (img) {
       bindPhotoFallback(img);
       if (img.hasAttribute("data-src") && !img.getAttribute("src")) {
         applyDisplayAttrs(img);
@@ -656,7 +715,7 @@
       ) || document.getElementById("trips-list");
     var el =
       (root && root.querySelector("[data-trip-chunk-start]")) ||
-      (root && root.querySelector(".trip-entry")) ||
+      (root && root.querySelector(".trip-entry, .trip-card")) ||
       document.getElementById("trip-chunk-start");
     if (el) el.scrollIntoView(true);
   }
@@ -669,7 +728,7 @@
     var byYear = [];
     var yearIndex = Object.create(null);
     if (!root) return byYear;
-    root.querySelectorAll(".trip-entry[id]").forEach(function (el) {
+    root.querySelectorAll(".trip-entry[id], .trip-card[id]").forEach(function (el) {
       var m = /^trip-(\d{4})-(\d{2})(?:-|$)/.exec(el.id || "");
       if (!m) return;
       var year = Number(m[1]);
@@ -739,7 +798,8 @@
     var panel = document.getElementById("trip-jump-panel");
     var toggle = document.getElementById("trip-jump-toggle");
     var topBtn = document.getElementById("trip-jump-top");
-    if (!nav || !panel || !toggle || !topBtn) return;
+    var oldestBtn = document.getElementById("trip-jump-oldest");
+    if (!nav || !panel || !toggle || !topBtn || !oldestBtn) return;
 
     var months = [];
     (toc || []).forEach(function (y) {
@@ -800,9 +860,23 @@
         location.href = chunkHref(0);
         return;
       }
-      var first = document.querySelector("#trips-list .trip-entry");
+      var first = document.querySelector("#trips-list .trip-entry, #trips-list .trip-card");
       if (first) first.scrollIntoView(true);
       else window.scrollTo(0, 0);
+    };
+
+    oldestBtn.onclick = function () {
+      setOpen(false);
+      if (chunkIndex < chunkCount - 1) {
+        location.href = chunkHref(chunkCount - 1);
+        return;
+      }
+      var cards = document.querySelectorAll(
+        "#trips-list .trip-card, #trips-list .trip-entry"
+      );
+      var last = cards[cards.length - 1];
+      if (last) last.scrollIntoView(false);
+      else window.scrollTo(0, document.body.scrollHeight);
     };
 
     if (!mountTripJumpNav.clickBound) {
@@ -937,7 +1011,7 @@
       .map(function (t) {
         var photos = (t.photos || []).map(photoSrc).join("|");
         var tags = (t.tags || []).join(",");
-        return [t.id, t.date, t.endDate, t.title, tags, t.report, photos].join(
+        return [t.id, t.date, t.endDate, t.title, tags, t.report, t.coverPhoto || "", photos].join(
           "\u001f"
         );
       })
@@ -1043,13 +1117,65 @@
     var target = document.querySelector(targetSelector);
     if (!target) return;
     var config = window.NATURE_CONFIG || {};
-    var budget = Number(config.photoChunk);
-    if (!isFinite(budget) || budget < 1) budget = 60;
+    var budget = Number(config.tripPageSize);
+    if (!isFinite(budget) || budget < 1) budget = 8;
+    var detailId = new URLSearchParams(location.search).get("trip") || "";
 
     var prerenderHash = target.getAttribute("data-trips-hash") || "";
     var hasPrerender = !!target.querySelector(".trip-chunk");
 
     function finish(sorted) {
+      if (detailId) {
+        var detailIndex = sorted.findIndex(function (trip) {
+          return trip.id === detailId;
+        });
+        document.documentElement.setAttribute("data-trip-view", "detail");
+        mountTripJumpNav([]);
+        mountChunkNav([], 0);
+        if (detailIndex < 0) {
+          document.title = "Trip not found | Rongwu Xu";
+          target.innerHTML =
+            '<p class="trip-detail-back"><a href="trip.html">← Back to trips</a></p>' +
+            '<p class="trips-load-error">This trip could not be found.</p>';
+          return;
+        }
+
+        var trip = sorted[detailIndex];
+        var pageIndex = Math.floor(detailIndex / budget);
+        var backHref = chunkHref(pageIndex).replace(/#trip-chunk-start$/, "");
+        document.title = (trip.title || "Trip") + " | Rongwu Xu";
+        var canonical = document.querySelector('link[rel="canonical"]');
+        if (canonical) {
+          canonical.href =
+            "https://rongwuxu.com/trip.html?trip=" + encodeURIComponent(trip.id);
+        }
+        var description = document.querySelector('meta[name="description"]');
+        if (description) {
+          description.content =
+            (trip.title || "Trip") + " — outdoor trip report by Rongwu Xu.";
+        }
+        target.innerHTML =
+          '<p class="trip-detail-back"><a href="' +
+          escapeHtml(backHref) +
+          '">← Back to trips</a></p>' +
+          '<div class="trip-detail">' +
+          renderTrip(trip, {
+            detail: true,
+            eagerCount: GALLERY_EAGER_COUNT,
+          }) +
+          "</div>";
+        activateImages(target);
+        layoutGalleries(target);
+        initTips(target);
+        if (typeof window.bindNatureMapButtons === "function") {
+          var detailById = Object.create(null);
+          detailById[trip.id] = trip;
+          window.bindNatureMapButtons(target, detailById);
+        }
+        return;
+      }
+
+      document.documentElement.setAttribute("data-trip-view", "archive");
       var chunks = chunkTripsByPhotos(sorted, budget);
       if (!chunks.length) {
         if (hasPrerender) return;
@@ -1119,7 +1245,7 @@
         }
       }
       // A newer worker response replaces the saved HTML. A stale fallback does not.
-      if (!sorted && parsed[0] && (fromPrimary || !hasPrerender)) {
+      if (!sorted && parsed[0] && (fromPrimary || !hasPrerender || detailId)) {
         sorted = parsed[0];
       }
       if (!sorted && hasPrerender) {

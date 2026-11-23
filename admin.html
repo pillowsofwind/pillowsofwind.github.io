@@ -163,7 +163,7 @@
 
     .previews img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
 
-    .previews button {
+    .previews .remove-photo {
       position: absolute;
       top: 4px;
       right: 4px;
@@ -177,6 +177,34 @@
       font-size: 14px;
       line-height: 1;
       z-index: 2;
+    }
+
+    .previews figure.cover-selected {
+      outline: 3px solid var(--accent);
+      outline-offset: 1px;
+    }
+
+    .previews .cover-selector {
+      position: absolute;
+      left: 4px;
+      bottom: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 999px;
+      padding: 3px 7px;
+      background: rgba(0, 0, 0, 0.65);
+      color: #fff;
+      font: inherit;
+      font-size: 11px;
+      line-height: 1.2;
+      cursor: pointer;
+      z-index: 2;
+    }
+
+    .previews .cover-selector[aria-pressed="true"] {
+      background: var(--accent);
+      border-color: #fff;
+      color: #3d2208;
+      font-weight: 700;
     }
 
     .fmt-bar {
@@ -401,6 +429,7 @@
       var MAX_BATCH_BYTES = 70 * 1024 * 1024; // under Cloudflare ~100MB request limit
       // Unified ordered list: { type:'existing', url } | { type:'new', file, previewUrl }
       var photoItems = [];
+      var coverPhotoItem = null;
       var allTrips = [];
       var editingId = null;
       var pendingScrollTripId = null;
@@ -654,15 +683,33 @@
       function clearPhotos() {
         revokePreviews();
         photoItems = [];
+        coverPhotoItem = null;
         renderPhotoList();
       }
 
+      function normalizedPhotoUrl(url) {
+        try {
+          var parsed = new URL(String(url), window.location.href);
+          return parsed.origin + parsed.pathname;
+        } catch (e) {
+          return String(url || '');
+        }
+      }
+
+      function ensureCoverPhoto() {
+        if (photoItems.indexOf(coverPhotoItem) < 0) {
+          coverPhotoItem = photoItems.length ? photoItems[0] : null;
+        }
+      }
+
       function renderPhotoList() {
+        ensureCoverPhoto();
         photoList.innerHTML = '';
         photoItems.forEach(function (item, idx) {
           var fig = document.createElement('figure');
           fig.draggable = true;
           fig.dataset.index = String(idx);
+          fig.classList.toggle('cover-selected', item === coverPhotoItem);
           var img = document.createElement('img');
           if (item.type === 'existing') {
             img.src = item.url;
@@ -674,6 +721,7 @@
           }
           var btn = document.createElement('button');
           btn.type = 'button';
+          btn.className = 'remove-photo';
           btn.textContent = '×';
           btn.title = item.type === 'existing' ? 'Remove (deletes from R2 on save)' : 'Remove';
           btn.addEventListener('click', function (e) {
@@ -682,10 +730,23 @@
               try { URL.revokeObjectURL(item.previewUrl); } catch (err) {}
             }
             photoItems.splice(idx, 1);
+            if (coverPhotoItem === item) coverPhotoItem = photoItems[0] || null;
+            renderPhotoList();
+          });
+          var coverBtn = document.createElement('button');
+          coverBtn.type = 'button';
+          coverBtn.className = 'cover-selector';
+          coverBtn.textContent = item === coverPhotoItem ? 'Cover ✓' : 'Set cover';
+          coverBtn.title = item === coverPhotoItem ? 'Current cover photo' : 'Use as cover photo';
+          coverBtn.setAttribute('aria-pressed', item === coverPhotoItem ? 'true' : 'false');
+          coverBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            coverPhotoItem = item;
             renderPhotoList();
           });
           fig.appendChild(img);
           fig.appendChild(btn);
+          fig.appendChild(coverBtn);
 
           fig.addEventListener('dragstart', function (e) {
             dragFrom = idx;
@@ -774,6 +835,7 @@
             try {
               var file = await normalizeFile(candidates[i]);
               photoItems.push({ type: 'new', file: file, previewUrl: null });
+              if (!coverPhotoItem) coverPhotoItem = photoItems[0];
             } catch (err) {
               console.error(err);
               setStatus(status, 'err', 'Could not prepare ' + (candidates[i].name || 'photo') + '. Try exporting as JPEG.');
@@ -876,6 +938,10 @@
           var url = typeof photo === 'string' ? photo : (photo && photo.url) || '';
           return { type: 'existing', url: url };
         });
+        var requestedCover = normalizedPhotoUrl(trip.coverPhoto || '');
+        coverPhotoItem = photoItems.find(function (item) {
+          return requestedCover && normalizedPhotoUrl(item.url) === requestedCover;
+        }) || photoItems[0] || null;
         renderPhotoList();
         document.getElementById('submit').textContent = 'Save changes';
         document.getElementById('cancel-edit').classList.remove('hidden');
@@ -1000,17 +1066,28 @@
           var msg;
           var batches = chunkBySize(newItems, MAX_BATCH_BYTES);
           var useBatches = batches.length > 1;
+          var selectedCoverItem = coverPhotoItem;
 
           // Upload originals in size-capped batches (no resize) so large albums fit under ~100MB/request
           if (useBatches) {
             var currentKeep = keepUrls.slice();
             var tripId = editingId;
             var uploadedCount = 0;
+            var selectedCoverUrl =
+              selectedCoverItem && selectedCoverItem.type === 'existing'
+                ? selectedCoverItem.url
+                : '';
 
             for (var b = 0; b < batches.length; b++) {
               var batch = batches[b];
               var fd = new FormData();
               appendMeta(fd);
+              var selectedBatchIndex = batch.indexOf(selectedCoverItem);
+              if (selectedBatchIndex >= 0) {
+                fd.append('coverPhoto', '__new__:' + selectedBatchIndex);
+              } else if (selectedCoverUrl) {
+                fd.append('coverPhoto', selectedCoverUrl);
+              }
               uploadedCount += batch.length;
               var label =
                 'Uploading originals ' +
@@ -1042,6 +1119,9 @@
                 );
                 currentKeep = (data.trip && data.trip.photos) || currentKeep;
               }
+              if (selectedBatchIndex >= 0 && data.trip) {
+                selectedCoverUrl = data.trip.coverPhoto || '';
+              }
             }
 
             var finalOrder = [];
@@ -1053,11 +1133,23 @@
               if (item.type === 'existing') finalOrder.push(item.url);
               else if (newPtr < newUrlQueue.length) finalOrder.push(newUrlQueue[newPtr++]);
             });
-            if (finalOrder.length === currentKeep.length && finalOrder.join('\0') !== currentKeep.join('\0')) {
+            if (selectedCoverItem && selectedCoverItem.type === 'new') {
+              var selectedNewIndex = newItems.indexOf(selectedCoverItem);
+              if (selectedNewIndex >= 0) selectedCoverUrl = newUrlQueue[selectedNewIndex] || selectedCoverUrl;
+            }
+            var needsOrderUpdate =
+              finalOrder.length === currentKeep.length &&
+              finalOrder.join('\0') !== currentKeep.join('\0');
+            var returnedCover = data && data.trip && data.trip.coverPhoto;
+            var needsCoverUpdate =
+              selectedCoverUrl &&
+              normalizedPhotoUrl(selectedCoverUrl) !== normalizedPhotoUrl(returnedCover || '');
+            if (needsOrderUpdate || needsCoverUpdate) {
               var orderFd = new FormData();
               appendMeta(orderFd);
               orderFd.append('keepPhotos', JSON.stringify(finalOrder));
               orderFd.append('photoOrder', JSON.stringify(finalOrder));
+              if (selectedCoverUrl) orderFd.append('coverPhoto', selectedCoverUrl);
               data = await sendTrip(
                 'PUT',
                 base + '/api/trips/' + encodeURIComponent(tripId),
@@ -1082,6 +1174,11 @@
                 newIdx += 1;
               }
             });
+            var selectedCover =
+              selectedCoverItem && selectedCoverItem.type === 'existing'
+                ? selectedCoverItem.url
+                : '__new__:' + newItems.indexOf(selectedCoverItem);
+            fd.append('coverPhoto', selectedCover);
             if (editingId) {
               fd.append('keepPhotos', JSON.stringify(keepUrls));
               fd.append('photoOrder', JSON.stringify(order));
@@ -1166,7 +1263,7 @@
           btn.type = 'button';
           btn.className = 'trip-item';
           if (trip.id) btn.setAttribute('data-trip-id', trip.id);
-          var thumbRaw = (trip.photos && trip.photos[0]) || '';
+          var thumbRaw = trip.coverPhoto || (trip.photos && trip.photos[0]) || '';
           var thumb = typeof thumbRaw === 'string' ? thumbRaw : (thumbRaw && thumbRaw.url) || '';
           btn.innerHTML =
             (thumb ? '<img src="' + thumb.replace(/"/g, '&quot;') + '" alt="">' : '<div></div>') +

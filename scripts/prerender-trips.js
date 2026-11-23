@@ -167,7 +167,7 @@ async function main() {
   const sorted = api.sortTrips((data.trips || []).map(api.normalizeTrip));
   const built = api.buildArchiveHtml(
     sorted,
-    60,
+    8,
     "https://rongwuxu.com/trip.html"
   );
   let html = fs.readFileSync(tripPath, "utf8");

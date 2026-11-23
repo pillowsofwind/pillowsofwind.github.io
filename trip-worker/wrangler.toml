@@ -12,6 +12,12 @@ bucket_name = "trips"
 [images]
 binding = "IMAGES"
 
+[[d1_databases]]
+binding = "DB"
+database_name = "nature-trips"
+database_id = "50d056d3-7d4d-47da-bfd3-a2e2e2c3aafd"
+migrations_dir = "migrations"
+
 [[routes]]
 pattern = "photos.rongwuxu.com"
 custom_domain = true

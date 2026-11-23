@@ -114,14 +114,37 @@ async function fillPhotoDimensions(data) {
 async function loadTrips() {
   let data;
   try {
-    const res = await fetch(workerUrl, {
+    const res = await fetch(workerUrl + "?all=1", {
       headers: {
         Accept: "application/json",
         "User-Agent": "pillowsofwind-prerender/1.0",
       },
     });
     if (!res.ok) throw new Error("HTTP " + res.status);
-    data = await res.json();
+    const listing = await res.json();
+    const summaries = listing.trips || [];
+    const trips = new Array(summaries.length);
+    let next = 0;
+    async function detailWorker() {
+      while (next < summaries.length) {
+        const i = next++;
+        const detailRes = await fetch(
+          workerUrl + "/" + encodeURIComponent(summaries[i].id),
+          {
+            headers: {
+              Accept: "application/json",
+              "User-Agent": "pillowsofwind-prerender/1.0",
+            },
+          }
+        );
+        if (!detailRes.ok) throw new Error("detail HTTP " + detailRes.status);
+        trips[i] = (await detailRes.json()).trip;
+      }
+    }
+    await Promise.all(
+      Array.from({ length: Math.min(8, summaries.length) }, detailWorker)
+    );
+    data = { publicBaseUrl: listing.publicBaseUrl, trips };
     console.log("loaded live trips from worker");
   } catch (err) {
     console.warn("worker unavailable (" + err.message + "); using data/trips.json");
@@ -161,49 +184,229 @@ function replaceMarked(html, start, end, inner) {
   return html.replace(pattern, start + inner + end);
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function archiveHref(index) {
+  return index <= 0
+    ? "/trip.html#trip-chunk-start"
+    : "/trips/page/" + (index + 1) + "/#trip-chunk-start";
+}
+
+function rangeLabel(trips) {
+  if (!trips.length) return "";
+  const short = new Intl.DateTimeFormat("en", {
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
+  const first = short.format(new Date(trips[0].date + "T00:00:00Z"));
+  const last = short.format(
+    new Date(trips[trips.length - 1].date + "T00:00:00Z")
+  );
+  return first === last ? first : first + " – " + last;
+}
+
+function pageNavHtml(trips, pageIndex, pageCount) {
+  if (pageCount <= 1) return "";
+  const newer =
+    pageIndex > 0
+      ? '<a class="trip-chunk-link" href="' +
+        archiveHref(pageIndex - 1) +
+        '">Newer</a>'
+      : '<span class="trip-chunk-link is-disabled">Newer</span>';
+  const older =
+    pageIndex < pageCount - 1
+      ? '<a class="trip-chunk-link" href="' +
+        archiveHref(pageIndex + 1) +
+        '">Older</a>'
+      : '<span class="trip-chunk-link is-disabled">Older</span>';
+  return (
+    '<div class="trip-chunk-bar-set" data-chunk-nav="0">' +
+    '<div class="trip-chunk-bar">' +
+    newer +
+    '<span class="trip-chunk-label">' +
+    escapeHtml(rangeLabel(trips)) +
+    "</span>" +
+    older +
+    "</div></div>"
+  );
+}
+
+function rootRelativeAssets(html) {
+  return html
+    .replace(/(["'])\.\//g, "$1/")
+    .replace(/href="stylesheets\//g, 'href="/stylesheets/')
+    .replace(/src="javascripts\//g, 'src="/javascripts/')
+    .replace(/src="data\//g, 'src="/data/');
+}
+
+function setHtmlAttributes(html, attrs) {
+  return html.replace(
+    /<html(?:\s[^>]*)?>/,
+    "<html " +
+      Object.entries(attrs)
+        .map(([key, value]) =>
+          value === "" ? key : key + '="' + escapeHtml(value) + '"'
+        )
+        .join(" ") +
+      ">"
+  );
+}
+
+function setMetadata(html, title, description, canonical) {
+  return html
+    .replace(/<title>[\s\S]*?<\/title>/, "<title>" + escapeHtml(title) + "</title>")
+    .replace(
+      /<meta name="description" content="[^"]*">/,
+      '<meta name="description" content="' + escapeHtml(description) + '">'
+    )
+    .replace(
+      /<link rel="canonical" href="[^"]*">/,
+      '<link rel="canonical" href="' + escapeHtml(canonical) + '">'
+    );
+}
+
 async function main() {
   const api = loadRenderer();
   const data = await loadTrips();
   const sorted = api.sortTrips((data.trips || []).map(api.normalizeTrip));
-  const built = api.buildArchiveHtml(
-    sorted,
-    8,
-    "https://rongwuxu.com/trip.html"
-  );
-  let html = fs.readFileSync(tripPath, "utf8");
-  html = html.replace(
-    /id="trips-list"(?: data-trips-hash="[^"]*")?/,
-    'id="trips-list" data-trips-hash="' + built.hash + '"'
-  );
-  html = replaceMarked(
-    html,
-    "<!-- static-trips:start -->",
-    "<!-- static-trips:end -->",
-    "\n" + built.listHtml + "\n                "
-  );
-  html = replaceMarked(
-    html,
-    "<!-- static-chunk-nav:start -->",
-    "<!-- static-chunk-nav:end -->",
-    built.navHtml
-  );
-  const navOpen =
-    '<nav class="trip-chunk-nav" data-trip-chunk-nav hidden aria-label="Trip archive pages">';
-  const navShown =
-    '<nav class="trip-chunk-nav" data-trip-chunk-nav aria-label="Trip archive pages">';
-  if (built.chunkCount > 1) {
-    html = html.replace(navOpen, navShown);
-  } else {
-    html = html.replace(navShown, navOpen);
+  const pageSize = 8;
+  const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const template = fs.readFileSync(tripPath, "utf8");
+  const generatedRoot = path.join(root, "trips");
+  fs.rmSync(generatedRoot, { recursive: true, force: true });
+
+  function archiveDocument(pageIndex) {
+    const pageTrips = sorted.slice(
+      pageIndex * pageSize,
+      (pageIndex + 1) * pageSize
+    );
+    const built = api.buildArchiveHtml(
+      pageTrips,
+      pageSize,
+      "https://rongwuxu.com/trip.html"
+    );
+    let html = template.replace(
+      /id="trips-list"(?: data-trips-hash="[^"]*")?/,
+      'id="trips-list" data-trips-hash="' + built.hash + '"'
+    );
+    html = replaceMarked(
+      html,
+      "<!-- static-trips:start -->",
+      "<!-- static-trips:end -->",
+      "\n" + built.listHtml + "\n                "
+    );
+    html = replaceMarked(
+      html,
+      "<!-- static-chunk-nav:start -->",
+      "<!-- static-chunk-nav:end -->",
+      pageNavHtml(pageTrips, pageIndex, pageCount)
+    );
+    html = html.replace(
+      /<nav class="trip-chunk-nav" data-trip-chunk-nav(?: hidden)?/,
+      '<nav class="trip-chunk-nav" data-trip-chunk-nav'
+    );
+    if (pageIndex > 0) {
+      html = setHtmlAttributes(html, {
+        "data-static-trip-page": String(pageIndex + 1),
+      });
+      html = setMetadata(
+        html,
+        "Trip Archive — Page " + (pageIndex + 1) + " | Rongwu Xu",
+        "Older outdoor trips by Rongwu Xu.",
+        "https://rongwuxu.com/trips/page/" + (pageIndex + 1) + "/"
+      );
+      html = rootRelativeAssets(html);
+    }
+    return html;
   }
-  fs.writeFileSync(tripPath, html);
+
+  fs.writeFileSync(tripPath, archiveDocument(0));
+  for (let pageIndex = 1; pageIndex < pageCount; pageIndex++) {
+    const dir = path.join(generatedRoot, "page", String(pageIndex + 1));
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "index.html"), archiveDocument(pageIndex));
+  }
+
+  sorted.forEach(function (trip, index) {
+    const pageIndex = Math.floor(index / pageSize);
+    const backHref = archiveHref(pageIndex);
+    const detailHtml =
+      '<p class="trip-detail-back"><a href="' +
+      backHref +
+      '">← Back to trips</a></p>' +
+      '<div class="trip-detail">' +
+      api.renderTrip(trip, { detail: true, eagerCount: 1 }) +
+      "</div>" +
+      '<p class="trip-detail-back trip-detail-back-bottom"><a href="' +
+      backHref +
+      '">← Back to trips</a></p>';
+    let html = replaceMarked(
+      template,
+      "<!-- static-trips:start -->",
+      "<!-- static-trips:end -->",
+      "\n" + detailHtml + "\n                "
+    );
+    html = replaceMarked(
+      html,
+      "<!-- static-chunk-nav:start -->",
+      "<!-- static-chunk-nav:end -->",
+      ""
+    );
+    html = setHtmlAttributes(html, {
+      "data-static-trip-id": trip.id,
+      "data-trip-view": "detail",
+      "data-trip-detail-ready": "",
+    });
+    html = setMetadata(
+      html,
+      (trip.title || "Trip") + " | Rongwu Xu",
+      (trip.title || "Trip") + " — outdoor trip report by Rongwu Xu.",
+      "https://rongwuxu.com/trips/" + encodeURIComponent(trip.id) + "/"
+    );
+    html = rootRelativeAssets(html);
+    const dir = path.join(generatedRoot, trip.id);
+    fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(path.join(dir, "index.html"), html);
+  });
+
+  const sitemapPath = path.join(root, "sitemap.xml");
+  const baseUrls = [
+    "https://rongwuxu.com/",
+    "https://rongwuxu.com/trip.html",
+    "https://rongwuxu.com/misc.html",
+    "https://rongwuxu.com/pickle-juice.html",
+  ];
+  for (let i = 1; i < pageCount; i++) {
+    baseUrls.push("https://rongwuxu.com/trips/page/" + (i + 1) + "/");
+  }
+  sorted.forEach((trip) => {
+    baseUrls.push(
+      "https://rongwuxu.com/trips/" + encodeURIComponent(trip.id) + "/"
+    );
+  });
+  fs.writeFileSync(
+    sitemapPath,
+    '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+      baseUrls
+        .map((url) => "  <url>\n    <loc>" + escapeHtml(url) + "</loc>\n  </url>")
+        .join("\n") +
+      "\n</urlset>\n"
+  );
+
   console.log(
-    "chunks",
-    built.chunkCount,
-    "trips",
+    "generated",
+    pageCount,
+    "archive pages and",
     sorted.length,
-    "hash",
-    built.hash
+    "detail pages"
   );
 }
 

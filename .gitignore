@@ -1,6 +1,7 @@
 # Dependencies
 node_modules/
 trip-worker/node_modules/
+trip-worker/.wrangler/
 
 # Local / temp migration artifacts
 .heic-migrate-tmp/

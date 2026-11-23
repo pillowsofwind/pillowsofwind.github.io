@@ -25,6 +25,7 @@ const ALLOWED_TAGS = [
   "camping",
   "backpacking",
   "scrambling",
+  "climbing",
   "kayaking",
 ];
 
@@ -239,6 +240,42 @@ async function serveResizedPhoto(request, env, ctx) {
   }
 }
 
+async function prewarmUploadedPhotos(env, base, photoUrls) {
+  const keys = (photoUrls || [])
+    .map((photoUrl) => keyFromPhotoUrl(photoUrl, base))
+    .filter(Boolean);
+  let next = 0;
+
+  async function worker() {
+    while (next < keys.length) {
+      const key = keys[next++];
+      const path = key.split("/").map(encodeURIComponent).join("/");
+      const cacheWrites = [];
+      const warmCtx = {
+        waitUntil(promise) {
+          cacheWrites.push(Promise.resolve(promise).catch(() => {}));
+        },
+      };
+      try {
+        await serveResizedPhoto(
+          new Request(`https://photos.rongwuxu.com/img/${path}?w=800`, {
+            headers: { Accept: "image/avif,image/webp,image/*" },
+          }),
+          env,
+          warmCtx
+        );
+        await Promise.all(cacheWrites);
+      } catch {
+        // Prewarming is best-effort and must never make an upload fail.
+      }
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(4, keys.length) }, () => worker())
+  );
+}
+
 function normalizePhotoUrl(photoUrl) {
   try {
     const u = new URL(String(photoUrl));
@@ -299,7 +336,7 @@ async function deletePhotoKeys(env, urls, base) {
   return deleted;
 }
 
-async function loadTrips(env, base) {
+async function loadLegacyTrips(env, base) {
   const obj = await env.PHOTOS.get("trips.json");
   if (!obj) return { publicBaseUrl: base, trips: [] };
   try {
@@ -328,7 +365,7 @@ async function loadTrips(env, base) {
     if (changed) {
       // Persist rename so stored data matches scrambling
       try {
-        await saveTrips(env, data);
+        await saveLegacyTrips(env, data);
       } catch {
         // still return normalized tags even if save fails
       }
@@ -339,13 +376,168 @@ async function loadTrips(env, base) {
   }
 }
 
-async function saveTrips(env, data) {
+async function saveLegacyTrips(env, data) {
   await env.PHOTOS.put("trips.json", JSON.stringify(data, null, 2), {
     httpMetadata: {
       contentType: "application/json; charset=utf-8",
       cacheControl: "no-cache",
     },
   });
+}
+
+function parseJsonField(value, fallback) {
+  try {
+    const parsed = JSON.parse(value || "");
+    return parsed == null ? fallback : parsed;
+  } catch {
+    return fallback;
+  }
+}
+
+function tripFromRow(row, summaryOnly = false) {
+  const photos = parseJsonField(row.photos_json, []);
+  const dimensions = parseJsonField(row.photo_dimensions_json, {});
+  const coverPhoto = row.cover_photo || photos[0] || "";
+  let summaryDimensions = dimensions;
+  if (summaryOnly) {
+    summaryDimensions = {};
+    const normalizedCover = normalizePhotoUrl(coverPhoto);
+    const dim = dimensions[coverPhoto] || dimensions[normalizedCover];
+    if (dim) summaryDimensions[normalizedCover] = dim;
+  }
+  const trip = {
+    id: row.id,
+    date: row.date,
+    endDate: row.end_date,
+    year: row.year,
+    month: row.month,
+    title: row.title,
+    tags: parseJsonField(row.tags_json, []),
+    photos: summaryOnly ? (coverPhoto ? [coverPhoto] : []) : photos,
+    coverPhoto,
+    photoDimensions: summaryDimensions,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+  if (!summaryOnly) {
+    trip.report = row.report || "";
+    trip.photoLocations = parseJsonField(row.photo_locations_json, []);
+  }
+  return trip;
+}
+
+function tripBindings(trip) {
+  return [
+    trip.id,
+    trip.date,
+    trip.endDate || trip.date,
+    Number(trip.year),
+    trip.month,
+    trip.title,
+    JSON.stringify(trip.tags || []),
+    trip.report || "",
+    JSON.stringify(trip.photos || []),
+    trip.coverPhoto || "",
+    JSON.stringify(trip.photoLocations || []),
+    JSON.stringify(trip.photoDimensions || {}),
+    trip.createdAt,
+    trip.updatedAt,
+  ];
+}
+
+async function putTrip(env, trip) {
+  await env.DB.prepare(
+    `INSERT INTO trips (
+      id, date, end_date, year, month, title, tags_json, report, photos_json,
+      cover_photo, photo_locations_json, photo_dimensions_json, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET
+      date=excluded.date, end_date=excluded.end_date, year=excluded.year,
+      month=excluded.month, title=excluded.title, tags_json=excluded.tags_json,
+      report=excluded.report, photos_json=excluded.photos_json,
+      cover_photo=excluded.cover_photo,
+      photo_locations_json=excluded.photo_locations_json,
+      photo_dimensions_json=excluded.photo_dimensions_json,
+      created_at=excluded.created_at, updated_at=excluded.updated_at`
+  ).bind(...tripBindings(trip)).run();
+}
+
+async function getTrip(env, id, base) {
+  try {
+    const row = await env.DB.prepare("SELECT * FROM trips WHERE id = ?")
+      .bind(id)
+      .first();
+    if (row) return tripFromRow(row);
+  } catch {
+    const legacy = await loadLegacyTrips(env, base);
+    return (legacy.trips || []).find((trip) => trip.id === id) || null;
+  }
+  return null;
+}
+
+async function archivePageForTrip(env, trip, limit = 8) {
+  const row = await env.DB.prepare(
+    `SELECT COUNT(*) AS newer FROM trips
+     WHERE date > ? OR (date = ? AND title > ?)`
+  ).bind(trip.date, trip.date, trip.title).first();
+  return Math.floor((Number(row?.newer) || 0) / limit) + 1;
+}
+
+async function listTrips(env, base, opts = {}) {
+  const all = !!opts.all;
+  const page = Math.max(1, Number(opts.page) || 1);
+  const limit = all
+    ? 5000
+    : Math.min(100, Math.max(1, Number(opts.limit) || 8));
+  const search = String(opts.search || "").trim();
+  const where = search ? " WHERE title LIKE ? COLLATE NOCASE" : "";
+  const bindings = search ? [`%${search}%`] : [];
+  try {
+    const countRow = await env.DB.prepare(
+      `SELECT COUNT(*) AS total FROM trips${where}`
+    ).bind(...bindings).first();
+    const total = Number(countRow?.total) || 0;
+    const offset = all ? 0 : (page - 1) * limit;
+    const rows = await env.DB.prepare(
+      `SELECT id, date, end_date, year, month, title, tags_json, photos_json,
+        cover_photo, photo_dimensions_json, created_at, updated_at
+       FROM trips${where}
+       ORDER BY date DESC, title DESC
+       LIMIT ? OFFSET ?`
+    ).bind(...bindings, limit, offset).all();
+    return {
+      publicBaseUrl: base,
+      trips: (rows.results || []).map((row) => tripFromRow(row, true)),
+      pagination: {
+        page: all ? 1 : page,
+        limit,
+        total,
+        pages: Math.max(1, Math.ceil(total / limit)),
+      },
+    };
+  } catch {
+    const legacy = await loadLegacyTrips(env, base);
+    let trips = legacy.trips || [];
+    if (search) {
+      const q = search.toLowerCase();
+      trips = trips.filter((trip) =>
+        String(trip.title || "").toLowerCase().includes(q)
+      );
+    }
+    const total = trips.length;
+    const sliced = all ? trips : trips.slice((page - 1) * limit, page * limit);
+    return {
+      publicBaseUrl: base,
+      trips: sliced,
+      pagination: {
+        page: all ? 1 : page,
+        limit,
+        total,
+        pages: Math.max(1, Math.ceil(total / limit)),
+      },
+      legacyFallback: true,
+    };
+  }
 }
 
 function normalizeTag(tag) {
@@ -585,9 +777,12 @@ function mergePhotoDimensions(existingMap, uploadedMap, photos) {
 }
 
 async function backfillPhotoDimensions(env, base) {
-  const data = await loadTrips(env, base);
+  const rows = await env.DB.prepare(
+    "SELECT * FROM trips ORDER BY date DESC, title DESC LIMIT 5000"
+  ).all();
+  const trips = (rows.results || []).map((row) => tripFromRow(row));
   const jobs = [];
-  (data.trips || []).forEach((trip) => {
+  trips.forEach((trip) => {
     const dims = trip.photoDimensions || {};
     (trip.photos || []).forEach((photo) => {
       const url = normalizePhotoUrl(photo);
@@ -599,7 +794,7 @@ async function backfillPhotoDimensions(env, base) {
   const MAX = 80;
   const slice = jobs.slice(0, MAX);
   let next = 0;
-  let changed = false;
+  const changedTrips = new Set();
 
   async function worker() {
     while (next < slice.length) {
@@ -611,13 +806,25 @@ async function backfillPhotoDimensions(env, base) {
       if (!meta.dim) continue;
       job.trip.photoDimensions = job.trip.photoDimensions || {};
       job.trip.photoDimensions[job.url] = meta.dim;
-      changed = true;
+      changedTrips.add(job.trip);
     }
   }
 
   const n = Math.min(8, slice.length);
   await Promise.all(Array.from({ length: n }, () => worker()));
-  if (changed) await saveTrips(env, data);
+  if (changedTrips.size) {
+    await env.DB.batch(
+      Array.from(changedTrips).map((trip) =>
+        env.DB.prepare(
+          "UPDATE trips SET photo_dimensions_json = ?, updated_at = ? WHERE id = ?"
+        ).bind(
+          JSON.stringify(trip.photoDimensions || {}),
+          new Date().toISOString(),
+          trip.id
+        )
+      )
+    );
+  }
 }
 
 async function gpsFromR2Key(env, key) {
@@ -678,10 +885,8 @@ async function gpsForPhotoUrls(env, base, urls) {
 async function persistTripPhotoLocations(env, base, tripId, points) {
   if (!tripId || !points || !points.length) return;
   try {
-    const data = await loadTrips(env, base);
-    const idx = (data.trips || []).findIndex((t) => t.id === tripId);
-    if (idx < 0) return;
-    const trip = data.trips[idx];
+    const trip = await getTrip(env, tripId, base);
+    if (!trip) return;
     const byUrl = Object.create(null);
     (trip.photoLocations || []).forEach((p) => {
       if (p && p.url) byUrl[normalizePhotoUrl(p.url)] = p;
@@ -707,8 +912,7 @@ async function persistTripPhotoLocations(env, base, tripId, points) {
       photoSet.has(normalizePhotoUrl(p.url))
     );
     trip.updatedAt = new Date().toISOString();
-    data.trips[idx] = trip;
-    await saveTrips(env, data);
+    await putTrip(env, trip);
   } catch {
     // persistence is best-effort; GPS response still returns
   }
@@ -752,7 +956,12 @@ async function handleRequest(request, env, ctx) {
     // List trips
     if (url.pathname === "/api/trips" && request.method === "GET") {
       try {
-        const data = await loadTrips(env, base);
+        const data = await listTrips(env, base, {
+          page: url.searchParams.get("page"),
+          limit: url.searchParams.get("limit"),
+          search: url.searchParams.get("search"),
+          all: url.searchParams.get("all") === "1",
+        });
         // Dimensions are already stored. Don't re-scan R2 on every load —
         // that raced with Save and could 1102 the isolate (Safari: "Load failed").
         if (
@@ -806,7 +1015,6 @@ async function handleRequest(request, env, ctx) {
           1
         );
 
-        const data = await loadTrips(env, base);
         const trip = {
           id: `${year}-${String(monthIndex(month)).padStart(2, "0")}-${slug}-${Date.now()}`,
           date,
@@ -827,9 +1035,10 @@ async function handleRequest(request, env, ctx) {
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
         };
-        data.publicBaseUrl = base;
-        data.trips = sortTrips([trip, ...(data.trips || [])]);
-        await saveTrips(env, data);
+        await putTrip(env, trip);
+        if (ctx && typeof ctx.waitUntil === "function") {
+          ctx.waitUntil(prewarmUploadedPhotos(env, base, uploaded.photoUrls));
+        }
         return json({ ok: true, trip }, 200, request);
       } catch (err) {
         return json({ error: err.message || "Upload failed" }, 500, request);
@@ -838,6 +1047,22 @@ async function handleRequest(request, env, ctx) {
 
     const tripId = tripIdFromPath(url.pathname);
     if (!tripId) return json({ error: "Not found" }, 404, request);
+
+    if (request.method === "GET") {
+      const trip = await getTrip(env, tripId, base);
+      if (!trip) return json({ error: "Trip not found" }, 404, request);
+      let archivePage = 1;
+      try {
+        archivePage = await archivePageForTrip(
+          env,
+          trip,
+          url.searchParams.get("limit") || 8
+        );
+      } catch {
+        // Legacy fallback remains page 1 if D1 is unavailable.
+      }
+      return json({ trip, archivePage }, 200, request);
+    }
 
     // Update trip
     if (request.method === "PUT") {
@@ -848,10 +1073,8 @@ async function handleRequest(request, env, ctx) {
           return json({ error: "Unauthorized" }, 401, request);
         }
 
-        const data = await loadTrips(env, base);
-        const idx = (data.trips || []).findIndex((t) => t.id === tripId);
-        if (idx < 0) return json({ error: "Trip not found" }, 404, request);
-        const existing = data.trips[idx];
+        const existing = await getTrip(env, tripId, base);
+        if (!existing) return json({ error: "Trip not found" }, 404, request);
 
         const title = String(form.get("title") || existing.title).trim();
         const date = parseTripDate(
@@ -985,10 +1208,14 @@ async function handleRequest(request, env, ctx) {
           updatedAt: new Date().toISOString(),
         };
 
-        data.trips[idx] = trip;
-        data.trips = sortTrips(data.trips);
-        data.publicBaseUrl = base;
-        await saveTrips(env, data);
+        await putTrip(env, trip);
+        if (
+          uploaded.length &&
+          ctx &&
+          typeof ctx.waitUntil === "function"
+        ) {
+          ctx.waitUntil(prewarmUploadedPhotos(env, base, uploaded));
+        }
         return json({ ok: true, trip, deletedPhotos: deletedCount }, 200, request);
       } catch (err) {
         return json({ error: err.message || "Update failed" }, 500, request);
@@ -1016,15 +1243,14 @@ async function handleRequest(request, env, ctx) {
           return json({ error: "Unauthorized" }, 401, request);
         }
 
-        const data = await loadTrips(env, base);
-        const idx = (data.trips || []).findIndex((t) => t.id === tripId);
-        if (idx < 0) return json({ error: "Trip not found" }, 404, request);
-        const [removedTrip] = data.trips.splice(idx, 1);
+        const removedTrip = await getTrip(env, tripId, base);
+        if (!removedTrip) return json({ error: "Trip not found" }, 404, request);
 
         if (deleteFiles) {
           const n = await deletePhotoKeys(env, removedTrip.photos || [], base);
-          data.publicBaseUrl = base;
-          await saveTrips(env, data);
+          await env.DB.prepare("DELETE FROM trips WHERE id = ?")
+            .bind(tripId)
+            .run();
           return json(
             { ok: true, deleted: removedTrip.id, deletedPhotos: n },
             200,
@@ -1032,8 +1258,9 @@ async function handleRequest(request, env, ctx) {
           );
         }
 
-        data.publicBaseUrl = base;
-        await saveTrips(env, data);
+        await env.DB.prepare("DELETE FROM trips WHERE id = ?")
+          .bind(tripId)
+          .run();
         return json({ ok: true, deleted: removedTrip.id, deletedPhotos: 0 }, 200, request);
       } catch (err) {
         return json({ error: err.message || "Delete failed" }, 500, request);

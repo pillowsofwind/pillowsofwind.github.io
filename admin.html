@@ -415,6 +415,11 @@
         </div>
         <input class="search" id="search" type="text" placeholder="Search by title…">
         <div class="trip-list" id="trip-list"></div>
+        <div class="actions hidden" id="trip-pages">
+          <button class="secondary" type="button" id="trips-prev">Newer</button>
+          <span class="status" id="trips-page-label"></span>
+          <button class="secondary" type="button" id="trips-next">Older</button>
+        </div>
       </div>
     </section>
   </div>
@@ -423,7 +428,7 @@
   <script src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js"></script>
   <script>
     (function () {
-      var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'kayaking'];
+      var TAGS = ['casual', 'hiking', 'cycling', 'camping', 'backpacking', 'scrambling', 'climbing', 'kayaking'];
       // HEIC must become JPEG for browsers; keep quality high. Other formats upload unchanged.
       var HEIC_JPEG_QUALITY = 0.95;
       var MAX_BATCH_BYTES = 70 * 1024 * 1024; // under Cloudflare ~100MB request limit
@@ -436,6 +441,9 @@
       var converting = false;
       var dragFrom = null;
       var endDateManual = false;
+      var managePage = 1;
+      var managePages = 1;
+      var manageSearchTimer = null;
 
       function todayISO() {
         var now = new Date();
@@ -952,6 +960,23 @@
         }, 0);
       }
 
+      async function loadTripForEdit(tripId) {
+        var status = document.getElementById('manage-status');
+        setStatus(status, '', 'Loading trip…');
+        try {
+          var res = await fetch(
+            workerUrl() + '/api/trips/' + encodeURIComponent(tripId),
+            { cache: 'no-store' }
+          );
+          var data = await res.json().catch(function () { return {}; });
+          if (!res.ok || !data.trip) throw new Error(data.error || 'Could not load trip');
+          setStatus(status, '', '');
+          fillForm(data.trip);
+        } catch (err) {
+          setStatus(status, 'err', err.message || 'Could not load trip');
+        }
+      }
+
       // Submit create / update
       document.getElementById('trip-form').addEventListener('submit', async function (e) {
         e.preventDefault();
@@ -1273,13 +1298,13 @@
           btn.querySelector('.meta').textContent = formatRangeMeta(dateFromTrip(trip), endDateFromTrip(trip)) + (trip.tags && trip.tags.length ? ' · ' + trip.tags.join(', ') : '');
           btn.querySelector('.edit-btn').addEventListener('click', function (ev) {
             ev.stopPropagation();
-            fillForm(trip);
+            loadTripForEdit(trip.id);
           });
           btn.querySelector('.del-btn').addEventListener('click', async function (ev) {
             ev.stopPropagation();
             await deleteTrip(trip);
           });
-          btn.addEventListener('click', function () { fillForm(trip); });
+          btn.addEventListener('click', function () { loadTripForEdit(trip.id); });
           list.appendChild(btn);
         });
         if (pendingScrollTripId) {
@@ -1314,26 +1339,42 @@
           var data = await res.json().catch(function () { return {}; });
           if (!res.ok) throw new Error(data.error || 'Delete failed');
           allTrips = allTrips.filter(function (t) { return t.id !== trip.id; });
-          renderTripList(document.getElementById('search').value);
           setStatus(manageStatus, 'ok', 'Deleted.');
+          loadTrips({ quiet: true, page: managePage });
         } catch (err) {
           setStatus(manageStatus, 'err', err.message || 'Delete failed');
         }
       }
 
       var tripsLoading = false;
+      function updateTripPager(pagination) {
+        managePage = Number(pagination && pagination.page) || 1;
+        managePages = Number(pagination && pagination.pages) || 1;
+        var pager = document.getElementById('trip-pages');
+        pager.classList.toggle('hidden', managePages <= 1);
+        document.getElementById('trips-page-label').textContent =
+          'Page ' + managePage + ' of ' + managePages;
+        document.getElementById('trips-prev').disabled = managePage <= 1;
+        document.getElementById('trips-next').disabled = managePage >= managePages;
+      }
+
       async function loadTrips(opts) {
         var quiet = opts && opts.quiet;
+        if (opts && opts.page) managePage = Math.max(1, Number(opts.page) || 1);
         if (opts && opts.preserveScrollId) pendingScrollTripId = opts.preserveScrollId;
         var base = workerUrl();
         var manageStatus = document.getElementById('manage-status');
+        var search = document.getElementById('search').value.trim();
         if (tripsLoading) return;
         tripsLoading = true;
         if (!base) {
           var config = window.NATURE_CONFIG || {};
           try {
             if (!quiet) setStatus(manageStatus, '', 'Loading…');
-            var urls = [config.tripsUrl, config.tripsFallbackUrl].filter(Boolean);
+            var primaryUrl = config.tripsUrl
+              ? config.tripsUrl + '?page=' + managePage + '&limit=50&search=' + encodeURIComponent(search)
+              : '';
+            var urls = [primaryUrl, config.tripsFallbackUrl].filter(Boolean);
             var data = null;
             for (var i = 0; i < urls.length; i++) {
               try {
@@ -1342,8 +1383,20 @@
               } catch (e) {}
             }
             if (!data) throw new Error('Could not load trips');
-            allTrips = data.trips || [];
-            renderTripList(document.getElementById('search').value || '');
+            var fallbackTrips = data.trips || [];
+            if (!data.pagination && search) {
+              fallbackTrips = fallbackTrips.filter(function (trip) {
+                return String(trip.title || '').toLowerCase().indexOf(search.toLowerCase()) >= 0;
+              });
+            }
+            allTrips = data.pagination
+              ? fallbackTrips
+              : fallbackTrips.slice((managePage - 1) * 50, managePage * 50);
+            updateTripPager(data.pagination || {
+              page: managePage,
+              pages: Math.max(1, Math.ceil(fallbackTrips.length / 50))
+            });
+            renderTripList('');
             setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
           } catch (err) {
             if (!quiet) setStatus(manageStatus, 'err', err.message || 'Load failed');
@@ -1368,7 +1421,13 @@
           var lastErr = null;
           for (var i = 0; i < bases.length; i++) {
             try {
-              var res = await fetch(bases[i] + '/api/trips', { cache: 'no-store' });
+              var listUrl =
+                bases[i] +
+                '/api/trips?page=' +
+                managePage +
+                '&limit=50&search=' +
+                encodeURIComponent(search);
+              var res = await fetch(listUrl, { cache: 'no-store' });
               var parsed = await res.json().catch(function () { return {}; });
               if (!res.ok) throw new Error(parsed.error || 'Load failed');
               data = parsed;
@@ -1384,8 +1443,13 @@
             localStorage.setItem('natureWorkerUrl', used);
           }
           allTrips = data.trips || [];
-          renderTripList(document.getElementById('search').value || '');
-          setStatus(manageStatus, 'ok', allTrips.length + ' trips loaded.');
+          updateTripPager(data.pagination);
+          renderTripList('');
+          setStatus(
+            manageStatus,
+            'ok',
+            (data.pagination ? data.pagination.total : allTrips.length) + ' trips loaded.'
+          );
         } catch (err) {
           if (opts && opts.keepStatus) {
             // Save already succeeded; keep the Saved! message.
@@ -1406,11 +1470,20 @@
       }
 
       document.getElementById('load-trips').addEventListener('click', function () {
-        loadTrips({ quiet: false });
+        loadTrips({ quiet: false, page: 1 });
       });
 
-      document.getElementById('search').addEventListener('input', function (e) {
-        renderTripList(e.target.value);
+      document.getElementById('trips-prev').addEventListener('click', function () {
+        if (managePage > 1) loadTrips({ quiet: true, page: managePage - 1 });
+      });
+      document.getElementById('trips-next').addEventListener('click', function () {
+        if (managePage < managePages) loadTrips({ quiet: true, page: managePage + 1 });
+      });
+      document.getElementById('search').addEventListener('input', function () {
+        clearTimeout(manageSearchTimer);
+        manageSearchTimer = setTimeout(function () {
+          loadTrips({ quiet: true, page: 1 });
+        }, 250);
       });
 
       // Ready for typing

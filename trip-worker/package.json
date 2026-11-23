@@ -4,6 +4,8 @@
   "description": "Upload trips from a simple web form. Photos and `trips.json` go to R2 — **no Git commit** for new trips.",
   "main": "index.js",
   "scripts": {
+    "migrate:d1": "node scripts/migrate-trips-to-d1.mjs",
+    "migrate:d1:remote": "node scripts/migrate-trips-to-d1.mjs --remote",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

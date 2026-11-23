@@ -5,7 +5,7 @@
   var GALLERY_MEASURE_TIMEOUT_MS = 3000;
   var GALLERY_GAP_RATIO = 0.03;
   var GALLERY_SIZES = "(max-width: 720px) 100vw, 360px";
-  var GALLERY_EAGER_COUNT = 6;
+  var GALLERY_EAGER_COUNT = 1;
 
   function escapeHtml(str) {
     return String(str || "")
@@ -367,7 +367,7 @@
   }
 
   function tripDetailHref(trip) {
-    return "trip.html?trip=" + encodeURIComponent(trip.id || "");
+    return "/trips/" + encodeURIComponent(trip.id || "") + "/";
   }
 
   function tripCover(trip) {
@@ -556,6 +556,14 @@
   }
 
   function chunkHref(index, baseHref) {
+    if (
+      !baseHref &&
+      document.documentElement.hasAttribute("data-static-trip-page")
+    ) {
+      return index <= 0
+        ? "/trip.html#trip-chunk-start"
+        : "/trips/page/" + (index + 1) + "/#trip-chunk-start";
+    }
     var url = new URL(baseHref || location.href);
     url.searchParams.delete("trip");
     url.searchParams.delete("chunk");
@@ -717,7 +725,7 @@
       (root && root.querySelector("[data-trip-chunk-start]")) ||
       (root && root.querySelector(".trip-entry, .trip-card")) ||
       document.getElementById("trip-chunk-start");
-    if (el) el.scrollIntoView(true);
+    if (el) smoothScrollTo(el, "start");
   }
 
   function tocFromChunk(root) {
@@ -746,7 +754,55 @@
   function scrollToTripId(id) {
     var el = document.getElementById(id);
     if (!el) return;
-    el.scrollIntoView(true);
+    smoothScrollTo(el, "start");
+  }
+
+  var scrollAnimationFrame = 0;
+
+  function smoothScrollToPosition(targetTop) {
+    var reduceMotion =
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var maxTop = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+    var destination = Math.max(0, Math.min(targetTop, maxTop));
+    if (scrollAnimationFrame) cancelAnimationFrame(scrollAnimationFrame);
+    if (reduceMotion) {
+      document.documentElement.classList.remove("is-auto-scrolling");
+      window.scrollTo(0, destination);
+      return;
+    }
+
+    document.documentElement.classList.add("is-auto-scrolling");
+    var start = window.scrollY;
+    var distance = destination - start;
+    var duration = 2500;
+    var startedAt = performance.now();
+
+    function tick(now) {
+      var progress = Math.min(1, (now - startedAt) / duration);
+      var eased =
+        progress < 0.5
+          ? 4 * progress * progress * progress
+          : 1 - Math.pow(-2 * progress + 2, 3) / 2;
+      window.scrollTo(0, start + distance * eased);
+      if (progress < 1) scrollAnimationFrame = requestAnimationFrame(tick);
+      else {
+        scrollAnimationFrame = 0;
+        document.documentElement.classList.remove("is-auto-scrolling");
+        window.dispatchEvent(new Event("tripscrollend"));
+      }
+    }
+    scrollAnimationFrame = requestAnimationFrame(tick);
+  }
+
+  function smoothScrollTo(el, block) {
+    var rect = el.getBoundingClientRect();
+    var offset = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    var targetTop =
+      block === "end"
+        ? window.scrollY + rect.bottom - window.innerHeight
+        : window.scrollY + rect.top - offset;
+    smoothScrollToPosition(targetTop);
   }
 
   function mountChunkNav(chunks, index) {
@@ -819,7 +875,14 @@
 
     nav.hidden = false;
 
-    var html =
+    var html = "";
+    if (chunkIndex > 0) {
+      html +=
+        '<a class="trip-jump-page trip-jump-newer" href="' +
+        escapeHtml(chunkHref(chunkIndex - 1)) +
+        '">Newer</a>';
+    }
+    html +=
       '<ul class="trip-jump-months">' +
       months
         .map(function (m) {
@@ -836,7 +899,7 @@
 
     if (chunkIndex < chunkCount - 1) {
       html +=
-        '<a class="trip-jump-older" href="' +
+        '<a class="trip-jump-page trip-jump-older" href="' +
         escapeHtml(chunkHref(chunkIndex + 1)) +
         '">Older</a>';
     }
@@ -861,8 +924,8 @@
         return;
       }
       var first = document.querySelector("#trips-list .trip-entry, #trips-list .trip-card");
-      if (first) first.scrollIntoView(true);
-      else window.scrollTo(0, 0);
+      if (first) smoothScrollTo(first, "start");
+      else smoothScrollToPosition(0);
     };
 
     oldestBtn.onclick = function () {
@@ -875,8 +938,8 @@
         "#trips-list .trip-card, #trips-list .trip-entry"
       );
       var last = cards[cards.length - 1];
-      if (last) last.scrollIntoView(false);
-      else window.scrollTo(0, document.body.scrollHeight);
+      if (last) smoothScrollTo(last, "end");
+      else smoothScrollToPosition(document.body.scrollHeight);
     };
 
     if (!mountTripJumpNav.clickBound) {
@@ -920,6 +983,7 @@
       "camping",
       "backpacking",
       "scrambling",
+      "climbing",
       "kayaking",
     ];
     root.querySelectorAll(".trip-tag").forEach(function (el) {
@@ -1111,6 +1175,9 @@
     sortTrips: sortTrips,
     normalizeTrip: normalizeTrip,
     buildArchiveHtml: buildArchiveHtml,
+    renderTrip: renderTrip,
+    renderAll: renderAll,
+    hashTrips: hashTrips,
   };
 
   window.renderNatureTrips = async function (targetSelector) {
@@ -1119,151 +1186,176 @@
     var config = window.NATURE_CONFIG || {};
     var budget = Number(config.tripPageSize);
     if (!isFinite(budget) || budget < 1) budget = 8;
-    var detailId = new URLSearchParams(location.search).get("trip") || "";
+    var params = new URLSearchParams(location.search);
+    var detailId =
+      params.get("trip") ||
+      document.documentElement.getAttribute("data-static-trip-id") ||
+      "";
+    var requestedPage = Number(
+      document.documentElement.getAttribute("data-static-trip-page") ||
+      params.get("page") ||
+      1
+    );
+    if (!isFinite(requestedPage) || requestedPage < 1) requestedPage = 1;
+    var hasPrerender = !!target.querySelector(".trip-chunk, .trip-detail");
 
-    var prerenderHash = target.getAttribute("data-trips-hash") || "";
-    var hasPrerender = !!target.querySelector(".trip-chunk");
+    function apiUrlForList() {
+      var api = new URL(config.tripsUrl, location.href);
+      api.searchParams.set("page", String(requestedPage));
+      api.searchParams.set("limit", String(budget));
+      return api.href;
+    }
 
-    function finish(sorted) {
-      if (detailId) {
-        var detailIndex = sorted.findIndex(function (trip) {
-          return trip.id === detailId;
-        });
-        document.documentElement.setAttribute("data-trip-view", "detail");
-        mountTripJumpNav([]);
-        mountChunkNav([], 0);
-        if (detailIndex < 0) {
-          document.title = "Trip not found | Rongwu Xu";
-          target.innerHTML =
-            '<p class="trip-detail-back"><a href="trip.html">← Back to trips</a></p>' +
-            '<p class="trips-load-error">This trip could not be found.</p>';
-          return;
-        }
+    function apiUrlForDetail(id) {
+      return (
+        String(config.tripsUrl || "").replace(/\/$/, "") +
+        "/" +
+        encodeURIComponent(id) +
+        "?limit=" +
+        encodeURIComponent(budget)
+      );
+    }
 
-        var trip = sorted[detailIndex];
-        var pageIndex = Math.floor(detailIndex / budget);
-        var backHref = chunkHref(pageIndex).replace(/#trip-chunk-start$/, "");
-        document.title = (trip.title || "Trip") + " | Rongwu Xu";
-        var canonical = document.querySelector('link[rel="canonical"]');
-        if (canonical) {
-          canonical.href =
-            "https://rongwuxu.com/trip.html?trip=" + encodeURIComponent(trip.id);
-        }
-        var description = document.querySelector('meta[name="description"]');
-        if (description) {
-          description.content =
-            (trip.title || "Trip") + " — outdoor trip report by Rongwu Xu.";
-        }
+    function renderDetailPage(trip, archivePage) {
+      document.documentElement.setAttribute("data-trip-view", "detail");
+      mountTripJumpNav([]);
+      mountChunkNav([], 0);
+      if (!trip) {
+        document.title = "Trip not found | Rongwu Xu";
         target.innerHTML =
-          '<p class="trip-detail-back"><a href="' +
-          escapeHtml(backHref) +
-          '">← Back to trips</a></p>' +
-          '<div class="trip-detail">' +
-          renderTrip(trip, {
-            detail: true,
-            eagerCount: GALLERY_EAGER_COUNT,
-          }) +
-          "</div>";
-        activateImages(target);
-        layoutGalleries(target);
-        initTips(target);
-        if (typeof window.bindNatureMapButtons === "function") {
-          var detailById = Object.create(null);
-          detailById[trip.id] = trip;
-          window.bindNatureMapButtons(target, detailById);
-        }
+          '<p class="trip-detail-back"><a href="/trip.html">← Back to trips</a></p>' +
+          '<p class="trips-load-error">This trip could not be found.</p>';
+        document.documentElement.setAttribute("data-trip-detail-ready", "");
         return;
       }
 
+      trip = normalizeTrip(trip);
+      var backPage = Math.max(1, Number(archivePage) || 1);
+      var backHref =
+        backPage <= 1
+          ? "/trip.html#trip-chunk-start"
+          : "/trips/page/" + backPage + "/#trip-chunk-start";
+      document.title = (trip.title || "Trip") + " | Rongwu Xu";
+      var canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical && !document.documentElement.hasAttribute("data-static-trip-id")) {
+        canonical.href =
+          "https://rongwuxu.com/trip.html?trip=" + encodeURIComponent(trip.id);
+      }
+      var description = document.querySelector('meta[name="description"]');
+      if (description) {
+        description.content =
+          (trip.title || "Trip") + " — outdoor trip report by Rongwu Xu.";
+      }
+      target.innerHTML =
+        '<p class="trip-detail-back"><a href="' +
+        escapeHtml(backHref) +
+        '">← Back to trips</a></p>' +
+        '<div class="trip-detail">' +
+        renderTrip(trip, {
+          detail: true,
+          eagerCount: GALLERY_EAGER_COUNT,
+        }) +
+        "</div>" +
+        '<p class="trip-detail-back trip-detail-back-bottom"><a href="' +
+        escapeHtml(backHref) +
+        '">← Back to trips</a></p>';
+      activateImages(target);
+      layoutGalleries(target);
+      initTips(target);
+      if (typeof window.bindNatureMapButtons === "function") {
+        var detailById = Object.create(null);
+        detailById[trip.id] = trip;
+        window.bindNatureMapButtons(target, detailById);
+      }
+      requestAnimationFrame(function () {
+        document.documentElement.setAttribute("data-trip-detail-ready", "");
+      });
+    }
+
+    function renderArchivePage(trips, pagination) {
+      var sorted = sortTrips((trips || []).map(normalizeTrip));
       document.documentElement.setAttribute("data-trip-view", "archive");
-      var chunks = chunkTripsByPhotos(sorted, budget);
-      if (!chunks.length) {
-        if (hasPrerender) return;
+      document.documentElement.setAttribute("data-trip-chunk", "0");
+      if (!sorted.length) {
         target.innerHTML = '<p class="trips-load-error">No trips yet.</p>';
         mountTripJumpNav([]);
         mountChunkNav([], 0);
         return;
       }
 
+      var rendered = renderAll(sorted, Object.create(null), requestedPage > 1);
+      target.innerHTML =
+        '<div class="trip-chunk" data-chunk="0">' + rendered.html + "</div>";
+      target.setAttribute("data-trips-hash", hashTrips(sorted));
+      var visible = target.querySelector(".trip-chunk");
+      activateImages(visible);
+      layoutGalleries(visible);
+      initTips(document);
+
+      var page = Number(pagination && pagination.page) || requestedPage;
+      var pages = Number(pagination && pagination.pages) || 1;
+      var navChunks = Array.from({ length: pages }, function () {
+        return { trips: [] };
+      });
+      navChunks[page - 1] = { trips: sorted };
+      mountTripJumpNav(tocFromChunk(visible), {
+        chunkIndex: page - 1,
+        chunkCount: pages,
+      });
+      mountChunkNav(navChunks, page - 1);
+
       var hashId = location.hash ? location.hash.slice(1) : "";
-      var index = readChunkIndex(chunks.length);
-      if (hashId && hashId !== "trip-chunk-start") {
-        var hashChunk = findChunkIndexForHash(chunks, hashId);
-        if (hashChunk >= 0 && hashChunk !== index) {
-          location.replace(chunkHref(hashChunk).split("#")[0] + "#" + hashId);
-          return;
-        }
-      }
-
-      var visible = paintArchive(target, sorted, budget, index);
-      var chunk = chunks[index];
-
       if (hashId === "trip-chunk-start") {
         requestAnimationFrame(scrollToChunkStart);
       } else if (hashId && document.getElementById(hashId)) {
         requestAnimationFrame(function () {
           scrollToTripId(hashId);
         });
-      } else if (index > 0) {
+      } else if (page > 1) {
         requestAnimationFrame(scrollToChunkStart);
-      }
-
-      var byId = Object.create(null);
-      (chunk.trips || []).forEach(function (t) {
-        if (t.id) byId[t.id] = t;
-      });
-      if (typeof window.bindNatureMapButtons === "function") {
-        window.bindNatureMapButtons(visible || target, byId);
       }
     }
 
     try {
-      var payloads = [];
-      var urls = [config.tripsUrl, config.tripsFallbackUrl].filter(Boolean);
-      var fromPrimary = false;
-      var lastErr;
-      for (var i = 0; i < urls.length; i++) {
+      if (detailId) {
         try {
-          payloads.push(await fetchTrips(urls[i]));
-          fromPrimary = i === 0 && !!config.tripsUrl;
-          break;
-        } catch (err) {
-          lastErr = err;
+          var detailPayload = await fetchTrips(apiUrlForDetail(detailId));
+          renderDetailPage(detailPayload.trip, detailPayload.archivePage);
+          return;
+        } catch (detailErr) {
+          var fallbackDetail = await fetchTrips(config.tripsFallbackUrl);
+          var fallbackSorted = sortTrips(
+            (fallbackDetail.trips || []).map(normalizeTrip)
+          );
+          var fallbackIndex = fallbackSorted.findIndex(function (trip) {
+            return trip.id === detailId;
+          });
+          renderDetailPage(
+            fallbackIndex >= 0 ? fallbackSorted[fallbackIndex] : null,
+            fallbackIndex >= 0 ? Math.floor(fallbackIndex / budget) + 1 : 1
+          );
+          return;
         }
       }
 
-      var parsed = payloads.map(function (data) {
-        return sortTrips((data.trips || []).map(normalizeTrip));
-      });
-      var sorted = null;
-      if (hasPrerender && prerenderHash) {
-        for (var p = 0; p < parsed.length; p++) {
-          if (hashTrips(parsed[p]) === prerenderHash) {
-            sorted = parsed[p];
-            break;
-          }
-        }
+      try {
+        var pagePayload = await fetchTrips(apiUrlForList());
+        renderArchivePage(pagePayload.trips, pagePayload.pagination);
+      } catch (pageErr) {
+        var fallback = await fetchTrips(config.tripsFallbackUrl);
+        var all = sortTrips((fallback.trips || []).map(normalizeTrip));
+        var start = (requestedPage - 1) * budget;
+        renderArchivePage(all.slice(start, start + budget), {
+          page: requestedPage,
+          limit: budget,
+          total: all.length,
+          pages: Math.max(1, Math.ceil(all.length / budget)),
+        });
       }
-      // A newer worker response replaces the saved HTML. A stale fallback does not.
-      if (!sorted && parsed[0] && (fromPrimary || !hasPrerender || detailId)) {
-        sorted = parsed[0];
-      }
-      if (!sorted && hasPrerender) {
-        var hinted = document.documentElement.getAttribute("data-trip-chunk") || "0";
-        var hintedIndex = parseInt(hinted, 10);
-        if (!isFinite(hintedIndex) || hintedIndex < 0) hintedIndex = 0;
-        var kept = visibleTripRoot(target, hintedIndex);
-        activateImages(kept);
-        layoutGalleries(kept);
-        initTips(document);
-        return;
-      }
-      if (!sorted) throw lastErr || new Error("No trips source");
-      finish(sorted);
     } catch (err) {
       if (!hasPrerender) {
         target.innerHTML =
-          '<p class="trips-load-error">Could not load trips. Check trips.json on R2 or ./data/trips.json.</p>';
+          '<p class="trips-load-error">Could not load trips. Please try again.</p>';
         mountTripJumpNav([]);
         mountChunkNav([], 0);
       }

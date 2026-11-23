@@ -497,7 +497,9 @@ async function listTrips(env, base, opts = {}) {
       `SELECT COUNT(*) AS total FROM trips${where}`
     ).bind(...bindings).first();
     const total = Number(countRow?.total) || 0;
-    const offset = all ? 0 : (page - 1) * limit;
+    const pages = Math.max(1, Math.ceil(total / limit));
+    const effectivePage = all ? 1 : Math.min(page, pages);
+    const offset = all ? 0 : (effectivePage - 1) * limit;
     const rows = await env.DB.prepare(
       `SELECT id, date, end_date, year, month, title, tags_json, photos_json,
         cover_photo, photo_dimensions_json, created_at, updated_at
@@ -509,10 +511,10 @@ async function listTrips(env, base, opts = {}) {
       publicBaseUrl: base,
       trips: (rows.results || []).map((row) => tripFromRow(row, true)),
       pagination: {
-        page: all ? 1 : page,
+        page: effectivePage,
         limit,
         total,
-        pages: Math.max(1, Math.ceil(total / limit)),
+        pages,
       },
     };
   } catch {
@@ -525,15 +527,19 @@ async function listTrips(env, base, opts = {}) {
       );
     }
     const total = trips.length;
-    const sliced = all ? trips : trips.slice((page - 1) * limit, page * limit);
+    const pages = Math.max(1, Math.ceil(total / limit));
+    const effectivePage = all ? 1 : Math.min(page, pages);
+    const sliced = all
+      ? trips
+      : trips.slice((effectivePage - 1) * limit, effectivePage * limit);
     return {
       publicBaseUrl: base,
       trips: sliced,
       pagination: {
-        page: all ? 1 : page,
+        page: effectivePage,
         limit,
         total,
-        pages: Math.max(1, Math.ceil(total / limit)),
+        pages,
       },
       legacyFallback: true,
     };

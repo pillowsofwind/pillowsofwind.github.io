@@ -11,6 +11,11 @@ const sourcePath = path.resolve(
   process.env.TRIPS_JSON || path.join(repoRoot, "data", "trips.json")
 );
 const remote = process.argv.includes("--remote");
+const sourceUrl =
+  process.env.TRIPS_JSON_URL ||
+  (!process.env.TRIPS_JSON && remote
+    ? "https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/trips.json"
+    : "");
 const months = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -102,7 +107,12 @@ ON CONFLICT(id) DO UPDATE SET
 `;
 }
 
-const source = JSON.parse(fs.readFileSync(sourcePath, "utf8"));
+const source = sourceUrl
+  ? await fetch(sourceUrl).then((response) => {
+      if (!response.ok) throw new Error(`Could not fetch ${sourceUrl}`);
+      return response.json();
+    })
+  : JSON.parse(fs.readFileSync(sourcePath, "utf8"));
 const trips = (source.trips || []).map(normalizeTrip);
 const ids = new Set();
 for (const trip of trips) {
@@ -129,7 +139,7 @@ try {
     stdio: "inherit",
   });
   console.log(
-    `Imported ${trips.length} trips from ${sourcePath} into ${
+    `Imported ${trips.length} trips from ${sourceUrl || sourcePath} into ${
       remote ? "remote" : "local"
     } D1`
   );

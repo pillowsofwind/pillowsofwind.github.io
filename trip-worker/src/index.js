@@ -918,7 +918,13 @@ async function persistTripPhotoLocations(env, base, tripId, points) {
       photoSet.has(normalizePhotoUrl(p.url))
     );
     trip.updatedAt = new Date().toISOString();
-    await putTrip(env, trip);
+    await env.DB.prepare(
+      "UPDATE trips SET photo_locations_json = ?, updated_at = ? WHERE id = ?"
+    ).bind(
+      JSON.stringify(trip.photoLocations),
+      trip.updatedAt,
+      trip.id
+    ).run();
   } catch {
     // persistence is best-effort; GPS response still returns
   }
@@ -1119,7 +1125,7 @@ async function handleRequest(request, env, ctx) {
         const removed = (existing.photos || []).filter(
           (p) => !keepSet.has(normalizePhotoUrl(p))
         );
-        const deletedCount = await deletePhotoKeys(env, removed, base);
+        let deletedCount = 0;
 
         const newFiles = form
           .getAll("photos")
@@ -1215,6 +1221,7 @@ async function handleRequest(request, env, ctx) {
         };
 
         await putTrip(env, trip);
+        deletedCount = await deletePhotoKeys(env, removed, base);
         if (
           uploaded.length &&
           ctx &&
@@ -1252,11 +1259,11 @@ async function handleRequest(request, env, ctx) {
         const removedTrip = await getTrip(env, tripId, base);
         if (!removedTrip) return json({ error: "Trip not found" }, 404, request);
 
+        await env.DB.prepare("DELETE FROM trips WHERE id = ?")
+          .bind(tripId)
+          .run();
         if (deleteFiles) {
           const n = await deletePhotoKeys(env, removedTrip.photos || [], base);
-          await env.DB.prepare("DELETE FROM trips WHERE id = ?")
-            .bind(tripId)
-            .run();
           return json(
             { ok: true, deleted: removedTrip.id, deletedPhotos: n },
             200,
@@ -1264,9 +1271,6 @@ async function handleRequest(request, env, ctx) {
           );
         }
 
-        await env.DB.prepare("DELETE FROM trips WHERE id = ?")
-          .bind(tripId)
-          .run();
         return json({ ok: true, deleted: removedTrip.id, deletedPhotos: 0 }, 200, request);
       } catch (err) {
         return json({ error: err.message || "Delete failed" }, 500, request);

@@ -24,6 +24,7 @@
 
   function pathKey() {
     var p = location.pathname || "/";
+    if (p.indexOf("/trips/") === 0) return "/trip.html";
     if (p === "/" || p.endsWith("/")) return "/";
     var parts = p.split("/");
     return "/" + (parts[parts.length - 1] || "index.html");
@@ -45,8 +46,15 @@
     var key = pathKey();
     var info = PAGE[key] || {};
     var title = document.title || "Rongwu Xu";
-    var description = info.description || title;
-    var url = ORIGIN + (key === "/" ? "/" : key);
+    var existingDescription = document.head.querySelector('meta[name="description"]');
+    var canonical = document.head.querySelector('link[rel="canonical"]');
+    var description =
+      (existingDescription && existingDescription.getAttribute("content")) ||
+      info.description ||
+      title;
+    var url =
+      (canonical && canonical.href) ||
+      ORIGIN + (key === "/" ? "/" : key);
 
     ensureMeta("name", "theme-color", "#1a3a42");
     ensureMeta("name", "description", description);
@@ -77,9 +85,9 @@
     var navbar =
       '<nav class="navbar">' +
       '<div class="nav-content">' +
-      '<a href="./index.html">home</a>' +
-      '<a href="./misc.html">misc</a>' +
-      '<a href="./trip.html">trip archive</a>' +
+      '<a href="/index.html">home</a>' +
+      '<a href="/misc.html">misc</a>' +
+      '<a href="/trip.html">trip archive</a>' +
       "</div>" +
       "</nav>";
 

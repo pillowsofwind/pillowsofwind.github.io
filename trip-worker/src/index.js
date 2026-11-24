@@ -414,6 +414,7 @@ function tripFromRow(row, summaryOnly = false) {
     title: row.title,
     tags: parseJsonField(row.tags_json, []),
     photos: summaryOnly ? (coverPhoto ? [coverPhoto] : []) : photos,
+    photoCount: photos.length,
     coverPhoto,
     photoDimensions: summaryDimensions,
     createdAt: row.created_at,

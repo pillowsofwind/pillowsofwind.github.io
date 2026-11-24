@@ -167,11 +167,16 @@
     ];
     var year = Number(parts[0]) || trip.year;
     var month = months[Number(parts[1]) - 1] || trip.month;
+    var photoCount = Number(trip && trip.photoCount);
+    if (!isFinite(photoCount) || photoCount < 0) {
+      photoCount = (trip && trip.photos && trip.photos.length) || 0;
+    }
     return Object.assign({}, trip, {
       date: date === "0000-00-00" ? trip.date : date,
       endDate: endDate,
       year: year,
       month: month,
+      photoCount: photoCount,
     });
   }
 
@@ -366,8 +371,37 @@
     );
   }
 
+  // Depth below site root: trip.html → 0, trips/page/N or trips/id → 2.
+  // Root-absolute "/…" links break under file://, so keep paths relative.
+  function siteRootDepth() {
+    try {
+      if (typeof document !== "undefined" && document.documentElement) {
+        if (document.documentElement.hasAttribute("data-static-trip-page")) {
+          return 2;
+        }
+        if (document.documentElement.hasAttribute("data-static-trip-id")) {
+          return 2;
+        }
+      }
+      if (typeof location === "undefined" || !location.pathname) return 0;
+      var path = decodeURIComponent(location.pathname || "");
+      if (/\/trips\/page\/[^/]+/i.test(path)) return 2;
+      if (/\/trips\/[^/]+/i.test(path)) return 2;
+      return 0;
+    } catch (err) {
+      return 0;
+    }
+  }
+
+  function fromSiteRoot(pathFromRoot) {
+    var path = String(pathFromRoot || "").replace(/^\//, "");
+    var depth = siteRootDepth();
+    if (depth <= 0) return path;
+    return new Array(depth + 1).join("../") + path;
+  }
+
   function tripDetailHref(trip) {
-    return "/trips/" + encodeURIComponent(trip.id || "") + "/";
+    return fromSiteRoot("trips/" + encodeURIComponent(trip.id || "") + "/");
   }
 
   function tripCover(trip) {
@@ -386,12 +420,19 @@
   function renderTripCard(trip, opts) {
     opts = opts || {};
     var cover = tripCover(trip);
+    var photoCount = tripPhotoCount(trip);
     var coverHtml = cover
       ? photoImgHtml(trip, cover, {
           eager: !!opts.eager,
           deferSrc: !!opts.deferSrc,
         })
       : '<span class="trip-card-cover-fallback" aria-hidden="true"></span>';
+    var countHtml =
+      photoCount > 0
+        ? '<span class="trip-card-count" aria-hidden="true">' +
+          photoCount +
+          "</span>"
+        : "";
     return (
       '<article class="trip-card"' +
       (opts.id ? ' id="' + escapeHtml(opts.id) + '"' : "") +
@@ -402,10 +443,12 @@
       '">' +
       '<div class="trip-card-cover">' +
       coverHtml +
+      countHtml +
       "</div>" +
       '<div class="trip-card-body">' +
       '<h2 class="trip-card-title">' +
       escapeHtml(trip.title) +
+      '<span class="trip-card-arrow" aria-hidden="true">→</span>' +
       "</h2>" +
       '<div class="trip-card-meta">' +
       (formatTripDateRangeHtml(trip.date, trip.endDate)
@@ -420,6 +463,8 @@
   }
 
   function tripPhotoCount(trip) {
+    var declared = Number(trip && trip.photoCount);
+    if (isFinite(declared) && declared >= 0) return declared;
     return (trip && trip.photos && trip.photos.length) || 0;
   }
 
@@ -558,11 +603,13 @@
   function chunkHref(index, baseHref) {
     if (
       !baseHref &&
-      document.documentElement.hasAttribute("data-static-trip-page")
+      (document.documentElement.hasAttribute("data-static-trip-page") ||
+        document.documentElement.hasAttribute("data-static-trip-id") ||
+        (typeof location !== "undefined" && location.protocol === "file:"))
     ) {
       return index <= 0
-        ? "/trip.html#trip-chunk-start"
-        : "/trips/page/" + (index + 1) + "/#trip-chunk-start";
+        ? fromSiteRoot("trip.html") + "#trip-chunk-start"
+        : fromSiteRoot("trips/page/" + (index + 1) + "/") + "#trip-chunk-start";
     }
     var url = new URL(baseHref || location.href);
     url.searchParams.delete("trip");
@@ -1075,9 +1122,17 @@
       .map(function (t) {
         var photos = (t.photos || []).map(photoSrc).join("|");
         var tags = (t.tags || []).join(",");
-        return [t.id, t.date, t.endDate, t.title, tags, t.report, t.coverPhoto || "", photos].join(
-          "\u001f"
-        );
+        return [
+          t.id,
+          t.date,
+          t.endDate,
+          t.title,
+          tags,
+          t.report,
+          t.coverPhoto || "",
+          tripPhotoCount(t),
+          photos,
+        ].join("\u001f");
       })
       .join("\u001e");
     var h = 5381;
@@ -1223,7 +1278,9 @@
       if (!trip) {
         document.title = "Trip not found | Rongwu Xu";
         target.innerHTML =
-          '<p class="trip-detail-back"><a href="/trip.html">← Back to trips</a></p>' +
+          '<p class="trip-detail-back"><a href="' +
+          escapeHtml(fromSiteRoot("trip.html")) +
+          '">← Back to trips</a></p>' +
           '<p class="trips-load-error">This trip could not be found.</p>';
         document.documentElement.setAttribute("data-trip-detail-ready", "");
         return;
@@ -1233,8 +1290,8 @@
       var backPage = Math.max(1, Number(archivePage) || 1);
       var backHref =
         backPage <= 1
-          ? "/trip.html#trip-chunk-start"
-          : "/trips/page/" + backPage + "/#trip-chunk-start";
+          ? fromSiteRoot("trip.html") + "#trip-chunk-start"
+          : fromSiteRoot("trips/page/" + backPage + "/") + "#trip-chunk-start";
       document.title = (trip.title || "Trip") + " | Rongwu Xu";
       var canonical = document.querySelector('link[rel="canonical"]');
       if (canonical && !document.documentElement.hasAttribute("data-static-trip-id")) {

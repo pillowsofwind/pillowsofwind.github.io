@@ -20,16 +20,16 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light only">
-    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/styles.css">
     <title>Bailing on Little Devil Peak | Rongwu Xu</title>
     <meta name="description" content="Bailing on Little Devil Peak — outdoor trip report by Rongwu Xu.">
     <link rel="canonical" href="https://rongwuxu.com/trips/2026-05-monogram-lake-overnight-attempt/">
     <link rel="preconnect" href="https://photos.rongwuxu.com" crossorigin>
     <link rel="preconnect" href="https://nature-trip-uploader.nature-trip-uploader.workers.dev" crossorigin>
-    <link rel="icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <script src="/javascripts/load_navbar.js?v=nested-trips1"></script>
+    <link rel="icon" href="../../favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+    <script src="../../javascripts/load_navbar.js?v=nested-trips1"></script>
     <style>
         /* Nav (44px) + jump (~28px) + ~36px gap like other pages under the nav */
         body {
@@ -426,6 +426,28 @@
             transform: scale(1.02);
         }
 
+        .trip-card-count {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            z-index: 1;
+            box-sizing: border-box;
+            min-width: 1.55em;
+            height: 1.55em;
+            padding: 0 4px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 0, 0, 0.32);
+            pointer-events: none;
+        }
+
         .trip-card-link:focus-visible {
             outline: 2px solid #d97706;
             outline-offset: 3px;
@@ -450,8 +472,31 @@
             font-weight: 500;
         }
 
+        .trip-card-arrow {
+            display: inline-block;
+            margin-left: 0.22em;
+            color: #b45309;
+            font-weight: 400;
+            opacity: 0;
+            transform: translateX(-2px);
+            transition: opacity 160ms ease, transform 160ms ease;
+        }
+
         .trip-card-link:hover .trip-card-title {
             color: #b45309;
+        }
+
+        .trip-card-link:hover .trip-card-arrow,
+        .trip-card-link:focus-visible .trip-card-arrow {
+            opacity: 0.8;
+            transform: translateX(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .trip-card-arrow {
+                transition: none;
+                transform: none;
+            }
         }
 
         .trip-card-meta {
@@ -1310,7 +1355,7 @@
 </head>
 
 <body>
-    <nav class="navbar"><div class="nav-content"><a href="/index.html">home</a><a href="/misc.html">misc</a><a href="/trip.html">trip archive</a></div></nav>
+    <nav class="navbar"><div class="nav-content"><a href="../../index.html">home</a><a href="../../misc.html">misc</a><a href="../../trip.html">trip archive</a></div></nav>
     <main class="fun-wrapper">
         <nav class="trip-jump" id="trip-jump" aria-label="Jump to trip dates">
             <div class="trip-jump-bar">
@@ -1348,7 +1393,7 @@
             allow.
         </p>
         <figure class="trip-lede-photo">
-            <img src="/images/jade-dragon-snow-mountain.jpg" width="1024" height="768"
+            <img src="../../images/jade-dragon-snow-mountain.jpg" width="1024" height="768"
                 alt="Jade Dragon Snow Mountain peaks breaking through cloud under a clear blue sky, Yunnan, 2025"
                 loading="lazy" decoding="async">
             <figcaption>玉龙雪山 — a brief clear window above the cloud, Yunnan, China, July 2025.</figcaption>
@@ -1423,9 +1468,9 @@
                     dangerous. Always do your own research.</p>
             </div>
 
-            <div id="trips-list" data-trips-hash="81354e5e">
+            <div id="trips-list" data-trips-hash="452491d">
                 <!-- static-trips:start -->
-<p class="trip-detail-back"><a href="/trips/page/4/#trip-chunk-start">← Back to trips</a></p><div class="trip-detail"><article class="trip-entry"><h1 class="trip-title">Bailing on Little Devil Peak</h1><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23–24, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-monogram-lake-overnight-attempt" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><em>”Can't make more mistakes if you leave at 8PM and end up camping in a super damp subalpine meadow at midnight.”</em></p><p>(Part II, after my Hidden Lake WORKout, I quickly packed my overnight gear and got myself on the Monogram Lake trail feverishly)</p><p>LEARN THE HARD LESSON! </p><p>This is a very unsuccessful and miserable overnight experience with several severe mistakes. </p><ul><li>I departed late around 8PM, pre-funked on the heavy hidden lake hike earlier this day, so in very poor physical condition, sore feet due to the B3 boots' long approach on dry trail (Yeah, I originally planned for some mountaineering here at little devil peak, now I felt like a total dumb!). </li></ul><ul><li>I had a heavy pack, lacking proper light packing practices.</li></ul><ul><li>I had multiple off-trail incidents in dense shrubs, partially because hiking in total darkness, largely because I was exhausted, sleepy, and had poor cognitive capacity due to sleep deprivation.</li></ul><ul><li>I didn't reach the designated backcountry camp due to hard to navigate the snow -covered high meadows at night. I couldn't find an available location near the trail, or I would just stop as soon as possible. So I just forced my body to keep hiking up until I ended up in a rather open subalpine meadow. I knew it's a bit unethical to camp on vegetation, but I was too exhausted and had no choice. </li></ul><ul><li>I selected a problematic camping location with sloped ground, which made my inner tent lean on one side. It was a wet, windy subalpine meadow with some intermittent snowfield. Nearly took away all my body heat, as tiny running streams of snowmelt water ran under the footprint. It was just miserable, cold, and mentally really fatiguing, worrying my tent would flip any moment, and I would slip down the slope - I knew it wouldn't be very dangerous, but it would be bothersome, and I was way too tired to even try to solve this. </li></ul><ul><li>I didn’t bring another dry set of camp clothes. Sweat-soaked outfit and socks, and the lack of insulation at night (I brought an improper summer quilt for weight saving and I even did not learn how to use it correctly, so I was using it in the wrong direction) made it impossible for me to sleep. </li></ul><p>At one moment I knew staying here couldn't work, and it was only 3AM, not worth the suffering to the sunrise either. I made a quick decision to just pack again (I arrived around 12 and set my tent up 12:30PM) and hike out.</p><p>My only thought when hiking out: I'm such an overconfident dumbhead who did not turn around when I started so late and was so tired!</p><p>I was too tired to even take pictures for this trip. Oh, I remembered I was here from 8pm to 5am so I have nearly no view other than pitch dark!</p></div><div class="trip-gallery"><div class="trip-gallery-col"><img src="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg" width="3024" height="4032" srcset="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" fetchpriority="high"><img src="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-gallery-col"><img src="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><img src="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake2.jpg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div></div></article></div><p class="trip-detail-back trip-detail-back-bottom"><a href="/trips/page/4/#trip-chunk-start">← Back to trips</a></p>
+<p class="trip-detail-back"><a href="../page/4/#trip-chunk-start">← Back to trips</a></p><div class="trip-detail"><article class="trip-entry"><h1 class="trip-title">Bailing on Little Devil Peak</h1><div class="trip-meta"><div class="trip-meta-left"><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span></div><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23–24, 2026</span></div></div><button type="button" class="trip-map-btn" data-trip-map="2026-05-monogram-lake-overnight-attempt" aria-label="See this trip on the map"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.2A7 7 0 0 0 5 9.8C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.2"/></svg><span class="trip-map-btn-label">See on map</span><span class="trip-map-btn-arrow" aria-hidden="true">→</span></button></div><div class="trip-report"><p><em>”Can't make more mistakes if you leave at 8PM and end up camping in a super damp subalpine meadow at midnight.”</em></p><p>(Part II, after my Hidden Lake WORKout, I quickly packed my overnight gear and got myself on the Monogram Lake trail feverishly)</p><p>LEARN THE HARD LESSON! </p><p>This is a very unsuccessful and miserable overnight experience with several severe mistakes. </p><ul><li>I departed late around 8PM, pre-funked on the heavy hidden lake hike earlier this day, so in very poor physical condition, sore feet due to the B3 boots' long approach on dry trail (Yeah, I originally planned for some mountaineering here at little devil peak, now I felt like a total dumb!). </li></ul><ul><li>I had a heavy pack, lacking proper light packing practices.</li></ul><ul><li>I had multiple off-trail incidents in dense shrubs, partially because hiking in total darkness, largely because I was exhausted, sleepy, and had poor cognitive capacity due to sleep deprivation.</li></ul><ul><li>I didn't reach the designated backcountry camp due to hard to navigate the snow -covered high meadows at night. I couldn't find an available location near the trail, or I would just stop as soon as possible. So I just forced my body to keep hiking up until I ended up in a rather open subalpine meadow. I knew it's a bit unethical to camp on vegetation, but I was too exhausted and had no choice. </li></ul><ul><li>I selected a problematic camping location with sloped ground, which made my inner tent lean on one side. It was a wet, windy subalpine meadow with some intermittent snowfield. Nearly took away all my body heat, as tiny running streams of snowmelt water ran under the footprint. It was just miserable, cold, and mentally really fatiguing, worrying my tent would flip any moment, and I would slip down the slope - I knew it wouldn't be very dangerous, but it would be bothersome, and I was way too tired to even try to solve this. </li></ul><ul><li>I didn’t bring another dry set of camp clothes. Sweat-soaked outfit and socks, and the lack of insulation at night (I brought an improper summer quilt for weight saving and I even did not learn how to use it correctly, so I was using it in the wrong direction) made it impossible for me to sleep. </li></ul><p>At one moment I knew staying here couldn't work, and it was only 3AM, not worth the suffering to the sunrise either. I made a quick decision to just pack again (I arrived around 12 and set my tent up 12:30PM) and hike out.</p><p>My only thought when hiking out: I'm such an overconfident dumbhead who did not turn around when I started so late and was so tired!</p><p>I was too tired to even take pictures for this trip. Oh, I remembered I was here from 8pm to 5am so I have nearly no view other than pitch dark!</p></div><div class="trip-gallery"><div class="trip-gallery-col"><img src="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg" width="3024" height="4032" srcset="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260186.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" fetchpriority="high"><img src="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/an-ugly-monogram-lake-overnighter1788940260187.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-gallery-col"><img src="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><img src="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake2.jpg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake2.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div></div></article></div><p class="trip-detail-back trip-detail-back-bottom"><a href="../page/4/#trip-chunk-start">← Back to trips</a></p>
                 <!-- static-trips:end -->
             </div>
 
@@ -1481,10 +1526,10 @@
         </div>
     </div>
 
-    <script src="/javascripts/nature-config.js?v=trip-cards1"></script>
-    <script src="/data/glaciers.js?v=3"></script>
-    <script src="/javascripts/nature-map.js?v=map-photo-queue1"></script>
-    <script src="/javascripts/nature-trips.js?v=d1-pages2"></script>
+    <script src="../../javascripts/nature-config.js?v=trip-cards1"></script>
+    <script src="../../data/glaciers.js?v=3"></script>
+    <script src="../../javascripts/nature-map.js?v=map-photo-queue1"></script>
+    <script src="../../javascripts/nature-trips.js?v=file-href1"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tooltips for static activity-key icons

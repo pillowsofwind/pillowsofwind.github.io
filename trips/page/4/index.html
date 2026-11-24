@@ -20,16 +20,16 @@
     </script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light only">
-    <link rel="stylesheet" href="/stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/styles.css">
     <title>Trip Archive — Page 4 | Rongwu Xu</title>
     <meta name="description" content="Older outdoor trips by Rongwu Xu.">
     <link rel="canonical" href="https://rongwuxu.com/trips/page/4/">
     <link rel="preconnect" href="https://photos.rongwuxu.com" crossorigin>
     <link rel="preconnect" href="https://nature-trip-uploader.nature-trip-uploader.workers.dev" crossorigin>
-    <link rel="icon" href="/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-    <script src="/javascripts/load_navbar.js?v=nested-trips1"></script>
+    <link rel="icon" href="../../favicon.ico">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../apple-touch-icon.png">
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+    <script src="../../javascripts/load_navbar.js?v=nested-trips1"></script>
     <style>
         /* Nav (44px) + jump (~28px) + ~36px gap like other pages under the nav */
         body {
@@ -426,6 +426,28 @@
             transform: scale(1.02);
         }
 
+        .trip-card-count {
+            position: absolute;
+            top: 7px;
+            right: 7px;
+            z-index: 1;
+            box-sizing: border-box;
+            min-width: 1.55em;
+            height: 1.55em;
+            padding: 0 4px;
+            border-radius: 5px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+            line-height: 1;
+            color: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 0, 0, 0.32);
+            pointer-events: none;
+        }
+
         .trip-card-link:focus-visible {
             outline: 2px solid #d97706;
             outline-offset: 3px;
@@ -450,8 +472,31 @@
             font-weight: 500;
         }
 
+        .trip-card-arrow {
+            display: inline-block;
+            margin-left: 0.22em;
+            color: #b45309;
+            font-weight: 400;
+            opacity: 0;
+            transform: translateX(-2px);
+            transition: opacity 160ms ease, transform 160ms ease;
+        }
+
         .trip-card-link:hover .trip-card-title {
             color: #b45309;
+        }
+
+        .trip-card-link:hover .trip-card-arrow,
+        .trip-card-link:focus-visible .trip-card-arrow {
+            opacity: 0.8;
+            transform: translateX(0);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .trip-card-arrow {
+                transition: none;
+                transform: none;
+            }
         }
 
         .trip-card-meta {
@@ -1310,7 +1355,7 @@
 </head>
 
 <body>
-    <nav class="navbar"><div class="nav-content"><a href="/index.html">home</a><a href="/misc.html">misc</a><a href="/trip.html">trip archive</a></div></nav>
+    <nav class="navbar"><div class="nav-content"><a href="../../index.html">home</a><a href="../../misc.html">misc</a><a href="../../trip.html">trip archive</a></div></nav>
     <main class="fun-wrapper">
         <nav class="trip-jump" id="trip-jump" aria-label="Jump to trip dates">
             <div class="trip-jump-bar">
@@ -1348,7 +1393,7 @@
             allow.
         </p>
         <figure class="trip-lede-photo">
-            <img src="/images/jade-dragon-snow-mountain.jpg" width="1024" height="768"
+            <img src="../../images/jade-dragon-snow-mountain.jpg" width="1024" height="768"
                 alt="Jade Dragon Snow Mountain peaks breaking through cloud under a clear blue sky, Yunnan, 2025"
                 loading="lazy" decoding="async">
             <figcaption>玉龙雪山 — a brief clear window above the cloud, Yunnan, China, July 2025.</figcaption>
@@ -1423,13 +1468,13 @@
                     dangerous. Always do your own research.</p>
             </div>
 
-            <div id="trips-list" data-trips-hash="2411eee4">
+            <div id="trips-list" data-trips-hash="b5c1f046">
                 <!-- static-trips:start -->
-<div class="trip-chunk" data-chunk="0"><article class="trip-card" id="trip-2026-05" data-trip-chunk-start><a class="trip-card-link" href="/trips/2026-05-wild-goose-trail-artist-point-attempt/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Artist%20Point.jpg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" fetchpriority="high"></div><div class="trip-card-body"><h2 class="trip-card-title">Artist Point Snowshoeing</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">30, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="/trips/2026-05-hidden-lake-lookout-attempt/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-card-body"><h2 class="trip-card-title">Hidden Lake Lookout/Peaks (Winter Climber's Route) Attempt</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23, 2026</span></div><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="/trips/2026-05-monogram-lake-overnight-attempt/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-card-body"><h2 class="trip-card-title">Bailing on Little Devil Peak</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23–24, 2026</span></div><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="/trips/2026-05-mount-walker-1788883675545/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/mount-walker2.jpeg" width="3024" height="4032" srcset="https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-card-body"><h2 class="trip-card-title">Mount Walker</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">10, 2026</span></div><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="/trips/2026-05-green-mountain-kitsap-peninsula/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-card-body"><h2 class="trip-card-title">Green Mountain (Kitsap Peninsula)</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">10, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="/trips/2026-05-dosewallips-state-park/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-card-body"><h2 class="trip-card-title">Dosewallips State Park</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">9–10, 2026</span></div><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag camping" title="camping"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="/trips/2026-05-fort-flagler-state-park/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Fort%20Flagler%20State%20Park.jpg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-card-body"><h2 class="trip-card-title">Fort Flagler State Park</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">8–9, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag camping" title="camping"></span></div></div></div></a></article><article class="trip-card" id="trip-2026-04"><a class="trip-card-link" href="/trips/2026-04-snow-lake/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/April/snow-lake1788943154570.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/snow-lake1788943154570.jpeg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/April/snow-lake1788943154570.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/April/snow-lake1788943154570.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/April/snow-lake1788943154570.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"></div><div class="trip-card-body"><h2 class="trip-card-title">Snow Lake Winter Route</h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">26, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag scrambling" title="scrambling"></span></div></div></div></a></article></div>
+<div class="trip-chunk" data-chunk="0"><article class="trip-card" id="trip-2026-05" data-trip-chunk-start><a class="trip-card-link" href="../../trips/2026-05-wild-goose-trail-artist-point-attempt/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Artist%20Point.jpg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Artist%20Point.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" fetchpriority="high"><span class="trip-card-count" aria-hidden="true">2</span></div><div class="trip-card-body"><h2 class="trip-card-title">Artist Point Snowshoeing<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">30, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="../../trips/2026-05-hidden-lake-lookout-attempt/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Hidden%20Lake%20Lookout1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Hidden%20Lake%20Lookout1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><span class="trip-card-count" aria-hidden="true">6</span></div><div class="trip-card-body"><h2 class="trip-card-title">Hidden Lake Lookout/Peaks (Winter Climber's Route) Attempt<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23, 2026</span></div><div class="trip-tags"><span class="trip-tag scrambling" title="scrambling"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="../../trips/2026-05-monogram-lake-overnight-attempt/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Monogram%20Lake1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Monogram%20Lake1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><span class="trip-card-count" aria-hidden="true">4</span></div><div class="trip-card-body"><h2 class="trip-card-title">Bailing on Little Devil Peak<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">23–24, 2026</span></div><div class="trip-tags"><span class="trip-tag backpacking" title="backpacking"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="../../trips/2026-05-mount-walker-1788883675545/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/mount-walker2.jpeg" width="3024" height="4032" srcset="https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/mount-walker2.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><span class="trip-card-count" aria-hidden="true">2</span></div><div class="trip-card-body"><h2 class="trip-card-title">Mount Walker<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">10, 2026</span></div><div class="trip-tags"><span class="trip-tag casual" title="casual"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="../../trips/2026-05-green-mountain-kitsap-peninsula/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Green%20Mountain1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Green%20Mountain1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><span class="trip-card-count" aria-hidden="true">3</span></div><div class="trip-card-body"><h2 class="trip-card-title">Green Mountain (Kitsap Peninsula)<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">10, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="../../trips/2026-05-dosewallips-state-park/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Dosewallips%20State%20Park1.jpg" width="4032" height="3024" srcset="https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Dosewallips%20State%20Park1.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><span class="trip-card-count" aria-hidden="true">5</span></div><div class="trip-card-body"><h2 class="trip-card-title">Dosewallips State Park<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">9–10, 2026</span></div><div class="trip-tags"><span class="trip-tag casual" title="casual"></span><span class="trip-tag camping" title="camping"></span></div></div></div></a></article><article class="trip-card"><a class="trip-card-link" href="../../trips/2026-05-fort-flagler-state-park/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/May/Fort%20Flagler%20State%20Park.jpg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=400 400w, https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=800 800w, https://photos.rongwuxu.com/img/2026/May/Fort%20Flagler%20State%20Park.jpg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><span class="trip-card-count" aria-hidden="true">3</span></div><div class="trip-card-body"><h2 class="trip-card-title">Fort Flagler State Park<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">May</span> <span class="trip-date-rest">8–9, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag camping" title="camping"></span></div></div></div></a></article><article class="trip-card" id="trip-2026-04"><a class="trip-card-link" href="../../trips/2026-04-snow-lake/"><div class="trip-card-cover"><img src="https://photos.rongwuxu.com/img/2026/April/snow-lake-winter-route1795439835846.jpeg?w=800" alt="" decoding="async" data-full="https://pub-ef165a3e20f24d10a0bafbb1aa236e40.r2.dev/2026/April/snow-lake-winter-route1795439835846.jpeg" width="5712" height="4284" srcset="https://photos.rongwuxu.com/img/2026/April/snow-lake-winter-route1795439835846.jpeg?w=400 400w, https://photos.rongwuxu.com/img/2026/April/snow-lake-winter-route1795439835846.jpeg?w=800 800w, https://photos.rongwuxu.com/img/2026/April/snow-lake-winter-route1795439835846.jpeg?w=1280 1280w" sizes="(max-width: 720px) 100vw, 360px" loading="lazy"><span class="trip-card-count" aria-hidden="true">5</span></div><div class="trip-card-body"><h2 class="trip-card-title">Snow Lake Winter Route<span class="trip-card-arrow" aria-hidden="true">→</span></h2><div class="trip-card-meta"><div class="trip-date"><span class="trip-date-month">April</span> <span class="trip-date-rest">26, 2026</span></div><div class="trip-tags"><span class="trip-tag hiking" title="hiking"></span><span class="trip-tag scrambling" title="scrambling"></span></div></div></div></a></article></div>
                 <!-- static-trips:end -->
             </div>
 
-            <nav class="trip-chunk-nav" data-trip-chunk-nav aria-label="Trip archive pages"><!-- static-chunk-nav:start --><div class="trip-chunk-bar-set" data-chunk-nav="0"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="/trips/page/3/#trip-chunk-start">Newer</a><span class="trip-chunk-label">May 2026 – Apr 2026</span><a class="trip-chunk-link" href="/trips/page/5/#trip-chunk-start">Older</a></div></div><!-- static-chunk-nav:end --></nav>
+            <nav class="trip-chunk-nav" data-trip-chunk-nav aria-label="Trip archive pages"><!-- static-chunk-nav:start --><div class="trip-chunk-bar-set" data-chunk-nav="0"><div class="trip-chunk-bar"><a class="trip-chunk-link" href="../3/#trip-chunk-start">Newer</a><span class="trip-chunk-label">May 2026 – Apr 2026</span><a class="trip-chunk-link" href="../5/#trip-chunk-start">Older</a></div></div><!-- static-chunk-nav:end --></nav>
         </div>
 
         <footer class="site-footer"></footer>
@@ -1481,10 +1526,10 @@
         </div>
     </div>
 
-    <script src="/javascripts/nature-config.js?v=trip-cards1"></script>
-    <script src="/data/glaciers.js?v=3"></script>
-    <script src="/javascripts/nature-map.js?v=map-photo-queue1"></script>
-    <script src="/javascripts/nature-trips.js?v=d1-pages2"></script>
+    <script src="../../javascripts/nature-config.js?v=trip-cards1"></script>
+    <script src="../../data/glaciers.js?v=3"></script>
+    <script src="../../javascripts/nature-map.js?v=map-photo-queue1"></script>
+    <script src="../../javascripts/nature-trips.js?v=file-href1"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
             // Tooltips for static activity-key icons

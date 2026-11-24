@@ -192,21 +192,10 @@ function escapeHtml(value) {
     .replace(/"/g, "&quot;");
 }
 
-// from: "root" (trip.html), "page" (trips/page/N/), or "detail" (trips/id/)
-function archiveHref(index, from) {
-  from = from || "root";
-  if (index <= 0) {
-    return from === "root"
-      ? "trip.html#trip-chunk-start"
-      : "../../trip.html#trip-chunk-start";
-  }
-  if (from === "root") {
-    return "trips/page/" + (index + 1) + "/#trip-chunk-start";
-  }
-  if (from === "page") {
-    return "../" + (index + 1) + "/#trip-chunk-start";
-  }
-  return "../page/" + (index + 1) + "/#trip-chunk-start";
+function archiveHref(index) {
+  return index <= 0
+    ? "/trip.html#trip-chunk-start"
+    : "/trips/page/" + (index + 1) + "/#trip-chunk-start";
 }
 
 function rangeLabel(trips) {
@@ -225,17 +214,16 @@ function rangeLabel(trips) {
 
 function pageNavHtml(trips, pageIndex, pageCount) {
   if (pageCount <= 1) return "";
-  const from = pageIndex > 0 ? "page" : "root";
   const newer =
     pageIndex > 0
       ? '<a class="trip-chunk-link" href="' +
-        archiveHref(pageIndex - 1, from) +
+        archiveHref(pageIndex - 1) +
         '">Newer</a>'
       : '<span class="trip-chunk-link is-disabled">Newer</span>';
   const older =
     pageIndex < pageCount - 1
       ? '<a class="trip-chunk-link" href="' +
-        archiveHref(pageIndex + 1, from) +
+        archiveHref(pageIndex + 1) +
         '">Older</a>'
       : '<span class="trip-chunk-link is-disabled">Older</span>';
   return (
@@ -250,14 +238,13 @@ function pageNavHtml(trips, pageIndex, pageCount) {
   );
 }
 
-// Nested pages live two directories below the site root (trips/page/N or trips/id).
-// Prefer relative asset paths so file:// previews work the same as https.
-function nestRelativeAssets(html, depth) {
-  const prefix = "../".repeat(depth);
+// Nested pages (trips/page/N, trips/id) need root-absolute asset URLs on GitHub Pages.
+function rootRelativeAssets(html) {
   return html
-    .replace(/(["'])\.\//g, "$1" + prefix)
-    .replace(/(href|src)="\/(?!\/)/g, "$1=\"" + prefix)
-    .replace(/href="trips\//g, 'href="' + prefix + "trips/");
+    .replace(/(["'])\.\//g, "$1/")
+    .replace(/href="stylesheets\//g, 'href="/stylesheets/')
+    .replace(/src="javascripts\//g, 'src="/javascripts/')
+    .replace(/src="data\//g, 'src="/data/');
 }
 
 function setHtmlAttributes(html, attrs) {
@@ -336,9 +323,9 @@ async function main() {
         "Older outdoor trips by Rongwu Xu.",
         "https://rongwuxu.com/trips/page/" + (pageIndex + 1) + "/"
       );
-      html = nestRelativeAssets(html, 2);
-      // Cards were built as trips/id/ (site-root relative); rewrite for trips/page/N/.
-      html = html.replace(/href="trips\//g, 'href="../');
+      html = rootRelativeAssets(html);
+      // Cards are built as trips/id/; rewrite for trips/page/N/.
+      html = html.replace(/href="trips\//g, 'href="/trips/');
     }
     return html;
   }
@@ -352,7 +339,7 @@ async function main() {
 
   sorted.forEach(function (trip, index) {
     const pageIndex = Math.floor(index / pageSize);
-    const backHref = archiveHref(pageIndex, "detail");
+    const backHref = archiveHref(pageIndex);
     const detailHtml =
       '<p class="trip-detail-back"><a href="' +
       backHref +
@@ -386,7 +373,7 @@ async function main() {
       (trip.title || "Trip") + " — outdoor trip report by Rongwu Xu.",
       "https://rongwuxu.com/trips/" + encodeURIComponent(trip.id) + "/"
     );
-    html = nestRelativeAssets(html, 2);
+    html = rootRelativeAssets(html);
     const dir = path.join(generatedRoot, trip.id);
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(path.join(dir, "index.html"), html);

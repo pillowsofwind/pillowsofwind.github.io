@@ -53,6 +53,11 @@
             background-color: #ffffff;
         }
 
+        html,
+        body {
+            overflow-x: hidden;
+        }
+
         /* Override site theme: section { float: right } is for index layout only */
         .fun-wrapper section {
             float: none;
@@ -477,26 +482,11 @@
             margin-left: 0.22em;
             color: #b45309;
             font-weight: 400;
-            opacity: 0;
-            transform: translateX(-2px);
-            transition: opacity 160ms ease, transform 160ms ease;
+            opacity: 0.65;
         }
 
         .trip-card-link:hover .trip-card-title {
             color: #b45309;
-        }
-
-        .trip-card-link:hover .trip-card-arrow,
-        .trip-card-link:focus-visible .trip-card-arrow {
-            opacity: 0.8;
-            transform: translateX(0);
-        }
-
-        @media (prefers-reduced-motion: reduce) {
-            .trip-card-arrow {
-                transition: none;
-                transform: none;
-            }
         }
 
         .trip-card-meta {

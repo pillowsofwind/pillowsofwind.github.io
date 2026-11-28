@@ -383,3 +383,50 @@ footer.site-footer .site-copyright {
 .nav-content a:hover {
   color: #069;
 }
+
+.interests-short p[lang="zh-Hans"] {
+  color: #666;
+}
+
+.interests-more {
+  margin: 0 0 20px;
+}
+
+.interests-more > summary {
+  cursor: pointer;
+  color: #39c;
+  list-style: none;
+  margin-bottom: 12px;
+  user-select: none;
+}
+
+.interests-more > summary::-webkit-details-marker {
+  display: none;
+}
+
+.interests-more > summary::before {
+  content: "";
+  display: inline-block;
+  width: 0;
+  height: 0;
+  margin-right: 0.45em;
+  border-style: solid;
+  border-width: 0.32em 0 0.32em 0.55em;
+  border-color: transparent transparent transparent currentColor;
+  vertical-align: 0.08em;
+}
+
+.interests-more[open] > summary::before {
+  border-width: 0.55em 0.32em 0 0.32em;
+  border-color: currentColor transparent transparent transparent;
+  vertical-align: 0;
+}
+
+.interests-more > summary:hover {
+  color: #069;
+  font-weight: bold;
+}
+
+.interests-long > :last-child {
+  margin-bottom: 0;
+}
